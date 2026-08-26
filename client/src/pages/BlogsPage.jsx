@@ -16,10 +16,13 @@ export function BlogsListing({ destinationSlug = null, heading, intro }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const search = searchParams.get('search') || ''
   const category = searchParams.get('category') || ''
+  const tag = searchParams.get('tag') || ''
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
 
   const [searchInput, setSearchInput] = React.useState(search)
+  const [tagInput, setTagInput] = React.useState(tag)
   React.useEffect(() => setSearchInput(search), [search])
+  React.useEffect(() => setTagInput(tag), [tag])
   React.useEffect(() => {
     const t = setTimeout(() => {
       const next = searchInput.trim()
@@ -35,7 +38,14 @@ export function BlogsListing({ destinationSlug = null, heading, intro }) {
       if (v === null || v === '' ) next.delete(k)
       else next.set(k, String(v))
     }
-    next.delete('page')
+    // Pagination resets on filter change; page change preserves filters.
+    if (!('page' in patch)) next.delete('page')
+    setSearchParams(next)
+  }
+
+  function setPage(n) {
+    const next = new URLSearchParams(searchParams)
+    next.set('page', String(n))
     setSearchParams(next)
   }
 
@@ -49,7 +59,7 @@ export function BlogsListing({ destinationSlug = null, heading, intro }) {
   })
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['blogs', { page, limit: PAGE_SIZE, search: search || undefined, category: category || undefined, destination: destinationSlug || undefined }],
+    queryKey: ['blogs', { page, limit: PAGE_SIZE, search: search || undefined, category: category || undefined, tag: tag || undefined, destination: destinationSlug || undefined }],
     queryFn: () =>
       destinationSlug
         ? blogApi.listByDestination(destinationSlug, {
@@ -57,12 +67,14 @@ export function BlogsListing({ destinationSlug = null, heading, intro }) {
             limit: PAGE_SIZE,
             ...(search ? { search } : {}),
             ...(category ? { category } : {}),
+            ...(tag ? { tag } : {}),
           })
         : blogApi.list({
             page,
             limit: PAGE_SIZE,
             ...(search ? { search } : {}),
             ...(category ? { category } : {}),
+            ...(tag ? { tag } : {}),
           }),
     placeholderData: (prev) => prev,
   })
@@ -129,10 +141,80 @@ export function BlogsListing({ destinationSlug = null, heading, intro }) {
         ))}
       </div>
 
+      {/* Tag filtering */}
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            const v = tagInput.trim()
+            setParams({ tag: v || null })
+          }}
+          className="flex max-w-xs items-center gap-2"
+        >
+          <label htmlFor="blog-tag" className="sr-only">Filter by tag</label>
+          <input
+            id="blog-tag"
+            type="text"
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            placeholder="Filter by tag (e.g. beaches)"
+            className="h-9 flex-1 rounded-full border border-input bg-background px-4 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          <Button type="submit" variant="outline" size="sm" className="shrink-0 rounded-full">Apply</Button>
+          {tag && (
+            <Button type="button" variant="ghost" size="sm" onClick={() => setParams({ tag: null })} className="shrink-0">
+              Clear
+            </Button>
+          )}
+        </form>
+        {tag && (
+          <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+            Tag: {tag}
+            <button
+              type="button"
+              onClick={() => setParams({ tag: null })}
+              aria-label="Clear tag filter"
+              className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              ×
+            </button>
+          </span>
+        )}
+      </div>
+
+      {/* Active filter chips */}
+      {(category || tag || search) && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {category && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-input bg-background px-3 py-1 text-xs font-medium">
+              Category: {BLOG_CATEGORY_LABELS[category] || category}
+              <button type="button" onClick={() => setParams({ category: null })} aria-label="Clear category" className="ml-1 rounded-full p-0.5 hover:bg-muted">×</button>
+            </span>
+          )}
+          {tag && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-input bg-background px-3 py-1 text-xs font-medium">
+              Tag: {tag}
+              <button type="button" onClick={() => setParams({ tag: null })} aria-label="Clear tag" className="ml-1 rounded-full p-0.5 hover:bg-muted">×</button>
+            </span>
+          )}
+          {search && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-input bg-background px-3 py-1 text-xs font-medium">
+              Search: {search}
+              <button type="button" onClick={() => setParams({ search: null })} aria-label="Clear search" className="ml-1 rounded-full p-0.5 hover:bg-muted">×</button>
+            </span>
+          )}
+          <button type="button" onClick={() => setParams({ search: null, category: null, tag: null })} className="text-xs font-medium text-primary hover:underline">
+            Clear all
+          </button>
+        </div>
+      )}
+
       {!isLoading && result && (
         <p className="mt-5 text-sm text-muted-foreground" aria-live="polite">
           {result.total} article{result.total === 1 ? '' : 's'}
           {destinationSlug && result.destination ? ` in ${result.destination.name}` : ''}
+          {category ? ` · ${BLOG_CATEGORY_LABELS[category] || category}` : ''}
+          {tag ? ` · tag "${tag}"` : ''}
         </p>
       )}
 
@@ -158,15 +240,15 @@ export function BlogsListing({ destinationSlug = null, heading, intro }) {
           <Newspaper className="mx-auto h-8 w-8 text-muted-foreground/40" aria-hidden="true" />
           <p className="mt-3 text-lg font-medium">No blogs found</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {search || category
-              ? 'Try a different search or category.'
+            {search || category || tag
+              ? 'Try a different search, category or tag.'
               : 'New travel stories are on the way — check back soon.'}
           </p>
-          {(search || category) && (
+          {(search || category || tag) && (
             <Button
               variant="outline"
               className="mt-5"
-              onClick={() => setParams({ search: null, category: null })}
+              onClick={() => setParams({ search: null, category: null, tag: null })}
             >
               Clear filters
             </Button>
@@ -186,7 +268,7 @@ export function BlogsListing({ destinationSlug = null, heading, intro }) {
                 variant="outline"
                 size="icon"
                 disabled={result.page <= 1}
-                onClick={() => setParams({ page: result.page - 1 })}
+                onClick={() => setPage(result.page - 1)}
                 aria-label="Previous page"
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -197,7 +279,7 @@ export function BlogsListing({ destinationSlug = null, heading, intro }) {
                   <button
                     key={n}
                     type="button"
-                    onClick={() => setParams({ page: n })}
+                    onClick={() => setPage(n)}
                     aria-current={n === result.page ? 'page' : undefined}
                     aria-label={`Page ${n}`}
                     className={`inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
@@ -214,7 +296,7 @@ export function BlogsListing({ destinationSlug = null, heading, intro }) {
                 variant="outline"
                 size="icon"
                 disabled={result.page >= result.totalPages}
-                onClick={() => setParams({ page: result.page + 1 })}
+                onClick={() => setPage(result.page + 1)}
                 aria-label="Next page"
               >
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />

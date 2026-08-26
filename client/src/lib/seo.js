@@ -2,7 +2,7 @@ import * as React from 'react'
 
 // Lightweight SEO helper for the SPA. Dynamically sets document title, meta
 // description, canonical link and Open Graph basics. No heavy SEO framework.
-export function useSeo({ title, description, canonical, noindex, ogType, ogImage } = {}) {
+export function useSeo({ title, description, canonical, noindex, ogType, ogImage, ogUrl, twitterCard } = {}) {
   React.useEffect(() => {
     const fullTitle = title ? `${title} | 24x7Chhutti` : '24x7Chhutti'
     const prevTitle = document.title
@@ -21,7 +21,8 @@ export function useSeo({ title, description, canonical, noindex, ogType, ogImage
     const prevDescription = document.querySelector('meta[name="description"]')?.getAttribute('content') || ''
     applyOrCreate('meta[name="description"]', 'name', 'description', description || '24x7Chhutti — travel packages with departure dates, itineraries and pricing. Group and customised trips, available around the clock.')
 
-    // Open Graph basics (article pages set ogType/ogImage).
+    // Open Graph + Twitter basics (article pages set ogType/ogImage).
+    const effectiveOgUrl = ogUrl || canonical
     const prevOg = {}
     const ogTags = [
       ['meta[property="og:title"]', 'property', 'og:title', fullTitle],
@@ -29,6 +30,11 @@ export function useSeo({ title, description, canonical, noindex, ogType, ogImage
       ...(ogType ? [['meta[property="og:type"]', 'property', 'og:type', ogType]] : []),
       ...(ogImage ? [['meta[property="og:image"]', 'property', 'og:image', ogImage]] : []),
       ...(description ? [['meta[property="og:description"]', 'property', 'og:description', description]] : []),
+      ...(effectiveOgUrl ? [['meta[property="og:url"]', 'property', 'og:url', effectiveOgUrl]] : []),
+      ['meta[name="twitter:card"]', 'name', 'twitter:card', twitterCard || (ogImage ? 'summary_large_image' : 'summary')],
+      ['meta[name="twitter:title"]', 'name', 'twitter:title', fullTitle],
+      ...(description ? [['meta[name="twitter:description"]', 'name', 'twitter:description', description]] : []),
+      ...(ogImage ? [['meta[name="twitter:image"]', 'name', 'twitter:image', ogImage]] : []),
     ]
     const createdOg = []
     for (const [sel, attr, name, content] of ogTags) {
@@ -76,7 +82,7 @@ export function useSeo({ title, description, canonical, noindex, ogType, ogImage
         else canonicalEl.removeAttribute('href')
       }
     }
-  }, [title, description, canonical, noindex, ogType, ogImage])
+  }, [title, description, canonical, noindex, ogType, ogImage, ogUrl, twitterCard])
 }
 
 export function destinationSeoTitle(name) {

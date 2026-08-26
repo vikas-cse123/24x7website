@@ -27,7 +27,7 @@ export function HeroSection() {
     <section className="relative flex min-h-[400px] items-center overflow-hidden sm:min-h-[460px]">
       {/* Background imagery */}
       <div className="absolute inset-0" aria-hidden="true">
-        {featured?.heroImage?.url || featured?.heroImage?.secureUrl ? (
+        {featured?.heroImage?.publicId || featured?.heroImage?.secureUrl || featured?.heroImage?.url ? (
           <DestinationImage
             image={featured.heroImage}
             alt=""

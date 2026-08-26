@@ -84,7 +84,10 @@ booking wizard. Wishlist/notifications remain PLANNED.
 Verified booking-based reviews with moderation, rating summaries, trip-page and My Account sections, and admin management (ADR-019).
 
 ### Blogs — IMPLEMENTED
-Published travel articles with category/destination browsing, search, detail with structured blocks and related posts, homepage carousel, and admin editor (ADR-020).
+Published travel articles with category/tag/destination browsing, search, detail with structured blocks and related posts, homepage carousel, and admin editor (ADR-020). Category/tag filtering is URL-driven and shareable.
+
+### Content pages — IMPLEMENTED (Phase 19)
+About, Contact (info + validated form, no backend email), legal (Privacy, Terms, Cancellation) with SEO and breadcrumbs, and a branded 404. All reachable via header/footer and no dead placeholder links.
 
 ### FAQs — IMPLEMENTED
 Frequently asked questions, linked to trips or global, managed via CMS.
@@ -127,15 +130,18 @@ Usage analytics and error monitoring integrated at production stage.
 | Enquiries       | PLANNED |
 | Customers       | IMPLEMENTED (account area: profile, my bookings, saved travellers) |
 | Reviews         | IMPLEMENTED (verified-booking reviews, moderation, rating summaries) |
-| Blogs            | IMPLEMENTED (public discovery + detail + admin editor; FAQs below) |
+| Blogs            | IMPLEMENTED (public discovery + detail + admin editor; category/tag filtering via URL; FAQs below) |
 | Wishlist         | IMPLEMENTED (trip & destination)
 | Notifications    | IMPLEMENTED (booking/departure/review events, header bell, account page)
-| Capture A Trip UX | IMPLEMENTED (real nav, real homepage reviews, destination tabs, related trips, hero imagery, FAQs page) |
+| Capture A Trip UX | IMPLEMENTED (real nav, real homepage reviews, destination tabs, related trips, hero imagery, FAQs/About/Contact/legal/404, lazy performance) |
 | FAQs             | IMPLEMENTED (global/destination/trip, priority merge, admin CMS) |
 | Admin/CMS       | IMPLEMENTED for destinations/trips/trip-batches + dashboard; remaining sections PLANNED |
 | Payments        | PLANNED |
 | Media           | PLANNED |
-| SEO/Analytics   | PLANNED |
+| SEO             | IMPLEMENTED (titles/meta/canonical/OG/Twitter, robots, sitemap, noindex) |
+| Performance     | IMPLEMENTED (lazy + chunking, f_auto/q_auto, lazy images) |
+| Security        | AUDITED (headers, RBAC, validation, upload limits, prod error hiding) |
+| Analytics       | PLANNED |
 
 See `docs/ROADMAP.md` for the phased plan and `docs/CURRENT_STATE.md` for the
 authoritative current status.

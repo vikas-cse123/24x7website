@@ -94,7 +94,7 @@ function DestinationTile({ destination }) {
       className="group block overflow-hidden rounded-xl shadow-card transition-shadow hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <DestinationImage
-        src={destination.heroImage?.url}
+        image={destination.heroImage}
         alt={destination.heroImage?.alt || destination.name}
         className="aspect-[4/5] w-full"
       />

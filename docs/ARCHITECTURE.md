@@ -31,7 +31,7 @@ server-state fetching. It communicates with the backend **only** through REST
 APIs. It never talks to MongoDB directly and contains minimal business logic.
 
 - `src/routes/` — React Router configuration (`AppRoutes`, `PublicLayout`
-  parent route with nested public pages).
+  parent route with nested public pages). **Phase 20**: route-level `React.lazy` + `Suspense` + `manualChunks` for production performance.
 - `src/pages/` — route-level page components (home shell, placeholder pages).
 - `src/components/` — reusable components (`ui/`, `layout/`, `auth/`, `brand/`).
   `layout/` holds the public shell: `PublicLayout`, `Header`, `SiteNav`,
@@ -41,7 +41,8 @@ APIs. It never talks to MongoDB directly and contains minimal business logic.
   API modules).
 - `src/stores/` — Zustand stores: `auth` (session) and `ui` (overlay state).
 - `src/schemas/` — Zod schemas for forms.
-- `src/lib/` — utilities (`cn`, query client, `nav` config).
+- `src/lib/` — utilities (`cn`, query client, `nav` config, `seo` with OG/Twitter).
+- `public/robots.txt`, `public/sitemap.xml` — SEO: static public URLs only (Phase 20).
 
 ### server (`server/`)
 Node.js + Express REST API. Owns all business logic and all data access.
@@ -339,7 +340,7 @@ Admin:   /api/admin/blogs (CRUD + publish/unpublish, requireAuth+admin)
 - Content is stored as **typed blocks** (ADR-020) rendered client-side by
   `BlogContentView`; paragraphs support inline `[text](url)` links.
 - Public APIs return only `published` blogs. Search spans title/excerpt/tags
-  and linked destination names/countries in one `$or` query.
+  and linked destination names/countries in one `$or` query. Filtering supports `category` (enum) and `tag` (exact match on `tags[]`), both driven by URL query params in `BlogsPage.jsx` (`?category=` / `?tag=` shareable, pagination-safe).
 - Related posts resolve same-destination first, then same-category, then recent.
 - Summaries of other systems stay untouched; slugs reuse `ensureUniqueSlug`.
 

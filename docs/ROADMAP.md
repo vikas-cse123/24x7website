@@ -133,10 +133,29 @@ implemented and verified.
 - [x] Hero real travel imagery + real /faqs page
 - [x] Responsive 320–1440 + regression verification
 
-## Phase 11 — Production
-- [ ] SEO
-- [ ] Performance
-- [ ] Security
+## Phase 19 — Capture A Trip content pages + final public UX gaps
+- [x] About page (/about) — hero, who we are, value prop, why choose us, CTA
+- [x] Contact page (/contact) — info + RHF/Zod form (name/email/phone/message) with validation, success/error (no backend email infra)
+- [x] Legal pages (/privacy-policy, /terms-and-conditions, /cancellation-policy) — readable, mobile/SEO-friendly, footer-linked
+- [x] 404 page — travel-oriented, branded, Home/Trips CTAs, noindex
+- [x] Blog category/tag filtering via URL query params (shareable, pagination-safe, combo with search)
+- [x] Navigation/footer updated, dead placeholders replaced, responsive 320–1440, SEO, build + regression
+
+## Phase 20 — Final production readiness + Capture A Trip clone QA
+- [x] Performance: route lazy loading (React.lazy+Suspense) + manualChunks → initial 53 kB vs 862 kB, no >500 kB chunk
+- [x] SEO audit: og:url + twitter metadata, robots.txt, sitemap.xml, canonical/noindex, filtered URLs noindex-safe
+- [x] Security audit: headers, CORS, cookies, RBAC, owner scoping, ObjectId/Zod, upload 5 MB + image/*, Cloudinary travel-crm/ guard, prod error hiding, no secrets exposed
+- [x] API reliability: consistent 400/401/403/404/409/500, validation, pagination limits, empty/error states
+- [x] Image audit: f_auto/q_auto/srcSet/lazy/fallback retained, no local storage
+- [x] Responsive QA 320–1440 all key pages, no overflow, tappable booking, modals fit
+- [x] Error/empty/loading states, no blank screens
+- [x] Capture A Trip clone QA (header/home/trips/trip/destination/account/blogs)
+- [x] Regression + production build verified, DB safety (no destructive ops)
+
+## Phase 11 — Production (remaining post-20)
+- [x] SEO (Phase 20 complete)
+- [x] Performance (Phase 20 complete)
+- [x] Security (Phase 20 audited/hardened)
 - [ ] Analytics
-- [ ] Error monitoring
-- [ ] Production deployment
+- [ ] Error monitoring (Sentry etc.)
+- [ ] Production deployment (CDN, domain, monitoring)

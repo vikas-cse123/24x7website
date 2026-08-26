@@ -197,6 +197,19 @@ Path alias `@/` maps to `client/src/`.
 - `HeroSection` real Cloudinary hero image via existing `DestinationImage`, gradient overlay, logo fallback
 - New `FaqsPage` reuses `faqApi.list` + `Accordion`
 
+### Phase 19 — Content pages + final UX gaps
+- New pages: `AboutPage.jsx` (hero, who we are, why choose us, CTA, breadcrumbs, SEO), `ContactPage.jsx` (info + RHF+Zod form with Sonner success, breadcrumbs, SEO), `PrivacyPolicyPage.jsx`/`TermsPage.jsx`/`CancellationPolicyPage.jsx` (readable, breadcrumbs, SEO, footer-linked), `NotFoundPage.jsx` (404 with `noindex`, branded CTAs)
+- Routes: `/about`, `/contact`, `/privacy-policy`, `/terms-and-conditions` (alias `/terms` retained), `/cancellation-policy`, `*` → `NotFoundPage`; all under `PublicLayout` in `routes/index.jsx`
+- `BlogsPage.jsx` (`BlogsListing`): added `tag` query param support — `useSearchParams` for `search`/`category`/`tag`/`page`, debounced search, tag input + active chips, `Clear all`, `setPage` preserves filters; queryKey includes `tag`; API calls pass `tag` to `blogApi.list`/`listByDestination`; empty state handles `search||category||tag`; pagination via `setPage` (not `setParams` reset) so filters persist; `BlogDetailPage.jsx` tags link to `?tag=` and category to `?category=`
+- Navigation/footer (`lib/nav.js`): `FOOTER_NAV.legal` corrected to `/terms-and-conditions` + added `/cancellation-policy`; `FOOTER_NAV.destinations/support` expanded to include Blogs/Destinations for discoverability; header `More` already exposed About/Contact/Blogs/FAQs
+- SEO: `useSeo` on all new pages (title/description/canonical); 404 uses `noindex: true`; blogs canonical stays unfiltered to avoid duplicate indexable filter combos
+
+### Phase 20 — Production readiness
+- **Performance**: `routes/index.jsx:1` now lazy-loads 29 pages via `React.lazy` + `Suspense` fallback spinner; `vite.config.js:19` adds `manualChunks` (vendor, vendor-router/query/forms/axios/zustand/icons/ui) so initial JS is ~54 kB + shared vendors, not 862 kB monolith.
+- **SEO**: `lib/seo.js:1` adds `og:url` + `twitter:card/title/description/image`; `client/public/robots.txt` + `client/public/sitemap.xml` (static public URLs only, no /admin/account/booking, filtered query URLs canonicalize to unfiltered root).
+- **Error/loading**: every new Phase 19 page has breadcrumbs, skeletons/empty/error states consistent with existing pages; `RouteFallback` spinner for lazy loading.
+- **Image/perf**: `DestinationImage` lazy + `f_auto/q_auto` + `srcSet` retained; no duplicate fetches; Cloudinary `publicId` paths only.
+
 ## Notifications
 - `NotificationBell` in Header (authenticated only) + MobileNav drawer; unread badge, dropdown, Escape/outside close, mark-read on click, View all → /account/notifications.
 - `notificationApi` in services/account.js; query keys `['notifications', …]`.

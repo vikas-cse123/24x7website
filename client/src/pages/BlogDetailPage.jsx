@@ -115,6 +115,34 @@ export function BlogDetailPage() {
           className="mt-6 aspect-[16/8] w-full rounded-2xl"
         />
 
+        {/* Tags — clickable filters */}
+        {blog.tags && blog.tags.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">Tags:</span>
+            {blog.tags.map((t) => (
+              <Link
+                key={t}
+                to={`/blogs?tag=${encodeURIComponent(t)}`}
+                className="rounded-full border border-input bg-background px-3 py-1 text-xs font-medium hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                #{t}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* Category filter link */}
+        {blog.category && (
+          <div className="mt-3">
+            <Link
+              to={`/blogs?category=${encodeURIComponent(blog.category)}`}
+              className="text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+            >
+              More in {BLOG_CATEGORY_LABELS[blog.category] || blog.category} →
+            </Link>
+          </div>
+        )}
+
         {/* Article body */}
         <div className="mt-8">
           <BlogContentView blocks={blog.content} />

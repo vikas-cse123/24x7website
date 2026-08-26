@@ -28,15 +28,18 @@ export const FOOTER_NAV = {
     { label: 'Popular Destinations', href: '/destinations' },
     { label: 'Group Trips', href: '/trips' },
     { label: 'Upcoming Group Trips', href: '/trips' },
+    { label: 'Travel Blogs', href: '/blogs' },
   ],
   support: [
     { label: 'Travel Blogs', href: '/blogs' },
     { label: 'FAQs', href: '/faqs' },
     { label: 'Contact Us', href: '/contact' },
     { label: 'About Us', href: '/about' },
+    { label: 'Destinations', href: '/destinations' },
   ],
   legal: [
     { label: 'Privacy Policy', href: '/privacy-policy' },
-    { label: 'Terms & Conditions', href: '/terms' },
+    { label: 'Terms & Conditions', href: '/terms-and-conditions' },
+    { label: 'Cancellation Policy', href: '/cancellation-policy' },
   ],
 }

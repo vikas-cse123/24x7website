@@ -191,12 +191,11 @@ Legacy (pre-phase) planned endpoints below:
 - `POST /api/reviews` — submit review (customer)
 - `PATCH /api/reviews/:id` — moderate (admin)
 
-### Blogs (`/api/blogs`)
-- `GET /api/blogs` — list published blogs
-- `GET /api/blogs/:slug` — blog detail
-- `POST /api/blogs` — create (admin)
-- `PATCH /api/blogs/:id` — update (admin)
-- `DELETE /api/blogs/:id` — delete (admin)
+### Blogs (`/api/blogs`) — IMPLEMENTED
+- `GET /api/blogs` — list published blogs. Query: `page` (1 default, 9 default limit), `limit` (max 50), `search` (title/excerpt/tags + destination name/country), `category` (one of `travel-guide | things-to-do | places-to-visit | trekking | shopping`), `tag` (exact tag match against `tags[]`), `destination` (slug), `featured` (true/false). Response `{ success, data: { items, page, limit, total, totalPages } }`. Client `BlogsPage` drives `category`/`tag`/`search`/`page` via URL query params (shareable, pagination-safe).
+- `GET /api/blogs/destination/:destinationSlug` — same filters plus destination scoping; 404 if destination unknown.
+- `GET /api/blogs/:slug` — blog detail (published only, 404 otherwise) plus `related` (same destination → same category → recent, limit 3).
+- `POST /api/blogs` / `PATCH /api/blogs/:id` / `DELETE /api/blogs/:id` — admin (via `/api/admin/blogs`) with publish/unpublish.
 
 ### Trip Media (`/api/trips/:tripId/media` + `/api/admin/media`) — IMPLEMENTED
 - `GET /api/trips/:tripId/media?mediaType=photo|video` — published traveler media
@@ -280,6 +279,14 @@ role (`requireRole('admin')`). Unauthenticated → 401; authenticated non-admin 
 Batch metrics are real counts: `upcomingBatches` = published open/full batches
 departing in the future; `openBatches` / `fullBatches` = all batches currently
 in those statuses.
+
+## Security & production notes (Phase 20)
+
+- All `/api/admin/*` behind `requireAuth` + `requireRole(...ADMIN_ROLES)` (`admin.routes.js:18`); owner scoping on `account`/`wishlist`/`notifications`/`bookings`/`travellers`/`reviews`.
+- Validation: Zod schemas + `validate()` middleware; ObjectId regex checks; pagination `max 50` (public) / `100` (admin); image uploads `fileFilter image/*` + `5 MB` limit (`middleware/upload.js:12`); Cloudinary deletion guarded by `travel-crm/` prefix (`upload.controller.js:32`).
+- Headers: `X-Content-Type-Options`, `X-Frame-Options DENY`, `Referrer-Policy`, `Permissions-Policy`, `HSTS` in prod + `CORS credentials:true` allowlist + `cookie httpOnly/secure/sameSite` (`app.js:8`, `config/index.js:21`).
+- Errors: `errorHandler` returns safe 500 in prod (`middleware/error.js:9`, `config.isProduction`), preserves validation `errors` array, never leaks stack/DB internals.
+- SEO: `robots.txt` disallows `/admin/account/booking/api`, `sitemap.xml` lists only indexable public URLs (filtered query URLs canonicalize, not sitemapped).
 
 ## Update policy
 

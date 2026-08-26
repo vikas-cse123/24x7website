@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Static public pages — only indexable URLs; never include /admin, /account, /booking, or filtered query URLs -->
+  <url><loc>https://24x7chhutti.com/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://24x7chhutti.com/destinations</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://24x7chhutti.com/trips</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://24x7chhutti.com/blogs</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://24x7chhutti.com/faqs</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://24x7chhutti.com/about</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://24x7chhutti.com/contact</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://24x7chhutti.com/privacy-policy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://24x7chhutti.com/terms-and-conditions</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://24x7chhutti.com/cancellation-policy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <!-- Dynamic destination/trip/blog URLs are not enumerated here; they are discovered via
+       public APIs (/api/destinations, /api/trips, /api/blogs) and should be added by a
+       build-time generator that fetches slugs when deploying to production. Example:
+       https://24x7chhutti.com/destination/:slug, /trip/:slug, /blog/:slug -->
+</urlset>

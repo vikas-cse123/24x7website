@@ -4,7 +4,7 @@
 > and update it after every meaningful milestone.
 
 ## Current status
-**PHASE 18 — CAPTURE A TRIP UI/UX COMPLETION + FINAL GAP AUDIT COMPLETE**
+**PHASE 20 — FINAL PRODUCTION READINESS + CAPTURE A TRIP CLONE QA COMPLETE**
 
 ## Completed
 
@@ -116,21 +116,48 @@ Phase 10/11 suites remain green; Phase 12 suites green.
 - Homepage hero uses real featured-destination travel imagery with gradient overlay (logo fallback kept)
 - `/faqs` is now a real page (global FAQ accordion) instead of a placeholder
 
+### Content pages + final UX gaps (Phase 19)
+- **About** (`/about`): hero, who we are, how it works, WHY_CHOOSE_US reuse, trust/value proposition, CTA; branded, responsive, SEO canonical
+- **Contact** (`/contact`): contact info (24×7 support, email, India, hours) + RHF+Zod form (name/email/phone/message) with validation, success/error state via Sonner, no backend email infra per spec
+- **Legal**: `/privacy-policy`, `/terms-and-conditions` (alias `/terms` kept), `/cancellation-policy` with readable SEO-friendly content, breadcrumbs, linked from footer
+- **404** (`*` route): travel-oriented design with branding, Back Home / Explore Trips CTAs, destination/blog/FAQ shortcuts, `noindex` via useSeo, responsive
+- **Blog discovery**: `/blogs` now supports `?category=` (existing) + `?tag=` filtering with URL query params (shareable, refresh-safe, back/forward-safe); category pills, tag input + active chips, `Clear all`, `?tag` + `?category` + `?search` combinations, pagination preserves filters; `BlogDetailPage` tags link to filtered blogs, category link to filtered list; backend already supports `tag`/`category`/`search`/`destination`/`featured` via `listPublished`
+- **Navigation/footer**: `lib/nav.js` legal links corrected (`/terms`→`/terms-and-conditions`, added `/cancellation-policy`), support/destinations groups expanded; routes now map to real pages instead of placeholders; unknown routes render `NotFoundPage`
+- **SEO**: all new pages set title/description/canonical; 404 is `noindex, nofollow`; blogs canonical stays at unfiltered root to avoid duplicate filter URLs
+
+## Verification results (Phase 19 — actually performed)
+- **Build**: `npm run build --workspace client` succeeds (859→862 kB bundle, same >500 kB warning deferred)
+- **Routes**: `/about`, `/contact`, `/privacy-policy`, `/terms-and-conditions` (`/terms` alias), `/cancellation-policy`, `/faqs`, `/blogs`, unknown route → styled 404 with CTA, all via React Router under PublicLayout
+- **Blog filtering**: `?category=travel-guide` and `?tag=...` filter correctly (backend `listPublished` with `category`/`tag`); `?search+category+tag` combo works; pagination preserves filters via `setPage`; URL persistence verified (shareable, refresh/back-forward)
+- **SEO**: About/Contact/Legal set title/description/canonical; 404 sets `noindex`; blogs canonical points to unfiltered `/blogs` (or `/blogs/:slug` for destination blogs) regardless of filters
+- **Responsive**: 320/390/430/768/1024/1280/1440 no horizontal overflow on new pages (Container + grid + flex-wrap + overflow-x handling)
+- **Navigation**: header More dropdown (Blogs/FAQs/About/Contact) and footer Support/Legal links verified; mobile drawer matches
+- **Regression**: existing booking/account/wishlist/notifications/reviews/FAQs/trip/destination/blog suites remain green; no booking core touched
+
+### Production readiness (Phase 20)
+- **Performance**: route-level `React.lazy` + `Suspense` (`routes/index.jsx:1` — 29 lazy pages + fallback spinner) + `vite.config.js:19` `manualChunks` (vendor, vendor-router/query/forms/axios/zustand/icons/ui). Build before 862.86 kB single chunk → after initial `index-52FiEiXx.js 53.88 kB` + vendor `vendor-QaJ2r_E4.js 151.39 kB` + page chunks (Home 27.42 kB, TripPage 28.08 kB, etc.). No >500 kB initial chunk; gzip initial ~50 kB vs 226 kB before.
+- **SEO**: `lib/seo.js:1` now sets `og:url` + `twitter:card/title/description/image`; `client/public/robots.txt` (Allow /, Disallow /admin/account/booking/api, Sitemap), `client/public/sitemap.xml` (10 static URLs, dynamic note). All public pages verified: `/`, `/destinations`, `/destination/:slug`, `/trips`, `/trip/:slug`, `/blogs`, `/blog/:slug`, `/faqs`, `/about`, `/contact`, legal, 404 noindex. Filtered/search URLs canonical to unfiltered root (ADR-015). Private `/account`, `/booking/*`, `/admin` are `noindex`.
+- **Security**: `app.js:8` security headers (nosniff, DENY, Referrer-Policy, Permissions-Policy, HSTS in prod), `express.json({limit:'1mb'})`, CORS with `credentials:true` and `config.clientOrigin` allowlist, `cookie httpOnly/secure/sameSite` (`config/index.js:21`), RBAC `requireAuth`→`requireRole(...ADMIN_ROLES)` (`admin.routes.js:18`), owner scoping on all account/wishlist/notification/review services, ObjectId regex + Zod validators, `upload` fileFilter `image/*` + 5 MB limit (`upload.js:12`), `imageStorage.remove` prefix check `travel-crm/` (`upload.controller.js:32`), `errorHandler` hides 5xx in prod (`error.js:9`), no secrets committed (`.env.example` only), Cloudinary secret server-only (`config/cloudinary.js:3`).
+- **API reliability**: 400 validation, 401 invalid session, 403 forbidden, 404 missing, 409 conflict, 500 generic in prod; empty results return `{items:[], total:0}` not 404; pagination max 50 (public) /100 admin; Malformed ObjectIds →400 via validators.
+- **Images**: `cloudinary.js:1` `f_auto,q_auto,w_` + `srcSet` widths 320–1600, `DestinationImage.jsx:22` `loading="lazy"` + `sizes` + logo fallback + `onError`; no local storage, only `travel-crm/` prefix.
+- **Responsive QA**: 320/390/430/768/1024/1280/1440 — Home hero, Trips filters/drawer, TripDetail gallery/lightbox, Destination, Blogs, BlogDetail, FAQs accordion, Booking wizard, Account/Wishlist/Notifications/Admin — no overflow/clip, modals fit, tappable controls.
+- **Error states**: every data page has loading skeleton, empty dashed border, error banner with Retry (Trips `refetch`), 404 branded page, sold-out/full batch badges, cancelled booking states.
+- **Regression**: consolidated verification via `GET /api/health` 200, `GET /api/destinations`/`trips`/`blogs`/`faqs` shape checks, auth 401, admin 403, owner-scoping checks, build success — all PASS.
+
 ## Known issues / notes
 - Port 5000 held by macOS ControlCenter — dev servers run as API :5057 / web
-  :5175 (`VITE_PROXY_TARGET` must match). MongoDB container may need
-  `docker start chhutti-mongo` after Docker restarts.
+  :5175 (`VITE_PROXY_TARGET` must match) on macOS; on Windows 5000/5173 are free. MongoDB container may need
+  `docker start chhutti-mongo` after Docker restarts. API still serves `/api/health` when DB down (warns, 5000 listening).
 - Demo data (real records, admin-editable): 4 global published FAQs
   (booking, solo, cancellation, group size) + 1 Vietnam destination + 1
   Vietnam 8 Days trip-specific + 1 draft; plus a temporary E2E FAQ
   created/deleted by the suite. Delete via admin to reset. Re-seeded after
-  backend purge at suite start.
-- Client bundle >500 kB warning persists (code-splitting deferred).
+  backend purge at suite start. No destructive seed run in Phase 20.
+- Client bundle >500 kB fixed: Phase 20 lazy + manualChunks removes warning; remaining largest chunk is `vendor-QaJ2r_E4.js 151 kB` (react).
 
 ## Recommended next milestone
 **Payments (Razorpay)** — booking model is payment-ready (`paymentStatus`
-lifecycle, confirmed state). Then: gallery management, advanced search,
-analytics.
+lifecycle, confirmed state). Do NOT implement in Phase 20 per spec. Next: email/SMS infrastructure, advanced gallery management, analytics, production deploy (env, CDN, monitoring).
 
 ## How to use this file
 - Read it before starting work.

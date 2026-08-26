@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /account/
+Disallow: /booking/
+Disallow: /api/
+
+Sitemap: https://24x7chhutti.com/sitemap.xml
