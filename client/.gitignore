@@ -1,0 +1,11 @@
+# Build
+node_modules/
+
+# Vite
+dist/
+.vite/
+
+# Environment
+.env
+.env.local
+.env.*.local
