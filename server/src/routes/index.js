@@ -10,6 +10,7 @@ import reviewRouter from './review.routes.js'
 import blogRouter from './blog.routes.js'
 import faqRouter from './faq.routes.js'
 import tripMediaRouter from './tripMedia.routes.js'
+import enquiryRouter from './enquiry.routes.js'
 
 const router = Router()
 
@@ -23,6 +24,7 @@ router.use('/account', accountRouter)
 router.use('/reviews', reviewRouter)
 router.use('/blogs', blogRouter)
 router.use('/faqs', faqRouter)
+router.use('/enquiries', enquiryRouter)
 router.use('/', tripMediaRouter)
 
 export default router

@@ -121,9 +121,24 @@ Manage bookings at `/admin/bookings`:
 - Destinations, Trips, Upcoming/Open/Full Batches, Total/Pending/Confirmed
   Bookings, Payment Pending, Enquiries.
 
-Values come from `GET /api/admin/dashboard`. All metrics except enquiries are
-real database counts — **no fabricated statistics**. Loading (skeleton), error,
-and empty states are handled.
+Values come from `GET /api/admin/dashboard`. All metrics are real database
+counts (including enquiries since Phase 27) — **no fabricated statistics**.
+Loading (skeleton), error, and empty states are handled.
+
+## Enquiries — IMPLEMENTED (Phase 27)
+
+`/admin/enquiries` (`AdminEnquiriesPage`) shows custom-trip / website lead
+requests submitted through the public "Plan Your Dream Trip" modal and the
+contact channel:
+
+- Each card shows the lead's name, destination (from the snapshot +
+  populated destination), phone, email, source badge (Custom trip), status
+  badge, and created date.
+- Inline status dropdown (`new` → `in-progress` → `resolved`) updates the
+  record via `PATCH /api/admin/enquiries/:id/status`.
+- Filters: status, source, and search (name/email/phone/destination).
+- Delete with confirmation (`DELETE /api/admin/enquiries/:id`).
+- RBAC unchanged: `/api/admin/*` requires auth + admin role (401/403).
 
 ## Destinations — IMPLEMENTED
 
@@ -238,6 +253,7 @@ added without restructuring.
   management** (list/create/edit/publish/unpublish/delete with itinerary,
   inclusions/exclusions, FAQs), **trip batch management** (departure CRUD,
   pricing, capacity, booking window, status workflow, publish/unpublish,
-  delete safety), destination + trip + trip-batch admin APIs.
-- **Planned (placeholders):** Bookings, Customers, Enquiries, Reviews, Blogs,
+  delete safety), destination + trip + trip-batch admin APIs, **enquiries**
+  (list/status/delete for custom-trip leads, Phase 27).
+- **Planned (placeholders):** Bookings, Customers, Reviews, Blogs,
   FAQs, Coupons, Media, Users, Settings.

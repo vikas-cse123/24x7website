@@ -8,6 +8,7 @@ import { DestinationImage } from '@/components/destinations/DestinationImage'
 import { tripApi } from '@/services/trips'
 import { TRIP_TYPE_LABELS } from '@/schemas/trip'
 import { formatDateShort } from '@/lib/dates'
+import { StarRating } from '@/components/reviews/StarRating'
 
 const LIMIT = 30
 
@@ -18,12 +19,20 @@ function getCardPricing(trip) {
   if (batches.length === 0) return null
   const cheapest = batches.reduce((min, b) => (Number(b.price) < Number(min.price) ? b : min), batches[0])
   const hasDiscount = cheapest.originalPrice != null && cheapest.discountAmount != null
+  const soldOut = cheapest.availableSeats != null && Number(cheapest.availableSeats) <= 0
+  const scarce =
+    !soldOut &&
+    cheapest.totalSeats != null &&
+    cheapest.availableSeats != null &&
+    Number(cheapest.availableSeats) > 0 &&
+    Number(cheapest.availableSeats) <= Math.max(1, Math.ceil(Number(cheapest.totalSeats) * 0.2))
   return {
     price: Number(cheapest.price),
     originalPrice: hasDiscount ? Number(cheapest.originalPrice) : null,
     discountAmount: hasDiscount ? Number(cheapest.discountAmount) : null,
     currency: cheapest.currency || 'INR',
     dates: batches.map((b) => formatDateShort(b.departureDate)),
+    availability: soldOut ? 'Sold out' : scarce ? `Only ${cheapest.availableSeats} seats left` : null,
   }
 }
 
@@ -57,6 +66,17 @@ export function HomepageTripCard({ trip }) {
             {TRIP_TYPE_LABELS[trip.tripType] || trip.tripType}
           </span>
         )}
+        {pricing?.availability && (
+          <span
+            className={`absolute bottom-2.5 left-2.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+              pricing.availability === 'Sold out'
+                ? 'bg-destructive text-destructive-foreground'
+                : 'bg-amber-100 text-amber-700'
+            }`}
+          >
+            {pricing.availability}
+          </span>
+        )}
       </div>
 
       <div className="p-4">
@@ -68,6 +88,18 @@ export function HomepageTripCard({ trip }) {
         <h3 className="mt-1.5 line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-foreground group-hover:text-primary">
           {trip.name}
         </h3>
+
+        {trip.ratingSummary?.total > 0 && (
+          <p className="mt-1.5 flex items-center gap-1.5">
+            <StarRating value={trip.ratingSummary.average} />
+            <span className="text-xs font-semibold text-foreground">
+              {Number(trip.ratingSummary.average).toFixed(1)}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              ({trip.ratingSummary.total})
+            </span>
+          </p>
+        )}
 
         {/* Price hierarchy */}
         <div className="mt-2">

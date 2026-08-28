@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
@@ -124,6 +125,7 @@ export function LoginModal({ open, onOpenChange }) {
               sendingOtp={sendingOtp}
               phoneValid={phoneValid}
               onSendOtp={handleSendOtp}
+              onNavigate={close}
             />
           ) : (
             <OtpStep
@@ -147,7 +149,7 @@ export function LoginModal({ open, onOpenChange }) {
   )
 }
 
-function PhoneStep({ form, sendingOtp, phoneValid, onSendOtp }) {
+function PhoneStep({ form, sendingOtp, phoneValid, onSendOtp, onNavigate }) {
   const {
     register,
     handleSubmit,
@@ -200,13 +202,21 @@ function PhoneStep({ form, sendingOtp, phoneValid, onSendOtp }) {
         />
         <span>
           I agree to the{' '}
-          <a href="#" className="font-medium text-primary hover:underline">
+          <Link
+            to="/terms-and-conditions"
+            onClick={onNavigate}
+            className="font-medium text-primary hover:underline"
+          >
             Terms &amp; Conditions
-          </a>{' '}
+          </Link>{' '}
           and{' '}
-          <a href="#" className="font-medium text-primary hover:underline">
+          <Link
+            to="/privacy-policy"
+            onClick={onNavigate}
+            className="font-medium text-primary hover:underline"
+          >
             Privacy Policy
-          </a>
+          </Link>
         </span>
       </label>
       {errors.terms && (

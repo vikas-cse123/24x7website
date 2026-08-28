@@ -1,35 +1,8 @@
 import * as React from 'react'
-import { X, ChevronLeft, ChevronRight, Images } from 'lucide-react'
+import { Images } from 'lucide-react'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
-import { resolveImageSrc } from '@/lib/cloudinary'
+import { Lightbox } from '@/components/ui/lightbox'
 import { cn } from '@/lib/utils'
-
-function Lightbox({ images, index, onClose, onPrev, onNext }) {
-  React.useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose()
-      if (e.key === 'ArrowLeft') onPrev()
-      if (e.key === 'ArrowRight') onNext()
-    }
-    document.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
-  }, [onClose, onPrev, onNext])
-
-  const img = images[index]
-  const src = resolveImageSrc(img, { w: 1600 }) || img.url || img.secureUrl
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={onClose}>
-      <button onClick={onClose} aria-label="Close" className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"><X className="h-6 w-6" /></button>
-      <button onClick={(e)=>{e.stopPropagation(); onPrev()}} aria-label="Previous" className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white hover:bg-white/20 sm:left-4"><ChevronLeft className="h-6 w-6" /></button>
-      <img src={src} alt={img.alt || img.altText || ''} className="max-h-[85vh] max-w-[90vw] object-contain" onClick={e=>e.stopPropagation()} loading="lazy" />
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs text-white">{index+1} / {images.length}</div>
-      <button onClick={(e)=>{e.stopPropagation(); onNext()}} aria-label="Next" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white hover:bg-white/20 sm:right-4"><ChevronRight className="h-6 w-6" /></button>
-    </div>
-  )
-}
 
 export function TripGallery({ heroImage, gallery = [], tripName }) {
   const allImages = [heroImage, ...gallery].filter(Boolean).filter(i => i.url || i.secureUrl || i.publicId)

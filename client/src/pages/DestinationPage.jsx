@@ -1,10 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { useParams, Link } from 'react-router-dom'
+import * as React from 'react'
 import { MapPin, IndianRupee, ArrowLeft, HelpCircle } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
+import { DestinationCard } from '@/components/destinations/DestinationCard'
 import { TripCard } from '@/components/trips/TripCard'
 import { Accordion } from '@/components/ui/accordion'
+import { Lightbox } from '@/components/ui/lightbox'
+import { PlanTripTrigger } from '@/components/enquiry/PlanTripTrigger'
 import { destinationApi } from '@/services/destinations'
 import { tripApi } from '@/services/trips'
 import { faqApi } from '@/services/faqs'
@@ -12,6 +16,7 @@ import { useSeo, destinationSeoTitle } from '@/lib/seo'
 
 export function DestinationPage() {
   const { slug } = useParams()
+  const [galleryIndex, setGalleryIndex] = React.useState(null)
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['destinations', 'slug', slug],
@@ -109,7 +114,7 @@ export function DestinationPage() {
           )}
 
           {destination.description && (
-            <div className="mt-6 space-y-3 text-foreground/90">
+            <div className="mt-6 space-y-3 whitespace-pre-line text-foreground/90">
               <p>{destination.description}</p>
             </div>
           )}
@@ -136,6 +141,15 @@ export function DestinationPage() {
           >
             Browse trips
           </Link>
+
+          {/* Custom-trip lead CTA — preselects this destination. */}
+          <PlanTripTrigger
+            destinationId={destination.id}
+            variant="outline"
+            className="mt-3 w-full"
+          >
+            Plan Your Dream Trip
+          </PlanTripTrigger>
         </aside>
       </div>
 
@@ -174,20 +188,39 @@ export function DestinationPage() {
       {/* FAQs */}
       <DestinationFaqs slug={destination.slug} name={destination.name} />
 
+      {/* Related destinations — same market category, real data only */}
+      <RelatedDestinations category={destination.category} currentSlug={destination.slug} />
+
       {/* Gallery */}
       {destination.gallery && destination.gallery.length > 0 && (
         <div className="mt-10">
           <h2 className="mb-4 text-xl font-semibold">Gallery</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {destination.gallery.map((img, i) => (
-              <DestinationImage
+              <button
                 key={i}
-                src={img.url}
-                alt={img.alt || `${destination.name} ${i + 1}`}
-                className="aspect-square w-full"
-              />
+                type="button"
+                onClick={() => setGalleryIndex(i)}
+                aria-label={`View image ${i + 1} of ${destination.gallery.length}`}
+                className="overflow-hidden rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <DestinationImage
+                  image={img}
+                  alt={img.alt || `${destination.name} ${i + 1}`}
+                  className="aspect-square w-full transition-transform duration-300 hover:scale-[1.03]"
+                />
+              </button>
             ))}
           </div>
+          {galleryIndex !== null && (
+            <Lightbox
+              images={destination.gallery}
+              index={galleryIndex}
+              onClose={() => setGalleryIndex(null)}
+              onPrev={() => setGalleryIndex((i) => (i - 1 + destination.gallery.length) % destination.gallery.length)}
+              onNext={() => setGalleryIndex((i) => (i + 1) % destination.gallery.length)}
+            />
+          )}
         </div>
       )}
     </Container>
@@ -222,6 +255,51 @@ function DestinationFaqs({ slug, name }) {
       </h2>
       <div className="mt-4">
         <Accordion items={items} />
+      </div>
+    </div>
+  )
+}
+
+// Real destinations in the same market category (never fabricated). Hidden when
+// there is no meaningful set of peers.
+function RelatedDestinations({ category, currentSlug }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['destinations', 'related', category],
+    queryFn: () => destinationApi.list({ category, limit: 8 }),
+    enabled: !!category,
+    staleTime: 60_000,
+  })
+
+  const related = (data?.data?.data?.items || []).filter((d) => d.slug !== currentSlug).slice(0, 4)
+  if (isLoading) {
+    return (
+      <div className="mt-10">
+        <div className="h-6 w-40 animate-pulse rounded bg-muted" />
+        <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-64 animate-pulse rounded-xl bg-muted" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+  if (related.length < 2) return null
+
+  return (
+    <div className="mt-12">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Similar destinations</h2>
+        <Link
+          to="/destinations"
+          className="text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+        >
+          View all destinations
+        </Link>
+      </div>
+      <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {related.map((d) => (
+          <DestinationCard key={d.id} destination={d} />
+        ))}
       </div>
     </div>
   )

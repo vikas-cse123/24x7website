@@ -14,8 +14,26 @@ async function start() {
     )
   }
 
-  app.listen(config.port, () => {
+  const server = app.listen(config.port)
+
+  server.on('listening', () => {
     console.log(`24x7Chhutti API running on http://localhost:${config.port}`)
+  })
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(
+        `\n` +
+          `ERROR: Port ${config.port} is already in use.\n\n` +
+          `Another backend process (or another service) is already listening on port ${config.port}.\n` +
+          `Check what is using it:\n\n` +
+          `  lsof -i :${config.port}\n\n` +
+          `If it is a stale Node.js process from a previous dev session, stop it first,\n` +
+          `then restart this server. Do NOT start a second backend on the same port.\n`
+      )
+      process.exit(1)
+    }
+    throw err
   })
 }
 

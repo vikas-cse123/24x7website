@@ -10,7 +10,7 @@ export function PromoBanner() {
   if (!PROMO_BANNER_CONFIG.enabled || dismissed) return null
 
   return (
-    <div className="bg-primary text-primary-foreground">
+    <div className="relative bg-primary text-primary-foreground">
       <div className="container mx-auto flex items-center justify-center gap-2 px-4 py-2 text-center text-xs font-medium sm:text-sm">
         <Megaphone className="h-4 w-4 shrink-0" aria-hidden="true" />
         <span>{PROMO_BANNER_CONFIG.text}</span>

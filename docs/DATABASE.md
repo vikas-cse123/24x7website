@@ -237,11 +237,22 @@ Indexes: unique `bookingCode`; unique `{ userId, idempotencyKey }` (partial);
 > remain; cancelling releases them atomically. See
 > `docs/BOOKING_SYSTEM.md` and ADR-016.
 
-### Enquiry
-A contact / quote request.
-- `name`, `email`, `phone`, `message`
-- `tripId`? (optional reference)
-- `status` (e.g. `new`, `in-progress`, `resolved`)
+### Enquiry — IMPLEMENTED (Phase 27)
+`server/src/models/Enquiry.js`. A contact / custom-trip / quote request from a
+website visitor (public lead, no login required).
+
+| Field | Notes |
+| ----- | ----- |
+| `name` / `email` / `phone` | required, trimmed; phone is a 10-digit Indian mobile (`6-9` prefix), `countryCode` defaults `+91` |
+| `destinationId` | ref → published Destination (validated server-side; snapshot stored in `destinationName`) |
+| `destinationName` | snapshot of the destination name at submission time |
+| `source` | channel enum: `website \| custom_trip \| contact_form \| trip_page \| destination_page`, default `website`; the "Plan Your Dream Trip" modal uses `custom_trip` |
+| `message` | optional free text |
+| `status` | `new \| in-progress \| resolved`, default **new** (admin triage) |
+| `userId` | optional ref — set when an authenticated visitor submits (attribution; admin-only, never exposed publicly) |
+
+Indexes: `{ status, createdAt }`, `source`, `destinationId`. Admin triage is
+covered in `docs/ADMIN.md`; API in `docs/API.md`.
 
 ### Review — IMPLEMENTED
 `server/src/models/Review.js`. A moderated, verified review written by a user

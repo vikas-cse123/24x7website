@@ -33,6 +33,7 @@ export function HeroSection() {
             alt=""
             className="h-full w-full"
             width={1600}
+            loading="eager"
           />
         ) : (
           <img src="/logo.jpg" alt="" loading="eager" className="h-full w-full object-cover opacity-[0.06]" />

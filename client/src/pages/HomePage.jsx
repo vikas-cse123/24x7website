@@ -3,6 +3,7 @@ import { HeroSection } from '@/components/home/HeroSection'
 import { CommunityStats } from '@/components/home/CommunityStats'
 import { DestinationExplorer } from '@/components/home/DestinationExplorer'
 import { UpcomingTripsSection } from '@/components/home/UpcomingTripsSection'
+import { PlanTripCta } from '@/components/home/PlanTripCta'
 import { BookWithConfidence } from '@/components/home/BookWithConfidence'
 import { WhyChooseUs } from '@/components/home/WhyChooseUs'
 import { TrendingDestinations } from '@/components/home/TrendingDestinations'
@@ -20,6 +21,7 @@ const SECTIONS = {
   communityStats: <CommunityStats />,
   destinationExplorer: <DestinationExplorer />,
   upcomingTrips: <UpcomingTripsSection />,
+  planTripCta: <PlanTripCta />,
   bookWithConfidence: <BookWithConfidence />,
   whyChooseUs: <WhyChooseUs />,
   trendingDestinations: <TrendingDestinations />,

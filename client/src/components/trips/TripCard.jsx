@@ -3,6 +3,7 @@ import { MapPin, IndianRupee, CalendarDays, Clock3 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
 import { WishlistButton } from '@/components/wishlist/WishlistButton'
+import { StarRating } from '@/components/reviews/StarRating'
 import { TRIP_TYPE_LABELS } from '@/schemas/trip'
 import { formatDateShort } from '@/lib/dates'
 
@@ -115,6 +116,18 @@ export function TripCard({ trip }) {
               <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               {trip.destination.name}
               {trip.destination.country ? `, ${trip.destination.country}` : ''}
+            </p>
+          )}
+
+          {trip.ratingSummary?.total > 0 && (
+            <p className="mt-1.5 flex items-center gap-1.5">
+              <StarRating value={trip.ratingSummary.average} />
+              <span className="text-xs font-semibold text-foreground">
+                {Number(trip.ratingSummary.average).toFixed(1)}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                ({trip.ratingSummary.total})
+              </span>
             </p>
           )}
 

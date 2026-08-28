@@ -50,6 +50,7 @@ const AdminBlogFormPage = React.lazy(() => import('@/pages/admin/AdminBlogFormPa
 const AdminMediaPage = React.lazy(() => import('@/pages/admin/AdminMediaPage').then(m => ({ default: m.AdminMediaPage })))
 const AdminFaqsPage = React.lazy(() => import('@/pages/admin/AdminFaqsPage').then(m => ({ default: m.AdminFaqsPage })))
 const AdminFaqFormPage = React.lazy(() => import('@/pages/admin/AdminFaqFormPage').then(m => ({ default: m.AdminFaqFormPage })))
+const AdminEnquiriesPage = React.lazy(() => import('@/pages/admin/AdminEnquiriesPage').then(m => ({ default: m.AdminEnquiriesPage })))
 
 function RouteFallback() {
   return (
@@ -158,7 +159,7 @@ export function AppRoutes() {
           <Route path="bookings" element={<AdminBookingsPage />} />
           <Route path="bookings/:id" element={<AdminBookingDetailPage />} />
           <Route path="customers" element={adminPlaceholder('Customers')} />
-          <Route path="enquiries" element={adminPlaceholder('Enquiries')} />
+          <Route path="enquiries" element={<AdminEnquiriesPage />} />
           <Route path="reviews" element={<AdminReviewsPage />} />
           <Route path="blogs" element={<AdminBlogsPage />} />
           <Route path="blogs/new" element={<AdminBlogFormPage mode="create" />} />

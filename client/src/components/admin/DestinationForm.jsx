@@ -123,7 +123,7 @@ export function DestinationForm({ initialValues, isSubmitting, submitLabel, onSu
           <div>
             <Label>Hero image</Label>
             <div className="mt-1.5">
-              <ImageUploader value={watch('heroImage')} onChange={(v)=> setValue('heroImage', {...(watch('heroImage')||{}), ...v, alt: v.alt || watch('heroImage.alt')}, {shouldValidate:true, shouldDirty:true})} folder="destinations" />
+              <ImageUploader value={watch('heroImage')} onChange={(v)=> setValue('heroImage', {...(watch('heroImage')||{}), ...v, alt: v.alt || watch('heroImage.alt')}, {shouldValidate:true, shouldDirty:true})} folder="destination-media" />
             </div>
             <div className="mt-2">
               <Input placeholder="Alt text for hero image" {...register('heroImage.alt')} />
@@ -133,7 +133,7 @@ export function DestinationForm({ initialValues, isSubmitting, submitLabel, onSu
           <div>
             <Label>Gallery</Label>
             <div className="mt-1.5">
-              <ImageUploader value={watch('gallery')||[]} onChange={(v)=> setValue('gallery', v, {shouldValidate:true, shouldDirty:true})} multiple folder="destinations" />
+              <ImageUploader value={watch('gallery')||[]} onChange={(v)=> setValue('gallery', v, {shouldValidate:true, shouldDirty:true})} multiple folder="destination-media" />
             </div>
           </div>
         </div>

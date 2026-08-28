@@ -217,7 +217,7 @@ export function BlogForm({ initialValues, destinations = [], isSubmitting, submi
           <div>
             <Label>Cover image</Label>
             <div className="mt-1.5">
-              <ImageUploader value={watch('coverImage')} onChange={(v)=> setValue('coverImage', {...(watch('coverImage')||{}), ...v, alt: v.alt || watch('coverImage.alt')}, {shouldValidate:true, shouldDirty:true})} folder="blogs" />
+              <ImageUploader value={watch('coverImage')} onChange={(v)=> setValue('coverImage', {...(watch('coverImage')||{}), ...v, alt: v.alt || watch('coverImage.alt')}, {shouldValidate:true, shouldDirty:true})} folder="blog-media" />
             </div>
             <div className="mt-2"><Input placeholder="Alt text" {...register('coverImage.alt')} /></div>
           </div>

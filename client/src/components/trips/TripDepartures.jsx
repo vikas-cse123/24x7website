@@ -84,15 +84,20 @@ function DepartureSkeleton() {
 
 // Real upcoming departures for a trip (published, open/full, future — enforced
 // server-side, sorted by earliest departure).
-export function TripDepartures({ trip }) {
-  const { data, isLoading, isError } = useQuery({
+// `batches`/`isLoading` may be passed in by a parent that already loaded the
+// same query (TripPage), so the data is fetched once and shared.
+export function TripDepartures({ trip, batches, isLoading: isLoadingProp, isError: isErrorProp }) {
+  const ownQuery = useQuery({
     queryKey: ['trip-batches', trip.id],
     queryFn: () => tripBatchApi.listByTrip(trip.id),
     retry: false,
     staleTime: 30_000,
+    enabled: batches === undefined,
   })
 
-  const batches = data?.data?.data?.items || []
+  const isLoading = isLoadingProp ?? ownQuery.isLoading
+  const isError = isErrorProp ?? ownQuery.isError
+  const list = batches ?? ownQuery.data?.data?.data?.items ?? []
 
   if (isLoading) return <DepartureSkeleton />
 
@@ -100,9 +105,9 @@ export function TripDepartures({ trip }) {
     <div>
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-xl font-semibold">Upcoming departures</h2>
-        {batches.length > 0 && (
+        {list.length > 0 && (
           <p className="hidden text-xs text-muted-foreground sm:block">
-            Next: {formatDateShort(batches[0].departureDate)}
+            Next: {formatDateShort(list[0].departureDate)}
           </p>
         )}
       </div>
@@ -111,13 +116,13 @@ export function TripDepartures({ trip }) {
         <p className="mt-4 rounded-xl border border-destructive/40 p-6 text-center text-sm text-destructive">
           Could not load departures.
         </p>
-      ) : batches.length === 0 ? (
+      ) : list.length === 0 ? (
         <p className="mt-4 rounded-xl border border-dashed border-border bg-muted/30 p-8 text-center text-sm text-muted-foreground">
           No upcoming departures scheduled yet. Check back soon.
         </p>
       ) : (
         <div className="mt-4 space-y-3">
-          {batches.map((batch) => (
+          {list.map((batch) => (
             <DepartureRow key={batch.id} batch={batch} tripSlug={trip.slug} />
           ))}
         </div>

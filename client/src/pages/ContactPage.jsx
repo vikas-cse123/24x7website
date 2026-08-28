@@ -83,8 +83,8 @@ export function ContactPage() {
                 <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-muted text-primary"><Mail className="h-4 w-4" /></span>
                 <span>
                   <span className="font-medium">Email</span><br />
-                  <span className="text-muted-foreground">support@24x7chhutti.com</span>
-                  <span className="block text-xs text-muted-foreground/80">(replies within 24 hours)</span>
+                  <span className="text-muted-foreground">Email support coming soon</span>
+                  <span className="block text-xs text-muted-foreground/80">Use the form below and we will reply to your email.</span>
                 </span>
               </li>
               <li className="flex gap-3">

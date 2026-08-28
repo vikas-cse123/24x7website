@@ -97,7 +97,7 @@ export function AdminMediaPage(){
           </div>
         </div>
         <div className="mt-3">
-          <ImageUploader value={uploadData} onChange={setUploadData} folder="sightseeing" />
+          <ImageUploader value={uploadData} onChange={setUploadData} folder="traveler-media" />
         </div>
         <Button onClick={()=>createMut.mutate()} disabled={createMut.isPending} className="mt-3">Add to gallery</Button>
       </Card>

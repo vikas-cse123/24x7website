@@ -8,12 +8,15 @@ import { TripCard } from '@/components/trips/TripCard'
 import { TripGallery } from '@/components/trips/TripGallery'
 import { TravelerGallery } from '@/components/trips/TravelerGallery'
 import { tripApi } from '@/services/trips'
+import { tripBatchApi } from '@/services/tripBatches'
 import { TripDepartures } from '@/components/trips/TripDepartures'
 import { WishlistButton } from '@/components/wishlist/WishlistButton'
+import { PlanTripTrigger } from '@/components/enquiry/PlanTripTrigger'
 import { TripReviews } from '@/components/trips/TripReviews'
 import { faqApi } from '@/services/faqs'
 import { useSeo, tripSeoTitle } from '@/lib/seo'
 import { TRIP_TYPE_LABELS } from '@/schemas/trip'
+import { formatDateShort } from '@/lib/dates'
 
 function BulletList({ title, items, icon: Icon }) {
   if (!items || items.length === 0) return null
@@ -45,6 +48,25 @@ export function TripPage() {
   })
 
   const trip = data?.data?.data
+
+  // Upcoming departures loaded once and shared with the departures section and
+  // the sticky booking card (no duplicate requests).
+  const batchesQuery = useQuery({
+    queryKey: ['trip-batches', trip?.id],
+    queryFn: () => tripBatchApi.listByTrip(trip.id),
+    retry: false,
+    staleTime: 30_000,
+    enabled: !!trip,
+  })
+  const upcomingBatches = batchesQuery.data?.data?.data?.items || []
+  const nextBatch = upcomingBatches[0]
+
+  // Real display pricing: the cheapest upcoming public departure wins (matches
+  // the discovery cards); Trip.startingPrice is only the fallback when no
+  // departure is scheduled yet. Never fabricated.
+  const cheapestBatch = upcomingBatches.length
+    ? upcomingBatches.reduce((min, b) => (Number(b.price) < Number(min.price) ? b : min), upcomingBatches[0])
+    : null
 
   useSeo({
     title: trip ? tripSeoTitle(trip.name) : undefined,
@@ -141,14 +163,19 @@ export function TripPage() {
           )}
 
           {trip.description && (
-            <div className="mt-5 space-y-3 text-foreground/90">
+            <div className="mt-5 space-y-3 whitespace-pre-line text-foreground/90">
               <p>{trip.description}</p>
             </div>
           )}
 
           {/* Upcoming departures with real batch pricing/availability */}
           <div className="mt-10">
-            <TripDepartures trip={trip} />
+            <TripDepartures
+              trip={trip}
+              batches={upcomingBatches}
+              isLoading={batchesQuery.isLoading}
+              isError={batchesQuery.isError}
+            />
           </div>
 
           {/* Itinerary */}
@@ -241,7 +268,30 @@ export function TripPage() {
         {/* Pricing summary. Departure-specific pricing/availability lives in
             the Upcoming departures section; this is the package fallback. */}
         <aside className="h-fit rounded-xl border border-border bg-card p-6 shadow-card lg:sticky lg:top-24">
-          {hasPrice ? (
+          {cheapestBatch ? (
+            <>
+              <p className="text-sm text-muted-foreground">Starting at</p>
+              <p className="mt-1 flex items-center text-3xl font-bold">
+                <IndianRupee className="h-6 w-6" />
+                {Number(cheapestBatch.price).toLocaleString('en-IN')}
+                {cheapestBatch.originalPrice != null &&
+                  Number(cheapestBatch.originalPrice) > Number(cheapestBatch.price) && (
+                    <span className="ml-1.5 text-sm font-normal text-muted-foreground line-through">
+                      ₹{Number(cheapestBatch.originalPrice).toLocaleString('en-IN')}
+                    </span>
+                  )}
+              </p>
+              {cheapestBatch.discountAmount != null && Number(cheapestBatch.discountAmount) > 0 ? (
+                <p className="mt-0.5 text-xs font-medium text-primary">
+                  ₹{Number(cheapestBatch.discountAmount).toLocaleString('en-IN')} Off · per person
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {cheapestBatch.currency || trip.currency} · per person
+                </p>
+              )}
+            </>
+          ) : hasPrice ? (
             <>
               <p className="text-sm text-muted-foreground">Starting at</p>
               <p className="mt-1 flex items-center text-3xl font-bold">
@@ -264,6 +314,53 @@ export function TripPage() {
                 See upcoming departures below for dates and availability.
               </p>
             </div>
+          )}
+
+          {nextBatch ? (
+            <div className="mt-6">
+              <p className="flex items-center gap-1.5 text-sm font-medium">
+                <CalendarDays className="h-4 w-4 text-primary" aria-hidden="true" />
+                Next departure
+              </p>
+              <p className="mt-0.5 text-lg font-semibold">
+                {formatDateShort(nextBatch.departureDate)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {nextBatch.availableSeats > 0
+                  ? `${nextBatch.availableSeats} seats available`
+                  : 'Currently full'}
+              </p>
+              {nextBatch.availableSeats > 0 ? (
+                <Link
+                  to={`/booking/${trip.slug}?batch=${nextBatch.id}`}
+                  className="mt-4 flex w-full items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Book this departure
+                </Link>
+              ) : (
+                <p className="mt-4 rounded-md border border-border bg-background px-4 py-2.5 text-center text-xs font-medium text-muted-foreground">
+                  Sold out — see other departures below
+                </p>
+              )}
+            </div>
+          ) : (
+            !batchesQuery.isLoading &&
+            !batchesQuery.isError && (
+              <p className="mt-6 rounded-md border border-border bg-muted/30 px-4 py-3 text-center text-xs text-muted-foreground">
+                No upcoming departures scheduled yet.
+              </p>
+            )
+          )}
+
+          {/* Custom-trip lead CTA — preselects the trip's destination. */}
+          {trip.destination?.id && (
+            <PlanTripTrigger
+              destinationId={trip.destination.id}
+              variant="outline"
+              className="mt-4 w-full"
+            >
+              Plan Your Dream Trip
+            </PlanTripTrigger>
           )}
         </aside>
       </div>

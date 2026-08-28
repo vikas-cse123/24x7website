@@ -140,14 +140,14 @@ export function TripForm({ initialValues, destinations, tripCode, isSubmitting, 
           <div>
             <Label>Hero image</Label>
             <div className="mt-1.5">
-              <ImageUploader value={watch('heroImage')} onChange={(v)=> setValue('heroImage', {...(watch('heroImage')||{}), ...v, alt: v.alt || watch('heroImage.alt')}, {shouldValidate:true, shouldDirty:true})} folder="trips" />
+              <ImageUploader value={watch('heroImage')} onChange={(v)=> setValue('heroImage', {...(watch('heroImage')||{}), ...v, alt: v.alt || watch('heroImage.alt')}, {shouldValidate:true, shouldDirty:true})} folder="trip-media" />
             </div>
             <div className="mt-2"><Input placeholder="Alt text" {...register('heroImage.alt')} /></div>
           </div>
           <div>
             <Label>Gallery</Label>
             <div className="mt-1.5">
-              <ImageUploader value={watch('gallery')||[]} onChange={(v)=> setValue('gallery', v, {shouldValidate:true, shouldDirty:true})} multiple folder="trips" />
+              <ImageUploader value={watch('gallery')||[]} onChange={(v)=> setValue('gallery', v, {shouldValidate:true, shouldDirty:true})} multiple folder="trip-media" />
             </div>
           </div>
         </div>

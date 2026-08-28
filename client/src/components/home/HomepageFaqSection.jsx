@@ -6,7 +6,7 @@ import { faqApi } from '@/services/faqs'
 
 export function HomepageFaqSection() {
   const { data, isLoading } = useQuery({
-    queryKey: ['faqs', 'global'],
+    queryKey: ['faqs', 'global', { limit: 20 }],
     queryFn: () => faqApi.list({ limit: 20 }),
     staleTime: 60_000,
   })

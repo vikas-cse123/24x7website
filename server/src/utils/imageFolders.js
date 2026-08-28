@@ -3,6 +3,11 @@ export const IMAGE_FOLDERS = {
   trips: 'travel-crm/trips',
   blogs: 'travel-crm/blogs',
   website: 'travel-crm/website',
+  // media uploaded through the admin Media page / traveler-generated media
+  'trip-media': 'travel-crm/trip-media',
+  'traveler-media': 'travel-crm/traveler-media',
+  'destination-media': 'travel-crm/destination-media',
+  'blog-media': 'travel-crm/blog-media',
   // logical buckets for future masters; keep centralized so renames are one-file
   hotels: 'travel-crm/hotels',
   sightseeing: 'travel-crm/sightseeing',

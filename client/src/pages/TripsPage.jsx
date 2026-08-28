@@ -10,6 +10,8 @@ import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
 import { tripApi } from '@/services/trips'
+import { destinationApi } from '@/services/destinations'
+import { DestinationCard } from '@/components/destinations/DestinationCard'
 import { TRIP_TYPE_LABELS } from '@/schemas/trip'
 import { formatDateLong } from '@/lib/dates'
 import { useSeo } from '@/lib/seo'
@@ -384,15 +386,18 @@ export function TripsPage() {
               </Button>
             </div>
           ) : items.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-muted/30 p-16 text-center">
-              <p className="text-lg font-medium">No trips match your filters.</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Try widening your budget or clearing some filters.
-              </p>
-              <Button type="button" className="mt-5" onClick={clearAll}>
-                Clear Filters
-              </Button>
-            </div>
+            <>
+              <div className="rounded-xl border border-dashed border-border bg-muted/30 p-16 text-center">
+                <p className="text-lg font-medium">No trips match your filters.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Try widening your budget or clearing some filters.
+                </p>
+                <Button type="button" className="mt-5" onClick={clearAll}>
+                  Clear Filters
+                </Button>
+              </div>
+              <SearchDestinations search={filters.search} />
+            </>
           ) : (
             <>
               <div className={`grid gap-6 transition-opacity sm:grid-cols-2 xl:grid-cols-3 ${isFetching ? 'opacity-60' : ''}`}>
@@ -488,5 +493,40 @@ export function TripsPage() {
         to explore what 24x7Chhutti is about.
       </div>
     </Container>
+  )
+}
+
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// When a search term returns no trips, surface destinations that match the term
+// so discovery still works (e.g. searching "Goa" shows the Goa destination even
+// though Goa has no packaged trip yet). Real data only — hidden on no match.
+function SearchDestinations({ search }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['destinations', 'search', search || ''],
+    queryFn: () => destinationApi.list({ limit: 50 }),
+    enabled: !!search,
+    staleTime: 60_000,
+  })
+
+  if (!search || isLoading) return null
+  const all = data?.data?.data?.items || []
+  const rx = new RegExp(escapeRegex(search), 'i')
+  const matches = all
+    .filter((d) => (d.name || '').match(rx) || (d.country || '').match(rx) || (d.region || '').match(rx))
+    .slice(0, 4)
+  if (matches.length === 0) return null
+
+  return (
+    <div className="mt-8">
+      <h2 className="text-lg font-semibold">Destinations matching “{search}”</h2>
+      <div className="mt-4 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        {matches.map((d) => (
+          <DestinationCard key={d.id} destination={d} />
+        ))}
+      </div>
+    </div>
   )
 }

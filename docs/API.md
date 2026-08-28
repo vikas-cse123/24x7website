@@ -164,11 +164,27 @@ All endpoints require the existing JWT auth cookie.
 - `PATCH /api/travellers/:id` — update traveller
 - `DELETE /api/travellers/:id` — delete traveller
 
-### Enquiries (`/api/enquiries`)
-- `POST /api/enquiries` — submit enquiry
-- `GET /api/enquiries` — list (staff/admin)
-- `GET /api/enquiries/:id` — detail
-- `PATCH /api/enquiries/:id` — update status
+### Enquiries (`/api/enquiries`) — IMPLEMENTED (Phase 27)
+Public lead submission (works for logged-out visitors — `optionalAuth` only):
+- `POST /api/enquiries` — submit enquiry. Body: `{ name, destinationId, phone,
+  email, source?, message?, countryCode? }`. `source` is an allowed enum
+  (`website | custom_trip | contact_form | trip_page | destination_page`); the
+  custom-trip "Plan Your Dream Trip" modal sends `custom_trip`. Server-side
+  validation (Zod): name required, destinationId must be a valid published
+  destination ObjectId, phone is a 10-digit Indian mobile (`6-9` prefix), email
+  valid. Destination must exist and be PUBLISHED (400 otherwise). Created with
+  `status: 'new'`. Optional `userId` attribution is stored when a valid session
+  exists but never returned to the public caller.
+
+Admin (RBAC — `requireAuth` + admin role at the parent admin router):
+- `GET    /api/admin/enquiries` — list. Query: `page`, `limit` (max 100),
+  `status` (new/in-progress/resolved), `source`, `search`
+  (name/email/phone/destinationName)
+- `GET    /api/admin/enquiries/:id` — detail
+- `PATCH  /api/admin/enquiries/:id/status` — set status (`{ status }`)
+- `DELETE /api/admin/enquiries/:id` — delete
+
+Unauthenticated → 401; authenticated non-admin → 403.
 
 ### Reviews (`/api/reviews`) — IMPLEMENTED
 Public:

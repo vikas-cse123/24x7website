@@ -7,6 +7,7 @@ import adminBookingRouter from './adminBooking.routes.js'
 import adminReviewRouter from './adminReview.routes.js'
 import adminBlogRouter from './adminBlog.routes.js'
 import adminFaqRouter from './adminFaq.routes.js'
+import adminEnquiryRouter from './adminEnquiry.routes.js'
 import uploadRouter from './upload.routes.js'
 import { requireAuth, requireRole } from '../middleware/auth.js'
 import { ADMIN_ROLES } from '../utils/roles.js'
@@ -25,6 +26,7 @@ router.use('/bookings', adminBookingRouter)
 router.use('/reviews', adminReviewRouter)
 router.use('/blogs', adminBlogRouter)
 router.use('/faqs', adminFaqRouter)
+router.use('/enquiries', adminEnquiryRouter)
 router.use('/upload', uploadRouter)
 
 export default router

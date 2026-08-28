@@ -8,7 +8,7 @@ import { useSeo } from '@/lib/seo'
 export function FaqsPage() {
   useSeo({ title: 'Frequently Asked Questions', description: 'Answers to common questions about 24x7Chhutti group trips, booking and travel.' })
   const { data, isLoading } = useQuery({
-    queryKey: ['faqs','global'],
+    queryKey: ['faqs','global',{ limit: 50 }],
     queryFn: () => faqApi.list({ limit: 50 }),
   })
   const faqs = data?.data?.data?.items || []

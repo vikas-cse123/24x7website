@@ -1,18 +1,23 @@
 import * as React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// Visual travel search input. No backend search yet — this is the UI shell.
-// The real search system (backend + results page) will be wired in a later
-// milestone. `onSearch` is provided now so it can be connected later.
+// Travel search input wired to the shared trip discovery system: submitting
+// navigates to /trips?search=… (same as the hero search). `onSearch` may be
+// provided by a caller to override the default navigation.
 export function HeaderSearch({ onSearch, className, inputClassName }) {
   const [query, setQuery] = React.useState('')
+  const navigate = useNavigate()
 
   function handleSubmit(e) {
     e.preventDefault()
     const trimmed = query.trim()
-    if (trimmed && onSearch) onSearch(trimmed)
-    // No-op for now (no search results page implemented).
+    if (trimmed && onSearch) {
+      onSearch(trimmed)
+      return
+    }
+    navigate(trimmed ? `/trips?search=${encodeURIComponent(trimmed)}` : '/trips')
   }
 
   return (

@@ -4,7 +4,265 @@
 > and update it after every meaningful milestone.
 
 ## Current status
-**PHASE 20 — FINAL PRODUCTION READINESS + CAPTURE A TRIP CLONE QA COMPLETE**
+**PHASE 27 — CUSTOM TRIP ENQUIRY FEATURE (no payments)**
+
+### Phase 27 (custom-trip lead generation — end-to-end)
+- **Enquiry system built (was a placeholder):** the Admin → Enquiries area and
+  the dashboard `enquiries` metric previously had NO backend (placeholder page,
+  count hardcoded 0). Built the planned generic enquiry system per
+  `docs/DATABASE.md`/`docs/API.md` — model, validator, service, controller,
+  public route, admin route, client service, and a real `AdminEnquiriesPage`.
+- **Public lead submission:** `POST /api/enquiries` (public, `optionalAuth`).
+  Visitors can submit WITHOUT logging in. Server-side Zod validation (name,
+  destinationId must be a real PUBLISHED destination, 10-digit Indian mobile
+  `6-9` prefix, email). `source` enum (`website|custom_trip|contact_form|
+  trip_page|destination_page`) — the new modal sends `custom_trip`. Optional
+  `userId` attribution is stored when a session exists but never exposed
+  publicly.
+- **Admin:** `GET /api/admin/enquiries` (filters: status/source/search),
+  `GET /:id`, `PATCH /:id/status`, `DELETE /:id` — all behind
+  `requireAuth` + admin (401/403 verified). Dashboard `enquiries` count is now a
+  real DB count. `/admin/enquiries` is a live page (list, inline status update,
+  delete with confirm, filters, empty/loading/error states).
+- **Plan Your Dream Trip modal (`PlanTripModal`):** Capture A Trip UX pattern,
+  own implementation. Dark 70% overlay covering the viewport, body scroll lock,
+  compact centered white card (`w-[calc(100vw-2rem)] max-w-[380px]`), close X
+  top-right, Escape + overlay-click close (inside-click keeps open), subtle
+  fade/scale CSS animation. Fields in a single vertical column: Name →
+  Destination → Mobile (+91 prefix) → Email → full-width "Talk to our Experts"
+  CTA.
+- **Destination selector:** a real dropdown (not free text) fed by the existing
+  published destinations API (no hardcoding). Scrollable list, search filter,
+  loading / empty / API-error states, click-to-select, keyboard accessible,
+  mobile-friendly. Contextual preselection: opening from a destination page
+  (`/destination/bali`) pre-selects Bali; trip pages preselect the trip's
+  destination; global triggers leave it unselected.
+- **Form states:** client-side validation with field-level errors; loading
+  ("Submitting...", button disabled, duplicate-click guarded); success state
+  ("Thank you!" + received message + Done button that closes); error state
+  keeps entered values and shows server/field errors for retry.
+- **Triggers:** homepage "Plan Your Dream Trip" CTA section (config-driven via
+  `HOMEPAGE_SECTIONS`), a contextual trigger on every destination page price
+  card, and a contextual trigger on every trip page sticky card. One reusable
+  modal mounted once in `PublicLayout`.
+- **Reuse:** existing `destinationApi`, existing design tokens/buttons/inputs,
+  existing error middleware, existing `optionalAuth`/RBAC patterns. No new
+  dependencies. No payments, no notifications pipeline (enquiry record only —
+  reported honestly).
+- **Database safety:** only Enquiry records created/deleted during testing; no
+  other collections touched. Ladakh batch untouched (DRAFT). One test enquiry
+  remains in the DB (`X | t@e.com | custom_trip | Bali | new`) as admin
+  verification data — delete via admin if not wanted.
+- **Regression:** production build passes; all public APIs 200; admin RBAC
+  401/403 intact; all SPA routes 200; changed modules compile via Vite.
+
+### Phase 26 (real-media pipeline prep — no assets/credentials invented)
+- **Cloudinary status:** all four `CLOUDINARY_*` / `VITE_CLOUDINARY_CLOUD_NAME`
+  vars are STILL EMPTY in `.env`. No cloud name, key, or secret is configured
+  anywhere, so `isCloudinaryConfigured` is `false` and uploads keep the clean
+  **503 "Cloudinary is not configured"** behavior (verified by direct service
+  call). **Cloudinary end-to-end upload testing is blocked because genuine
+  Cloudinary credentials have not been supplied.** No credentials were
+  fabricated, hardcoded, or claimed to work.
+- **Security fix:** the working tree of `.env.example` (a tracked template) had
+  two credential-looking `CLOUDINARY_API_KEY`/`CLOUDINARY_API_SECRET` lines
+  appended to it. Removed them — `.env.example` is clean vs HEAD again and no
+  credential-like values exist in any tracked file. Values were never used by
+  the app (the server reads `.env`, which has them empty).
+- **Media pipeline audit (Step 1):** reviewed `AdminMediaPage`, `DestinationImage`,
+  `TripGallery`, `TravelerGallery`, `ImageUploader`, `imageStorage.service`,
+  `cloudinary.service`, `imageFolders`, `upload.routes/controller`, `TripMedia`
+  model + routes, `Destination`/`Trip`/`Blog` image schemas, `DestinationImage`
+  lazy/eager + srcSet + onError fallback. No working functionality rewritten.
+- **Folder alignment (Steps 3/5/6):** added the required logical `destination-media`
+  and `blog-media` buckets to `imageFolders.js` so all four canonical buckets exist:
+  `trip-media`, `traveler-media`, `destination-media`, `blog-media`. The admin
+  forms now upload into the matching bucket: `DestinationForm` →
+  `destination-media`, `TripForm` → `trip-media`, `BlogForm` → `blog-media`
+  (`AdminMediaPage` already used `traveler-media` — Phase 23 fix preserved).
+  Legacy `destinations`/`trips`/`blogs` keys kept for back-compat. Verified via
+  the `folderFor` helper (correct `travel-crm/…` paths + entity subfolder).
+- **Shared lightbox (Step 9):** extracted the trip gallery's fullscreen lightbox
+  into `components/ui/lightbox.jsx` (Esc/arrows, scroll-lock, counter,
+  Cloudinary-aware via `resolveImageSrc` with plain-URL fallback) and reused it in
+  `TripGallery`. The **destination gallery** previously had no interaction — it
+  now uses the same lightbox (tap any image to open fullscreen, next/prev/close).
+  Genuine UX parity; no fake gallery records created.
+- **Destination media (Step 5):** architecture supports hero + ordered gallery +
+  alt + responsive + lazy + fallback. All 11 destinations still have **empty
+  galleries** (no fabricated records). `India` keeps its honest logo fallback
+  (no invented image).
+- **Trip media (Step 6):** architecture supports hero + ordered gallery +
+  responsive gallery + hero-only fallback + lazy + alt + broken-image fallback.
+  All 7 trips have **empty galleries** (honest). `TripGallery` renders the empty
+  placeholder only when no images exist.
+- **Blog media (Step 7):** all 3 published blogs have valid covers (verified —
+  each returns 200 with `f_auto`-style Picsum URLs + alt text) and **zero broken
+  or empty image blocks**. No cover replaced unnecessarily.
+- **Traveler media (Step 7/real):** honestly empty — the public
+  `/trips/:id/media` endpoint returns `[]`; no traveler UGC fabricated.
+- **Image performance (Step 8):** homepage hero remains `eager`; below-the-fold
+  images remain `lazy`; `object-cover`, alt text, `onError` fallback, and
+  srcSet/Cloudinary transform path all preserved. No layout-breaking changes.
+  Trip hero URLs contain literal spaces (Picsum seed) — browsers auto-encode so
+  they render (verified 200 after redirects); left untouched per no-data-change rule.
+- **Database safety (Step 10):** zero DB writes. No bookings/customers/users/
+  reviews/batches/pricing/trip logic touched. No media records deleted or created.
+- **Ladakh (Step 11):** batch untouched, remains DRAFT.
+- **Regression (Step 12):** production build passes; health 200; all public APIs
+  200; batch endpoint 200 with real trip ID; RBAC 401 intact (admin/media/upload/
+  dashboard/account); all SPA routes 200; changed modules compile via Vite.
+  No payments, no API changes, no DB changes.
+
+### Phase 25 (UX/product audit vs Capture A Trip — reference only)
+- **Audited** the whole public site against the Capture A Trip experience (page
+  structure, cards, filters, discovery flow, conversion hierarchy) WITHOUT copying
+  content/assets. Result: the existing information hierarchy already matches the
+  target journey; most differences are intentional or blocked by real-data rules.
+- **Header search fixed (dead control):** the desktop header + mobile-nav search
+  input submitted but did nothing ("No-op for now"). It now navigates to
+  `/trips?search=…` exactly like the hero search (`HeaderSearch.jsx`), so header
+  search is a real discovery entry point. Optional `onSearch` prop preserved.
+- **Login modal legal links fixed:** Terms & Conditions / Privacy Policy used
+  `href="#"` (dead). They now route to the real `/terms-and-conditions` and
+  `/privacy-policy` pages and close the modal on click (`LoginModal.jsx`).
+- **Trip detail sticky price consistency:** the sticky booking card showed
+  `Trip.startingPrice` even when real upcoming departures are cheaper (e.g. Bali
+  card showed ₹56,999 while its only departure is ₹51,999). The card now derives
+  the display price from the **cheapest real upcoming public batch** (with honest
+  strikethrough original + discount), falling back to `startingPrice` only when no
+  departure is scheduled. Same data source as the discovery cards; never fabricated.
+- **Homepage trip card parity:** `HomepageTripCard` now also renders the real
+  scarcity/availability badge (Sold out / Only X seats left) and the real
+  rating summary — matching the `/trips` listing card. Real batch data only.
+- **Contact page honesty:** removed the fabricated `support@24x7chhutti.com` +
+  "(replies within 24 hours)" claim (no email infra exists). Now honestly says
+  "Email support coming soon" + "use the form below", matching the footer.
+- **Promo banner dismiss button** was `absolute` with no `relative` parent, so the
+  X positioned against the viewport. Wrapper is now `relative`.
+- **NOT NEEDED / intentionally not cloned:** nav items that map to `/trips`
+  (Group Trips / Travel Styles / Upcoming Group Trips / Deals all route to the
+  real discovery page); "Free Goodies"-style marketing badges; community-size /
+  traveller-count stats (honest "coming soon"); phone number in header (no real
+  number exists); TikTok-style UGC / video sections (honest placeholders kept).
+- **Regression:** production build passes; all public APIs 200; RBAC 401 intact;
+  all SPA routes 200; no console/runtime errors in changed modules; responsive
+  classes untouched. No payments, no Cloudinary, no data changes, no API changes.
+
+### Phase 24 (UX polish, no payments)
+- **Trip detail — conversion hierarchy (Step 3):** the sticky booking card now shows
+  the real **next departure** (date + seats) and a **"Book this departure"** CTA linking
+  straight into the booking wizard with the correct batch. Departures are fetched ONCE
+  at the TripPage level and shared with the departures section (`TripDepartures` accepts
+  optional shared props — no duplicate requests). Sold-out next batches show an honest
+  "Sold out" note; trips with no departures show an honest empty message. No fake
+  payment CTA was added — payments remain intentionally disabled.
+- **Destination detail (Step 2):** new **"Similar destinations"** section — real
+  published destinations in the same market category (excludes self, hidden when fewer
+  than 2 peers). Reuses existing cards/APIs.
+- **Search & discovery (Step 11):** when a `/trips` search returns zero trips, the page
+  now surfaces **destinations matching the term** (e.g. searching "Goa" shows the Goa
+  destination even though Goa has no packaged trip). Client-side filter over the real
+  destinations API — no new infrastructure. Hidden when nothing matches.
+- **Audit results:** homepage section order already matches the target journey; all
+  sections are data-driven; Community stats / UGC / videos keep honest "coming soon"
+  states; blog image blocks are clean; FAQ query-key fix (Phase 21) intact; bookings
+  honestly state "online payments coming soon — no payment collected".
+- **Regression:** 15/15 backend checks pass; production build passes; all 28 public/
+  account/admin SPA routes return 200. No payment logic, no booking logic, no data
+  deleted — all preserved.
+
+### Phase 23 (media layer)
+- **Cloudinary status:** all four `CLOUDINARY_*` / `VITE_CLOUDINARY_CLOUD_NAME` vars are
+  STILL empty in `.env` (verified again this phase; not fabricated). The full code path
+  is intact — admin upload → multer (5 MB, image/*) → `imageStorage` →
+  `cloudinary.service` → `isCloudinaryConfigured` guard — and returns a clean 503
+  ("Cloudinary is not configured") when unconfigured. RBAC intact (anon 401). **Uploads
+  were NOT claimed as tested — end-to-end Cloudinary upload verification is blocked
+  until real credentials are supplied.**
+- **Media audit:** `TripMedia` model/service/routes, `ImageUploader`, `DestinationImage`,
+  `TripGallery`, `TravelerGallery`, admin Media page and folder abstraction all verified
+  correct and working with URL fallback. No media architecture rebuilt.
+- **Folder abstraction:** added logical `trip-media` and `traveler-media` buckets to
+  `imageFolders.js`; fixed the admin Media page which was uploading to the wrong
+  `travel-crm/sightseeing` folder → now `traveler-media` (`AdminMediaPage.jsx`).
+- **Hero resolution:** homepage hero / trip / destination heroes were rendering a
+  600px source upscaled to full width (blurry). Upgraded all 10 published-with-image
+  destination heroes and all 7 trip heroes to a **higher-resolution variant of the SAME
+  Picsum seed** (1600×900) — same asset, sharper at hero widths. `India` untouched (no
+  image). Reversible targeted `$set`.
+- **LCP loading:** `DestinationImage` gained a `loading` prop (default `lazy`); the
+  homepage hero now loads `eager` for LCP (`HeroSection.jsx`).
+- **Fake traveler media removed from public view:** the sole TripMedia record was a
+  fabricated "test1" asset (fake Cloudinary publicId + placeholder image). It is now
+  `published: false` with the bogus `publicId` cleared (record preserved, reversible),
+  so the public Traveler Gallery shows its honest empty state. No traveler media was
+  manufactured.
+- **Regression:** 16/16 backend checks pass (counts, hero resolutions, covers, batch
+  visibility, RBAC, admin media list). Production build passes; all SPA routes 200.
+  Bookings/batches/users/wishlists/notifications/FAQs/reviews/blogs/destinations/trips
+  all preserved.
+
+### Phase 22 (content completion)
+- **Destinations (11/11)** now carry original 24x7Chhutti editorial content: meaningful
+  short descriptions, multi-paragraph long descriptions with highlights, and proper
+  `type` values (beach/hill-station/adventure/cultural). SEO title/description/keywords
+  set for all. `India` gained a region + content (hero image intentionally left empty —
+  no asset exists; logo fallback shows).
+- **Trips (7/7)** — the priority: every published trip now has a real description,
+  a full day-by-day itinerary matching its duration (5–8 days), realistic
+  inclusions/exclusions, important-travel-information (visa, altitude, weather,
+  fitness, cancellation) and SEO fields. Nothing invents specific hotels, flights or
+  operators; generic product copy only.
+- **Blogs (3/3)** rewritten as readable articles (headings/paragraphs/lists/quotes) and
+  given covers by reusing each linked destination's existing in-DB hero image (our own
+  asset). Empty image content-block removed from the Vietnam post. `readingTime`
+  recomputed server-style.
+- **Trip/destination detail pages** render multi-paragraph descriptions correctly
+  (`whitespace-pre-line`) — DestinationPage + TripPage. No other UI changes.
+- **Cloudinary (Step 6):** full code path verified — admin upload → multer →
+  `imageStorage` → `cloudinary.service` → `isCloudinaryConfigured` guard. All four
+  `CLOUDINARY_*`/`VITE_CLOUDINARY_CLOUD_NAME` vars are EMPTY in `.env`, so uploads
+  return a clean 503 ("Cloudinary is not configured") and existing URL fallback keeps
+  working. No credentials were fabricated; real uploads require real credentials.
+- **Ladakh batch (Step 8):** left DRAFT. BAT-000010 (dep 2027-06-12) is unpublished,
+  has 0 bookings, is priced (26,999) ABOVE the trip starting price (25,999), and its
+  return date spans 7 nights vs the trip's 6 — inconsistent and not clearly intended
+  for public booking. Publishing requires admin to reconcile price + duration and set
+  status/published. No departure dates were fabricated.
+- **Homepage** now uses real data in every section (hero = featured Bali, explorer
+  tabs, 7 upcoming trips with itineraries, trending, 1 real review, 4 FAQs, 3 blogs
+  with covers). Community stats / UGC / video sections keep honest "coming soon" states.
+- **Regression:** health 200, all list/detail APIs return the new content, draft
+  batches still hidden publicly, RBAC 401/403 intact, admin CRUD intact, production
+  build passes. Existing bookings/batches/users/wishlists/notifications untouched.
+
+### Phase 21 (audit + completion)
+- **Audited** the complete frontend→API→service→MongoDB flow. No frontend empty-state
+  bug was found: every section that renders "No … yet" does so only when data truly
+  does not exist. All 11 published destinations, 7 published trips, upcoming
+  departures, blogs, FAQs and reviews render from real DB data.
+- **Fixed** a genuine React Query cache-key collision: `HomepageFaqSection` and
+  `FaqsPage` both used `['faqs','global']` with different `limit` params, so the
+  second mount could silently reuse stale cache. Keys now include the limit
+  (`client/src/components/home/HomepageFaqSection.jsx`, `client/src/pages/FaqsPage.jsx`).
+- **Trip cards now show real ratings** where approved reviews exist: `TripCard` and
+  the homepage `HomepageTripCard` render `StarRating` + average + count from the
+  server-computed `ratingSummary` (real approved reviews only, never fabricated).
+- **Data corrections (equivalent to admin CMS edits, non-destructive `$set` only):**
+  - `India` destination had a **missing `category`** field (not `other`), so it never
+    matched any category tab despite being published. Set to `domestic` (4 domestic now).
+  - Marked `featured: true` on Bali, Vietnam, Ladakh and Kerala (all real, published,
+    with real images + trips) so the homepage hero shows real destination imagery
+    instead of only the logo watermark.
+- Verified: destinations (11, incl. category tabs 5/4/2), trips (7, featured 1),
+  per-trip departures (incl. sold-out `full` batches), blogs (3 published), FAQs
+  (4 global), reviews (1 approved), auth/RBAC (anon 401, non-admin 403, admin OK),
+  admin CRUD for destinations/trips/batches/blogs/FAQs/reviews, production build OK.
+- **Known data gaps (report only, no fabrication):** blog cover images are empty on all
+  3 published blogs; trip `description`/`itinerary` are empty on all trips; Ladakh
+  Expedition has only a draft batch (no public departure); `CLOUDINARY_*` env vars are
+  empty in `.env` so admin image uploads currently return 503 until configured.
 
 ## Completed
 
@@ -52,11 +310,76 @@ backend 26/26, Phase 12 frontend 31/31 + backend 21/21.
 - `logo.jpg` — official logo, SHA-1 `e4fc4cc…` re-verified unchanged.
 
 ## Not implemented (later)
-- Payments/refunds (Razorpay) — next recommended phase
+- Payments/refunds (Razorpay) — later phase (booking model is payment-ready)
+- Enquiry notification pipeline (no email/SMS sending; enquiry records are
+  created and surfaced in Admin → Enquiries only)
 - Blog media CMS (Cloudinary uploads), video embeds, blog comments; gallery
   management; wishlist/notifications; change-phone flow
 
 ## Verification results (all actually performed)
+
+### Phase 27 — custom-trip enquiry
+- **Build:** `npm run build --workspace client` succeeds (index 66 kB, no
+  warnings/errors).
+- **Backend health:** `GET /api/health` → 200.
+- **Public enquiry:** `POST /api/enquiries` — valid submission creates a record
+  (source `custom_trip`, destination snapshot "Bali", status `new`); logged-in
+  submissions store `userId` (admin-only). Validations verified: blank name →
+  "Name is required"; missing destination → "Please select a destination";
+  invalid phone → "Please enter a valid mobile number"; invalid email →
+  "Please enter a valid email address"; unknown/unpublished destination → 400;
+  unexpected `source` → 400.
+- **Admin (RBAC):** unauth `/api/admin/enquiries*` → 401; non-admin → 403;
+  admin list/detail/status/delete work; dashboard `enquiries` metric = real
+  count.
+- **Destinations used by the modal:** existing `GET /api/destinations?limit=50`
+  returns 11 published destinations (no new API).
+- **Routes:** `/`, `/trips`, `/trip/:slug`, `/destinations`, `/destination/:slug`,
+  `/admin/enquiries`, `/booking/*` all 200; changed modules compile via Vite.
+- **Cleanup:** duplicate test enquiries removed; one representative test
+  enquiry left for admin verification (see Phase 27 notes).
+
+### Phase 26 — media preparation
+- **Build:** `npm run build --workspace client` succeeds (54.16 kB index; no
+  warnings/errors).
+- **Cloudinary:** `isCloudinaryConfigured === false`; direct
+  `uploadBuffer(Buffer, {folder})` throws clean **503 "Cloudinary is not
+  configured"**. All four vars empty in `.env`; `.env.example` clean (no
+  credential-like values; `git grep` confirms none in tracked files).
+- **Folders:** `folderFor('trip-media'|'traveler-media'|'destination-media'|
+  'blog-media')` → correct `travel-crm/<bucket>[/id]` paths (verified via node).
+- **Changed modules compile:** `/src/components/ui/lightbox.jsx`,
+  `/src/components/trips/TripGallery.jsx`, `/src/pages/DestinationPage.jsx`,
+  `/src/components/admin/{TripForm,DestinationForm,BlogForm}.jsx` all 200 on Vite.
+- **Backend health:** `GET /api/health` → 200.
+- **Public APIs:** destinations, trips (+includeBatches), blogs, faqs,
+  reviews/recent, destination detail, trip detail, `trips/:id/batches` (real ID),
+  `trips/:id/media` (empty) all 200.
+- **Routes:** `/`, `/trips`, `/trip/:slug`, `/destinations`, `/destination/:slug`,
+  `/blogs`, `/blog/:slug`, `/faqs`, `/about`, `/contact`, `/account*`, `/admin*`,
+  `/booking/*`, legal pages — all 200.
+- **RBAC:** unauth `/api/admin/*` (destinations, media, upload, dashboard) → 401;
+  `/api/account/*` → 401.
+- **Images:** Picsum heroes/covers/batch assets all return 200 after redirects
+  (URL-encoded where needed); no 404/broken image requests found.
+- **DB:** zero writes; Ladakh batch untouched (DRAFT).
+
+### Phase 25 — audit fixes
+- **Build:** `npm run build --workspace client` succeeds (54.12 kB index, vendor
+  chunks unchanged, no warnings/errors).
+- **Frontend module compile:** `/src/components/layout/HeaderSearch.jsx`,
+  `/src/components/auth/LoginModal.jsx`, `/src/components/home/UpcomingTripsSection.jsx`,
+  `/src/pages/TripPage.jsx` all served 200 by the Vite dev server (HMR clean).
+- **Backend health:** `GET /api/health` → 200 `{"success":true}`.
+- **Public APIs:** destinations, trips, blogs, faqs, reviews/recent, destination
+  detail, trip detail all 200; trips search (`?search=vietnam`), featured filter,
+  and budget filter return real data.
+- **Routes:** `/`, `/trips`, `/trip/:slug`, `/destinations`, `/destination/:slug`,
+  `/blogs`, `/blog/:slug`, `/faqs`, `/about`, `/contact`, `/account`, `/admin`,
+  `/booking/:param` all return 200 on the SPA.
+- **RBAC:** unauthenticated `/api/admin/*` → 401, `/api/account/*` → 401.
+- **No data/API changes:** zero database writes, zero backend code changes in
+  this phase.
 
 ### Backend — 24/24 phase checks (+ regressions)
 RBAC (admin 401/403, no public write 404); validation (question <5 →400,
@@ -152,12 +475,25 @@ Phase 10/11 suites remain green; Phase 12 suites green.
   (booking, solo, cancellation, group size) + 1 Vietnam destination + 1
   Vietnam 8 Days trip-specific + 1 draft; plus a temporary E2E FAQ
   created/deleted by the suite. Delete via admin to reset. Re-seeded after
-  backend purge at suite start. No destructive seed run in Phase 20.
+  backend purge at suite start. No destructive seed run in Phase 20. In
+  Phase 21 India's `category` was corrected to `domestic` and Bali/Vietnam/
+  Ladakh/Kerala were marked `featured` (admin-editable via CMS).
 - Client bundle >500 kB fixed: Phase 20 lazy + manualChunks removes warning; remaining largest chunk is `vendor-QaJ2r_E4.js 151 kB` (react).
+- Phase 25 contact page no longer shows an email address (honest "coming soon"
+  state); no real support email/phone exists yet.
 
 ## Recommended next milestone
-**Payments (Razorpay)** — booking model is payment-ready (`paymentStatus`
-lifecycle, confirmed state). Do NOT implement in Phase 20 per spec. Next: email/SMS infrastructure, advanced gallery management, analytics, production deploy (env, CDN, monitoring).
+**Phase 28 — Real Cloudinary media + photography:** the project owner must supply
+real Cloudinary credentials (cloud name + API key + secret in `.env`; public cloud
+name in `VITE_CLOUDINARY_CLOUD_NAME`) and legally usable/owner-supplied destination
+and trip photography. Once present: end-to-end upload test via the admin forms
+(which already target the correct `trip-media`/`traveler-media`/`destination-media`/
+`blog-media` folders), replace the Picsum placeholder heroes with real imagery
+through the existing admin CMS, populate destination/trip galleries (lightbox-ready),
+and set real blog covers. **Real photography cannot be added until legally
+usable/owner-supplied assets are provided.** Payments (Razorpay) are a separate
+later phase — the booking model is already payment-ready (`paymentStatus`).
+After media: enquiry notifications (email/SMS to the travel team), then payments.
 
 ## How to use this file
 - Read it before starting work.

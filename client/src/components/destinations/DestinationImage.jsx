@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 import { resolveImageSrc, resolveSrcSet } from '@/lib/cloudinary'
 
 // Image can be a string URL (legacy) or an image object {url, secureUrl, publicId, alt}
-export function DestinationImage({ src, alt = '', image, className, imgClassName, width }) {
+export function DestinationImage({ src, alt = '', image, className, imgClassName, width, loading = 'lazy' }) {
   const [errored, setErrored] = React.useState(false)
   const imgObj = image || (typeof src === 'string' ? { url: src, alt } : src ? { ...src, alt: src.alt || alt } : null)
   const resolvedSrc = resolveImageSrc(imgObj, { w: width || 800 })
@@ -19,7 +19,7 @@ export function DestinationImage({ src, alt = '', image, className, imgClassName
           srcSet={srcSet}
           sizes={width ? `${width}px` : "(max-width: 640px) 100vw, 50vw"}
           alt={alt || imgObj?.alt || ''}
-          loading="lazy"
+          loading={loading}
           onError={() => setErrored(true)}
           className={cn('h-full w-full object-cover', imgClassName)}
         />

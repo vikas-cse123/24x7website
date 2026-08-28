@@ -71,8 +71,11 @@ A guided flow modelled on the reference journey:
 6. Private confirmation page at /booking/BK-xxxxxx (noindex).
 Razorpay payment collection lands in the next phase.
 
-### Enquiries — PLANNED
-Contact/quote request form; captured and managed by staff.
+### Enquiries — IMPLEMENTED (Phase 27)
+Custom-trip / website lead generation: a public "Plan Your Dream Trip" modal
+(name, destination dropdown, mobile +91, email) submits via `POST /api/enquiries`
+(no login required, server-validated). Leads appear in Admin → Enquiries with
+status triage (new/in-progress/resolved), source badges, search and filters.
 
 ### Customers — IMPLEMENTED (core)
 Authenticated customers get a Capture A Trip-style account area at `/account`:
@@ -127,7 +130,7 @@ Usage analytics and error monitoring integrated at production stage.
 | Trip batches    | IMPLEMENTED (departure CRUD, batch pricing, capacity/availability, status workflow, public visibility rules) |
 | Search/Filters  | IMPLEMENTED (batch-aware budget/date filters, server search/sort/pagination; faceted counts later) |
 | Booking         | IMPLEMENTED (seats, snapshots, idempotency, cancellation; payments PLANNED) |
-| Enquiries       | PLANNED |
+| Enquiries       | IMPLEMENTED (custom-trip modal + admin triage) |
 | Customers       | IMPLEMENTED (account area: profile, my bookings, saved travellers) |
 | Reviews         | IMPLEMENTED (verified-booking reviews, moderation, rating summaries) |
 | Blogs            | IMPLEMENTED (public discovery + detail + admin editor; category/tag filtering via URL; FAQs below) |
