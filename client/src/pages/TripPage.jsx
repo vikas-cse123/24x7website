@@ -255,7 +255,7 @@ export function TripPage() {
           {/* FAQs - CMS-managed (trip → destination → global) */}
           <TripFaqs slug={trip.slug} name={trip.name} />
 
-          {/* Gallery — polished Cloudinary lightbox */}
+          {/* Gallery — polished media lightbox */}
           <TripGallery heroImage={trip.heroImage} gallery={trip.gallery} tripName={trip.name} />
 
           {/* Gallery by Travelers — Photos/Videos tabs */}

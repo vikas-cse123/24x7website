@@ -1,5 +1,5 @@
 import AppSetting from '../models/AppSetting.js'
-import { isCloudinaryConfigured } from '../config/cloudinary.js'
+import { isS3Configured } from '../config/s3.js'
 
 export const BRANDING_KEY = 'branding'
 export const CONTACT_KEY = 'contact'
@@ -13,9 +13,12 @@ export const DEFAULT_LOGO_ALT = BRAND_NAME
 
 // No real phone number is configured anywhere in the project, so the default
 // is intentionally empty and hidden. The admin adds a number + enables the
-// header toggle. No phone number is ever invented.
+// header toggle. No phone number is ever invented. `showCountryCode` controls
+// whether a +91 prefix is shown in the header; the stored number never
+// contains the prefix (it is added/removed only when displaying).
 export const DEFAULT_CONTACT = {
   phone: '',
+  showCountryCode: true,
   showPhoneInHeader: false,
 }
 
@@ -57,7 +60,7 @@ export async function getBrandingPublic() {
 }
 
 // Admin branding — includes metadata (publicId, updatedAt, isCustom) and the
-// Cloudinary configuration status so the admin UI can warn before uploading.
+// storage configuration status so the admin UI can warn before uploading.
 export async function getBrandingAdmin() {
   const data = await getSettingData(BRANDING_KEY)
   const logo = data.logo?.url
@@ -75,11 +78,11 @@ export async function getBrandingAdmin() {
         updatedAt: null,
         isCustom: false,
       }
-  return { logo, cloudinaryConfigured: isCloudinaryConfigured }
+  return { logo, storageConfigured: isS3Configured }
 }
 
 // Persist the uploaded logo metadata (never the binary) under the branding
-// setting. Old Cloudinary assets are intentionally NOT deleted (non-destructive).
+// setting. Old stored assets are intentionally NOT deleted (non-destructive).
 export async function setBrandingLogo({ url, publicId = '', alt = DEFAULT_LOGO_ALT }) {
   await AppSetting.updateOne(
     { key: BRANDING_KEY },
@@ -110,9 +113,18 @@ export async function clearBrandingLogo() {
 // --- contact -----------------------------------------------------------------
 
 function normalizeContact(data = {}) {
+  // Store only the local number: a leading +91 / 91 prefix typed by the admin
+  // is stripped so the stored value never contains the country code. The
+  // header re-adds +91 purely for display when `showCountryCode` is enabled.
+  const phone =
+    typeof data.phone === 'string' ? data.phone.trim().replace(/\s+/g, ' ').slice(0, 30) : ''
+  const phoneWithoutCode = phone.replace(/^\+?91[\s-]*/, '')
   return {
-    phone:
-      typeof data.phone === 'string' ? data.phone.trim().replace(/\s+/g, ' ').slice(0, 30) : '',
+    phone: phoneWithoutCode,
+    showCountryCode:
+      typeof data.showCountryCode === 'boolean'
+        ? data.showCountryCode
+        : DEFAULT_CONTACT.showCountryCode,
     showPhoneInHeader:
       typeof data.showPhoneInHeader === 'boolean'
         ? data.showPhoneInHeader
@@ -137,10 +149,12 @@ function normalizePromotionalBanner(data = {}) {
     const v = typeof value === 'string' ? value.trim() : ''
     return v ? v.slice(0, max) : fallback
   }
+  const ctaText =
+    typeof data.ctaText === 'string' ? data.ctaText.trim().slice(0, 60) : DEFAULT_PROMOTIONAL_BANNER.ctaText
   return {
     enabled: typeof data.enabled === 'boolean' ? data.enabled : DEFAULT_PROMOTIONAL_BANNER.enabled,
     message: take(data.message, DEFAULT_PROMOTIONAL_BANNER.message, 300),
-    ctaText: take(data.ctaText, DEFAULT_PROMOTIONAL_BANNER.ctaText, 60),
+    ctaText,
     ctaUrl: take(data.ctaUrl, DEFAULT_PROMOTIONAL_BANNER.ctaUrl, 300),
     shimmerEnabled:
       typeof data.shimmerEnabled === 'boolean'

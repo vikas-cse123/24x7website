@@ -64,8 +64,8 @@ export async function getAdminBranding(_req, res, next) {
 }
 
 // POST /api/admin/settings/branding/logo — admin-only. Multipart field `image`.
-// Uploads through the canonical imageStorage (Cloudinary) into `brand-media`,
-// then stores only the returned metadata. When Cloudinary is not configured the
+// Uploads through the canonical imageStorage (AWS S3) into `brand-media`,
+// then stores only the returned metadata. When S3 is not configured the
 // upload throws a clean 503 and nothing is persisted.
 export async function uploadLogo(req, res, next) {
   try {
@@ -79,7 +79,11 @@ export async function uploadLogo(req, res, next) {
       })
     }
     const alt = String(req.body?.alt || '').trim().slice(0, 200) || settingsService.BRAND_NAME
-    const meta = await imageStorage.upload(req.file.buffer, { folder: folderFor('brand-media') })
+    const meta = await imageStorage.upload(req.file.buffer, {
+      folder: folderFor('brand-media'),
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+    })
     const data = await settingsService.setBrandingLogo({
       url: meta.url,
       publicId: meta.publicId,
@@ -92,8 +96,8 @@ export async function uploadLogo(req, res, next) {
 }
 
 // DELETE /api/admin/settings/branding/logo — admin-only. Resets branding to the
-// default /logo.jpg. Non-destructive: the stored Cloudinary asset is not
-// deleted and client/public/logo.jpg is untouched.
+// default /logo.jpg. Non-destructive: the stored S3 asset is not deleted and
+// client/public/logo.jpg is untouched.
 export async function clearLogo(_req, res, next) {
   try {
     const data = await settingsService.clearBrandingLogo()

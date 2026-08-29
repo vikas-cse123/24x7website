@@ -89,7 +89,7 @@ Indexes: unique `slug`; compound `(published, featured, displayOrder)`.
 
 `toPublicDestination()` strips `createdBy`/`updatedBy`/`__v`. See `docs/ADMIN.md`
 and `docs/API.md` for CRUD and publishing behaviour. Image `publicId` will be
-populated by the future Cloudinary media service (empty until then).
+populated by the media storage service (empty until then).
 
 ### Trip — IMPLEMENTED
 A trip package belonging to a destination. `server/src/models/Trip.js`.
@@ -282,7 +282,7 @@ Destination.
 | `title` / `slug` | slug unique, server-generated (suffix on collision), preserved on update unless explicitly changed |
 | `excerpt` | 10–400 chars, shown on cards |
 | `content[]` | **structured blocks** (ADR-020): `heading{level,text}` / `paragraph{text}` / `list{items[]}` / `image{url,alt,caption}` / `quote{text}` |
-| `coverImage` | `{ url, publicId, alt }` — URL-based until Cloudinary |
+| `coverImage` | `{ url, publicId, alt }` — S3 object URL + key for new uploads |
 | `category` | enum from `utils/blogCategories.js`: travel-guide, things-to-do, places-to-visit, trekking, shopping |
 | `tags[]` | free-form, indexed |
 | `destinationId` | optional ref → destination-specific browsing (`/blogs/:slug`) |
@@ -310,7 +310,7 @@ A discount code.
 - `maxUses`, `usedCount`, `minAmount`
 
 ### Media
-A reusable media asset (Cloudinary-backed).
+A reusable media asset (S3-backed).
 - `publicId`, `url`, `secureUrl`
 - `format`, `width`, `height`, `bytes`
 - `folder`, `tags`, `altText`

@@ -40,7 +40,7 @@ implemented. See `docs/CURRENT_STATE.md`.
 | Backend   | Node.js + Express.js + JavaScript, REST API                              |
 | Database  | MongoDB + Mongoose                                                       |
 | Auth      | JWT, HTTP-only cookies, bcrypt/bcryptjs (later)                          |
-| Media     | Multer + Cloudinary (later)                                              |
+| Media     | Multer + AWS S3                                                        |
 | Email     | Nodemailer (later)                                                       |
 | Payments  | Razorpay (later)                                                         |
 
@@ -222,7 +222,7 @@ Key rules:
   `requireAuth` + `requireRole('admin')`).
 - Update schemas must **not** apply Zod defaults, or omitted fields like
   `published`/`featured` get reset on PATCH (see ADR-011).
-- Images are `{ url, publicId, alt }`; URL-based until Cloudinary integration.
+- Images are `{ url, publicId, alt }`; new uploads stored in AWS S3 (key in `publicId`, S3 URL in `url`/`secureUrl`).
 - Public pages set SEO via `useSeo` (`client/src/lib/seo.js`).
 
 ### Trip conventions

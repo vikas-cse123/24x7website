@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Link } from 'react-router-dom'
-import { Megaphone, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { usePublicSettings } from '@/hooks/usePublicSettings'
 import { isSafeBannerUrl, isExternalUrl } from '@/lib/settings'
 
@@ -47,7 +47,6 @@ export function PromoBanner() {
       {banner.shimmerEnabled && <div className="banner-shimmer" aria-hidden="true" />}
 
       <div className="relative z-10 mx-auto flex min-h-10 w-full items-center justify-center gap-2 px-10 py-1.5 text-center text-xs font-medium sm:px-12 sm:text-sm">
-        <Megaphone className="hidden h-4 w-4 shrink-0 sm:block" aria-hidden="true" />
         <span className="min-w-0 truncate">{banner.message}</span>
         {showCta &&
           (isExternalUrl(ctaUrl) ? (

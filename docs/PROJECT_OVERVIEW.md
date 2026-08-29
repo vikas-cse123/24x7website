@@ -105,7 +105,7 @@ Razorpay integration: create order, client-side checkout, server-side
 verification, payment status tracking.
 
 ### Media — PLANNED
-Image/media uploads via Multer + Cloudinary; media library for reuse across
+Image/media uploads via Multer + AWS S3; media library for reuse across
 trips, destinations, and blogs.
 
 ### SEO — PLANNED

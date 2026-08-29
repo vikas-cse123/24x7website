@@ -4,7 +4,7 @@ import { BLOG_CATEGORIES } from '../utils/blogCategories.js'
 const imageSchema = new mongoose.Schema(
   {
     url: { type: String, trim: true, default: '' },
-    // Populated by the future Cloudinary media service; empty until then.
+    // Populated by the media storage service (AWS S3); empty until then.
     publicId: { type: String, trim: true, default: '' },
     alt: { type: String, trim: true, default: '' },
     secureUrl: { type: String, trim: true, default: '' },

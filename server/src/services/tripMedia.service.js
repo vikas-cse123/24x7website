@@ -38,7 +38,7 @@ export async function update(id, data){
 export async function remove(id){
   const doc=await TripMedia.findByIdAndDelete(id).lean()
   if(!doc) throw notFound('Media not found')
-  // Do NOT delete Cloudinary asset automatically
+  // Do NOT delete the stored S3 object automatically
   return { id: doc._id.toString() }
 }
 

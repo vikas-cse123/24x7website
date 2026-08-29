@@ -2,7 +2,7 @@ import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Images, Play } from 'lucide-react'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
-import { resolveImageSrc } from '@/lib/cloudinary'
+import { resolveImageSrc } from '@/lib/media'
 import { cn } from '@/lib/utils'
 import httpClient from '@/services/http'
 

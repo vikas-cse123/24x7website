@@ -27,6 +27,14 @@ import { cn } from '@/lib/utils'
 
 const ADMIN_SETTINGS_QUERY_KEY = ['admin', 'settings']
 
+// Backend validation failures carry a generic `message` ("Validation failed")
+// plus a detailed `errors` array. Surface the first real error so admins see
+// exactly which field failed instead of the generic message.
+function getApiError(err) {
+  const first = err.response?.data?.errors?.[0]
+  return first?.message || err.response?.data?.message || err.message
+}
+
 const MAX_LOGO_SIZE_MB = 5
 const SUPPORTED_FORMATS = 'JPG, JPEG, PNG, WebP'
 
@@ -78,7 +86,11 @@ export function AdminSettingsPage() {
   const [previewUrl, setPreviewUrl] = React.useState(null)
   const [resetOpen, setResetOpen] = React.useState(false)
 
-  const [contactForm, setContactForm] = React.useState({ phone: '', showPhoneInHeader: false })
+  const [contactForm, setContactForm] = React.useState({
+    phone: '',
+    showCountryCode: true,
+    showPhoneInHeader: false,
+  })
   const [bannerForm, setBannerForm] = React.useState({ ...DEFAULT_PROMOTIONAL_BANNER })
 
   const { data, isLoading, isError, error } = useQuery({
@@ -93,6 +105,7 @@ export function AdminSettingsPage() {
     if (!settings) return
     setContactForm({
       phone: settings.contact?.phone ?? '',
+      showCountryCode: settings.contact?.showCountryCode ?? true,
       showPhoneInHeader: settings.contact?.showPhoneInHeader ?? false,
     })
     setBannerForm({ ...DEFAULT_PROMOTIONAL_BANNER, ...settings.promotionalBanner })
@@ -140,7 +153,7 @@ export function AdminSettingsPage() {
       // Retain the currently active logo; never save a broken URL.
       if (err.response?.status === 503) {
         toast.error(
-          'Cloudinary is not configured. Persistent logo uploads require the Cloudinary environment variables.'
+          'S3 storage is not configured. Persistent logo uploads require the AWS S3 environment variables.'
         )
       } else {
         toast.error(err.response?.data?.message || err.message || 'Upload failed')
@@ -165,7 +178,7 @@ export function AdminSettingsPage() {
       toast.success('Contact information saved')
       invalidate()
     },
-    onError: (err) => toast.error(err.response?.data?.message || err.message || 'Save failed'),
+    onError: (err) => toast.error(getApiError(err) || 'Save failed'),
   })
 
   const bannerMutation = useMutation({
@@ -174,7 +187,7 @@ export function AdminSettingsPage() {
       toast.success('Promotional banner saved')
       invalidate()
     },
-    onError: (err) => toast.error(err.response?.data?.message || err.message || 'Save failed'),
+    onError: (err) => toast.error(getApiError(err) || 'Save failed'),
   })
 
   return (
@@ -199,12 +212,12 @@ export function AdminSettingsPage() {
               <CardDescription>Website logo — shown in the header, mobile menu, login/signup, footer and image fallbacks.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {settings?.branding?.cloudinaryConfigured === false && (
+              {settings?.branding?.storageConfigured === false && (
                 <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                   <p>
-                    Cloudinary is not configured. Uploading a new logo requires the
-                    Cloudinary environment variables (<code className="rounded bg-amber-100 px-1">CLOUDINARY_*</code>)
+                    S3 storage is not configured. Uploading a new logo requires the
+                    AWS S3 environment variables (<code className="rounded bg-amber-100 px-1">AWS_REGION, AWS_S3_BUCKET</code>)
                     to be set on the server.
                   </p>
                 </div>
@@ -313,6 +326,12 @@ export function AdminSettingsPage() {
                   placeholder="+91 98765 43210"
                 />
               </div>
+              <ToggleField
+                label="Show +91 country code"
+                description="Prefix the header phone number with +91 (display only — never saved into the stored number)."
+                checked={contactForm.showCountryCode}
+                onCheckedChange={(v) => setContactForm((f) => ({ ...f, showCountryCode: !!v }))}
+              />
               <ToggleField
                 label="Show in header"
                 description="Display the phone number in the main header row."

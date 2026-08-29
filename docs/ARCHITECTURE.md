@@ -355,7 +355,7 @@ ordered by `displayOrder`.
 Wishlist (`Wishlist` model) sits beside `Booking` under account scope; populated via batch fetch to avoid N+1, integrated via `WishlistButton` on cards.
 
 ## Homepage content feeds
-- `GET /api/reviews/recent?limit=N` (public) returns latest approved reviews with trip context — powers the homepage reviews section. No new image system: Cloudinary `DestinationImage` reused everywhere.
+- `GET /api/reviews/recent?limit=N` (public) returns latest approved reviews with trip context — powers the homepage reviews section. No new image system: S3-backed `DestinationImage` reused everywhere.
 
 ## Notifications
 Events raised inside Booking/TripBatch/Review services call the reusable notification service (fire-and-forget). Header bell + account page read `/api/account/notifications`.

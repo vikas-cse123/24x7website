@@ -4,6 +4,7 @@
 
 export const DEFAULT_CONTACT = {
   phone: '',
+  showCountryCode: true,
   showPhoneInHeader: false,
 }
 

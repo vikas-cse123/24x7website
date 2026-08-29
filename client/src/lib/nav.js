@@ -2,22 +2,47 @@
 // Each top-level item maps to a route registered in `client/src/routes/`.
 // Items with `children` render as a dropdown (desktop) / expandable group
 // (mobile). Add or reorder items here; the Header, MobileNav and Footer all
-// consume this config.
+// consume this config. `icon` is the emoji shown next to each label.
 
 export const NAV_ITEMS = [
-  { label: 'Group Trips', href: '/trips' },
-  { label: 'Deals', href: '/trips?featured=true' },
-  { label: 'Travel Styles', href: '/trips' },
-  { label: 'Upcoming Group Trips', href: '/trips' },
-  { label: 'Destinations', href: '/destinations' },
   {
-    label: 'More',
-    href: '/more',
+    label: 'Group Trips',
+    icon: '👥',
     children: [
-      { label: 'Travel Blogs', href: '/blogs' },
-      { label: 'FAQs', href: '/faqs' },
-      { label: 'About Us', href: '/about' },
-      { label: 'Contact Us', href: '/contact' },
+      { label: 'International Trips', icon: '✈️', href: '/trips?category=international' },
+      { label: 'Domestic Trips', icon: '🇮🇳', href: '/trips?category=domestic' },
+    ],
+  },
+  {
+    label: 'Deals',
+    icon: '🏷️',
+    children: [{ label: 'Northern Lights Early Bird', icon: '🔥', href: '/trips?featured=true' }],
+  },
+  {
+    label: 'Travel Styles',
+    icon: '🗺️',
+    children: [
+      { label: 'Bike Trips', icon: '🚴', href: '/trips' },
+      { label: 'Spiritual Trips', icon: '🙏', href: '/trips' },
+      { label: 'The Match Maker', icon: '💌', href: '/trips' },
+      { label: 'Wellness Retreats', icon: '🧘', href: '/trips' },
+      { label: 'Treks', icon: '🏔️', href: '/trips' },
+    ],
+  },
+  { label: 'Upcoming Group Trips', icon: '🧳', href: '/category/upcoming-trips' },
+  { label: 'Middle Age Trips', icon: '👫', href: '/category/middle-age-trips' },
+  {
+    label: 'Customised Trips',
+    icon: '🌍',
+    children: [{ label: 'Customised Trips', icon: '🌍', href: '/customised-trips' }],
+  },
+  {
+    label: 'More about us',
+    icon: '🟢',
+    children: [
+      { label: 'About CAT', icon: '🟢', href: '/about' },
+      { label: 'News and Press', icon: '📰', href: '/blogs' },
+      { label: 'Reviews', icon: '⭐', href: '/' },
     ],
   },
 ]

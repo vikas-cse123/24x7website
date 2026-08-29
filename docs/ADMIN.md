@@ -146,10 +146,10 @@ contact channel:
 
 **Branding** — the website logo:
 - **Current logo** — preview of the active logo with a Default/Custom badge and
-  (for custom) the update time and Cloudinary publicId.
+  (for custom) the update time and the S3 object key.
 - **Upload New Logo** — pick a JPG/JPEG/PNG/WebP file (max 5 MB). A **local
   preview** is shown immediately and is NOT saved; Cancel/change are supported.
-  **Save Logo** persists it. When Cloudinary is not configured the page shows a
+  **Save Logo** persists it. When S3 storage is not configured the page shows a
   warning banner and uploads return a clean 503 (nothing is persisted).
 - **Reset to Default** — appears only when a custom logo is active; a confirm
   dialog, then the site falls back to the default `/logo.jpg`.

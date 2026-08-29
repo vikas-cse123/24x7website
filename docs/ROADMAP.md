@@ -101,7 +101,7 @@ implemented and verified.
 - [x] FAQs — CMS (global / destination / trip scopes, priority merge
       trip→destination→global, admin CRUD + publish/reorder, public
       visibility by displayOrder)
-- [x] Gallery (Trip hero+traveler media, lightbox, Cloudinary)
+- [x] Gallery (Trip hero+traveler media, lightbox, S3)
 
 ## Phase 13 — FAQ CMS
 - [x] Global / Destination / Trip FAQ model with displayOrder + publish
@@ -144,7 +144,7 @@ implemented and verified.
 ## Phase 20 — Final production readiness + Capture A Trip clone QA
 - [x] Performance: route lazy loading (React.lazy+Suspense) + manualChunks → initial 53 kB vs 862 kB, no >500 kB chunk
 - [x] SEO audit: og:url + twitter metadata, robots.txt, sitemap.xml, canonical/noindex, filtered URLs noindex-safe
-- [x] Security audit: headers, CORS, cookies, RBAC, owner scoping, ObjectId/Zod, upload 5 MB + image/*, Cloudinary travel-crm/ guard, prod error hiding, no secrets exposed
+- [x] Security audit: headers, CORS, cookies, RBAC, owner scoping, ObjectId/Zod, upload 5 MB + image/*, S3 travel-crm/ guard, prod error hiding, no secrets exposed
 - [x] API reliability: consistent 400/401/403/404/409/500, validation, pagination limits, empty/error states
 - [x] Image audit: f_auto/q_auto/srcSet/lazy/fallback retained, no local storage
 - [x] Responsive QA 320–1440 all key pages, no overflow, tappable booking, modals fit

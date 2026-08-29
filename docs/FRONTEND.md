@@ -194,7 +194,7 @@ Path alias `@/` maps to `client/src/`.
 - Homepage `ReviewsSection` renders real approved reviews from `/api/reviews/recent` (loading/empty/error states)
 - `DestinationsPage` category tabs (All/International/Domestic/Weekend) — API already supported `category`
 - `TripPage` `RelatedTrips` section reuses `TripCard` + existing `tripApi.list({destination})`
-- `HeroSection` real Cloudinary hero image via existing `DestinationImage`, gradient overlay, logo fallback
+- `HeroSection` real hero video via existing layout, gradient overlay, logo fallback
 - New `FaqsPage` reuses `faqApi.list` + `Accordion`
 
 ### Phase 19 — Content pages + final UX gaps
@@ -208,7 +208,7 @@ Path alias `@/` maps to `client/src/`.
 - **Performance**: `routes/index.jsx:1` now lazy-loads 29 pages via `React.lazy` + `Suspense` fallback spinner; `vite.config.js:19` adds `manualChunks` (vendor, vendor-router/query/forms/axios/zustand/icons/ui) so initial JS is ~54 kB + shared vendors, not 862 kB monolith.
 - **SEO**: `lib/seo.js:1` adds `og:url` + `twitter:card/title/description/image`; `client/public/robots.txt` + `client/public/sitemap.xml` (static public URLs only, no /admin/account/booking, filtered query URLs canonicalize to unfiltered root).
 - **Error/loading**: every new Phase 19 page has breadcrumbs, skeletons/empty/error states consistent with existing pages; `RouteFallback` spinner for lazy loading.
-- **Image/perf**: `DestinationImage` lazy + `f_auto/q_auto` + `srcSet` retained; no duplicate fetches; Cloudinary `publicId` paths only.
+- **Image/perf**: `DestinationImage` lazy with S3/legacy URL resolution; no duplicate fetches; no srcSet transforms (S3 has no on-the-fly resizing).
 
 ## Notifications
 - `NotificationBell` in Header (authenticated only) + MobileNav drawer; unread badge, dropdown, Escape/outside close, mark-read on click, View all → /account/notifications.

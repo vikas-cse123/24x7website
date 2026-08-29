@@ -81,7 +81,7 @@ export function ImageUploader({
           onChange={e=>upload(Array.from(e.target.files||[]))} />
         {uploading ? <Loader2 className="h-8 w-8 animate-spin text-primary" /> : <Upload className="h-8 w-8 text-muted-foreground" />}
         <p className="mt-2 text-sm font-medium">{dragOver ? "Drop images here" : "Click or drag & drop images"}</p>
-        <p className="text-xs text-muted-foreground">PNG, JPG, WEBP — max 5 MB — f_auto/q_auto delivery</p>
+        <p className="text-xs text-muted-foreground">PNG, JPG, WEBP — max 5 MB — stored securely in S3</p>
         {progress!=null && <p className="mt-1 text-xs text-primary">{progress}%</p>}
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -96,7 +96,7 @@ export function ImageUploader({
                 <div className="flex h-32 items-center justify-center"><ImageIcon className="h-8 w-8 text-muted-foreground/40" /></div>
               )}
               <div className="absolute inset-0 flex items-start justify-between bg-gradient-to-b from-black/40 to-transparent p-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-                <span className="rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">{img.publicId ? 'Cloudinary' : hasImage ? 'External' : ''}</span>
+                <span className="rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">{img.publicId ? 'S3' : hasImage ? 'External' : ''}</span>
                 <Button type="button" size="icon" variant="destructive" className="h-7 w-7" onClick={e=>{e.stopPropagation(); remove(i)}}><X className="h-4 w-4" /></Button>
               </div>
               {isArray && (

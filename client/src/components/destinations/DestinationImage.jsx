@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
-import { resolveImageSrc, resolveSrcSet } from '@/lib/cloudinary'
+import { resolveImageSrc, resolveSrcSet } from '@/lib/media'
 import { BrandLogoImage } from '@/components/brand/BrandLogoImage'
 
 // Image can be a string URL (legacy) or an image object {url, secureUrl, publicId, alt}

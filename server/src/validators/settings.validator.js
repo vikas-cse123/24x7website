@@ -12,6 +12,7 @@ const optionalHex = z
 
 export const updateContactSchema = z.object({
   phone: z.string().trim().max(30, 'Phone is too long').optional(),
+  showCountryCode: z.boolean().optional(),
   showPhoneInHeader: z.boolean().optional(),
 })
 
@@ -19,7 +20,7 @@ export const updatePromotionalBannerSchema = z
   .object({
     enabled: z.boolean().optional(),
     message: z.string().trim().min(1, 'Message is required').max(300).optional(),
-    ctaText: z.string().trim().min(1, 'CTA text is required').max(60).optional(),
+    ctaText: z.string().trim().max(60).optional(),
     ctaUrl: z.string().trim().max(300).optional(),
     shimmerEnabled: z.boolean().optional(),
     dismissible: z.boolean().optional(),

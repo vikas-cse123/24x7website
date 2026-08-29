@@ -216,7 +216,7 @@ Public (no auth — the whole website reads these):
 
 Admin (RBAC — `requireAuth` + admin role at the parent admin router):
 - `GET /api/admin/settings` → aggregate admin bundle (branding metadata incl.
-  `isCustom`/`cloudinaryConfigured`, contact, promotionalBanner).
+  `isCustom`/`storageConfigured`, contact, promotionalBanner).
 - `GET /api/admin/settings/branding`, `POST
   /api/admin/settings/branding/logo` (multipart `image`, JPG/JPEG/PNG/WebP,
   5 MB), `DELETE /api/admin/settings/branding/logo` — branding (Phase 28).
@@ -259,10 +259,10 @@ Legacy (pre-phase) planned endpoints below:
 - `GET /api/trips/:tripId/media?mediaType=photo|video` — published traveler media
 - `GET /api/admin/media?tripId=&mediaType=&published=&page=&limit=` — admin list
 - `POST /api/admin/media` — create (tripId, mediaType, publicId/secureUrl, etc.)
-- `PATCH /api/admin/media/:id` — update, `PATCH /:id/publish` — toggle, `POST /reorder` — order, `DELETE /:id` — delete (no Cloudinary asset delete)
+- `PATCH /api/admin/media/:id` — update, `PATCH /:id/publish` — toggle, `POST /reorder` — order, `DELETE /:id` — delete (no S3 object delete)
 
 ### Media (`/api/media`)
-- `POST /api/media` — upload media (Multer + Cloudinary)
+- `POST /api/media` — upload media (Multer + AWS S3)
 - `GET /api/media` — list media
 - `DELETE /api/media/:id` — delete media
 
@@ -343,7 +343,7 @@ in those statuses.
 ## Security & production notes (Phase 20)
 
 - All `/api/admin/*` behind `requireAuth` + `requireRole(...ADMIN_ROLES)` (`admin.routes.js:18`); owner scoping on `account`/`wishlist`/`notifications`/`bookings`/`travellers`/`reviews`.
-- Validation: Zod schemas + `validate()` middleware; ObjectId regex checks; pagination `max 50` (public) / `100` (admin); image uploads `fileFilter image/*` + `5 MB` limit (`middleware/upload.js:12`); Cloudinary deletion guarded by `travel-crm/` prefix (`upload.controller.js:32`).
+- Validation: Zod schemas + `validate()` middleware; ObjectId regex checks; pagination `max 50` (public) / `100` (admin); image uploads `fileFilter image/*` + `5 MB` limit (`middleware/upload.js:12`); S3 deletion guarded by `travel-crm/` prefix (`upload.controller.js`).
 - Headers: `X-Content-Type-Options`, `X-Frame-Options DENY`, `Referrer-Policy`, `Permissions-Policy`, `HSTS` in prod + `CORS credentials:true` allowlist + `cookie httpOnly/secure/sameSite` (`app.js:8`, `config/index.js:21`).
 - Errors: `errorHandler` returns safe 500 in prod (`middleware/error.js:9`, `config.isProduction`), preserves validation `errors` array, never leaks stack/DB internals.
 - SEO: `robots.txt` disallows `/admin/account/booking/api`, `sitemap.xml` lists only indexable public URLs (filtered query URLs canonicalize, not sitemapped).

@@ -121,6 +121,8 @@ export function AppRoutes() {
           <Route path="/middle-age-trips" element={placeholder('Middle Age Trips')} />
           <Route path="/customised-trips" element={placeholder('Customised Trips')} />
           <Route path="/more" element={placeholder('More')} />
+          <Route path="/category/upcoming-trips" element={placeholder('Upcoming Group Trips')} />
+          <Route path="/category/middle-age-trips" element={placeholder('Middle Age Trips')} />
 
           {/* Account (private — noindex; layout guards auth) */}
           <Route path="/account" element={<AccountLayoutPage />}>

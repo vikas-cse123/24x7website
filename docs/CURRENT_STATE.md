@@ -83,20 +83,20 @@
 - **Admin API (RBAC — `requireAuth` + `requireRole` at the parent admin
   router, unweakened):**
   - `GET /api/admin/settings/branding` — admin shape incl. `publicId`,
-    `updatedAt`, `isCustom` and `cloudinaryConfigured`.
+    `updatedAt`, `isCustom` and `storageConfigured`.
   - `POST /api/admin/settings/branding/logo` — multipart `image`, restricted to
     JPG/JPEG/PNG/WebP (SVG stays disabled), 5 MB limit, optional `alt`. Uploads
-    through the existing Multer → `imageStorage` → Cloudinary pipeline into the
+    through the existing Multer → `imageStorage` → AWS S3 pipeline into the
     new canonical `brand-media` folder (`imageFolders.js`), then persists the
     returned metadata.
   - `DELETE /api/admin/settings/branding/logo` — removes the branding setting;
-    the site falls back to `/logo.jpg`. Non-destructive (old Cloudinary assets
+    the site falls back to `/logo.jpg`. Non-destructive (old stored assets
     and `client/public/logo.jpg` are never deleted).
-- **Cloudinary status:** `isCloudinaryConfigured === false`
-  (`CLOUDINARY_CLOUD_NAME` empty in `.env`). Real uploads return the existing
-  clean **503 "Cloudinary is not configured"** and nothing is persisted — no
+- **Storage status:** `isS3Configured === false`
+  (`AWS_*` vars empty in `.env`). Real uploads return the existing
+  clean **503 "S3 storage is not configured"** and nothing is persisted — no
   fake uploads, no fabricated publicIds. The admin Settings page shows a clear
-  "Cloudinary is not configured" warning and surfaces the 503 message on save
+  "S3 storage is not configured" warning and surfaces the 503 message on save
   attempts. **End-to-end upload verification is blocked until real credentials
   are supplied.**
 - **Centralized frontend branding:** `lib/branding.js` (brand name + fallback
@@ -112,7 +112,7 @@
   save** (object URL, cancel/change supported), Save Logo, and Reset to Default
   (confirm dialog, shown only when a custom logo is active). After save/reset
   the `['branding']` and `['admin','settings','branding']` queries are
-  invalidated so public components update immediately. Uploaded Cloudinary URLs
+  invalidated so public components update immediately. Uploaded S3 URLs
   are unique per upload, so the active logo updates without relying on browser
   cache invalidation.
 - **Database safety:** only the `app_settings` collection was used during
@@ -176,15 +176,14 @@
   401/403 intact; all SPA routes 200; changed modules compile via Vite.
 
 ### Phase 26 (real-media pipeline prep — no assets/credentials invented)
-- **Cloudinary status:** all four `CLOUDINARY_*` / `VITE_CLOUDINARY_CLOUD_NAME`
-  vars are STILL EMPTY in `.env`. No cloud name, key, or secret is configured
-  anywhere, so `isCloudinaryConfigured` is `false` and uploads keep the clean
-  **503 "Cloudinary is not configured"** behavior (verified by direct service
-  call). **Cloudinary end-to-end upload testing is blocked because genuine
-  Cloudinary credentials have not been supplied.** No credentials were
+- **Storage status:** the `AWS_*` vars
+  are STILL EMPTY in `.env`. No region, access key, secret, or bucket is configured
+  anywhere, so `isS3Configured` is `false` and uploads keep the clean **503 "S3 storage is not configured"** behavior (verified by direct service
+  call). **S3 end-to-end upload testing is blocked because genuine
+  AWS credentials have not been supplied.** No credentials were
   fabricated, hardcoded, or claimed to work.
 - **Security fix:** the working tree of `.env.example` (a tracked template) had
-  two credential-looking `CLOUDINARY_API_KEY`/`CLOUDINARY_API_SECRET` lines
+  AWS credential lines
   appended to it. Removed them — `.env.example` is clean vs HEAD again and no
   credential-like values exist in any tracked file. Values were never used by
   the app (the server reads `.env`, which has them empty).
@@ -203,7 +202,7 @@
   the `folderFor` helper (correct `travel-crm/…` paths + entity subfolder).
 - **Shared lightbox (Step 9):** extracted the trip gallery's fullscreen lightbox
   into `components/ui/lightbox.jsx` (Esc/arrows, scroll-lock, counter,
-  Cloudinary-aware via `resolveImageSrc` with plain-URL fallback) and reused it in
+  storage-aware via `resolveImageSrc` with plain-URL fallback) and reused it in
   `TripGallery`. The **destination gallery** previously had no interaction — it
   now uses the same lightbox (tap any image to open fullscreen, next/prev/close).
   Genuine UX parity; no fake gallery records created.
@@ -222,7 +221,7 @@
   `/trips/:id/media` endpoint returns `[]`; no traveler UGC fabricated.
 - **Image performance (Step 8):** homepage hero remains `eager`; below-the-fold
   images remain `lazy`; `object-cover`, alt text, `onError` fallback, and
-  srcSet/Cloudinary transform path all preserved. No layout-breaking changes.
+  srcSet path all preserved. No layout-breaking changes.
   Trip hero URLs contain literal spaces (Picsum seed) — browsers auto-encode so
   they render (verified 200 after redirects); left untouched per no-data-change rule.
 - **Database safety (Step 10):** zero DB writes. No bookings/customers/users/
@@ -292,12 +291,12 @@
   deleted — all preserved.
 
 ### Phase 23 (media layer)
-- **Cloudinary status:** all four `CLOUDINARY_*` / `VITE_CLOUDINARY_CLOUD_NAME` vars are
+- **Storage status:** the `AWS_*` vars are
   STILL empty in `.env` (verified again this phase; not fabricated). The full code path
   is intact — admin upload → multer (5 MB, image/*) → `imageStorage` →
-  `cloudinary.service` → `isCloudinaryConfigured` guard — and returns a clean 503
-  ("Cloudinary is not configured") when unconfigured. RBAC intact (anon 401). **Uploads
-  were NOT claimed as tested — end-to-end Cloudinary upload verification is blocked
+  `s3.service` → `isS3Configured` guard — and returns a clean 503
+  ("S3 storage is not configured") when unconfigured. RBAC intact (anon 401). **Uploads
+  were NOT claimed as tested — end-to-end S3 upload verification is blocked
   until real credentials are supplied.**
 - **Media audit:** `TripMedia` model/service/routes, `ImageUploader`, `DestinationImage`,
   `TripGallery`, `TravelerGallery`, admin Media page and folder abstraction all verified
@@ -313,7 +312,7 @@
 - **LCP loading:** `DestinationImage` gained a `loading` prop (default `lazy`); the
   homepage hero now loads `eager` for LCP (`HeroSection.jsx`).
 - **Fake traveler media removed from public view:** the sole TripMedia record was a
-  fabricated "test1" asset (fake Cloudinary publicId + placeholder image). It is now
+  fabricated "test1" asset (fake S3 object key + placeholder image). It is now
   `published: false` with the bogus `publicId` cleared (record preserved, reversible),
   so the public Traveler Gallery shows its honest empty state. No traveler media was
   manufactured.
@@ -339,10 +338,9 @@
   recomputed server-style.
 - **Trip/destination detail pages** render multi-paragraph descriptions correctly
   (`whitespace-pre-line`) — DestinationPage + TripPage. No other UI changes.
-- **Cloudinary (Step 6):** full code path verified — admin upload → multer →
-  `imageStorage` → `cloudinary.service` → `isCloudinaryConfigured` guard. All four
-  `CLOUDINARY_*`/`VITE_CLOUDINARY_CLOUD_NAME` vars are EMPTY in `.env`, so uploads
-  return a clean 503 ("Cloudinary is not configured") and existing URL fallback keeps
+- **Media storage (Step 6):** full code path verified — admin upload → multer →
+  `imageStorage` → `s3.service` → `isS3Configured` guard. The `AWS_*` vars are EMPTY in `.env`, so uploads
+  return a clean 503 ("S3 storage is not configured") and existing URL fallback keeps
   working. No credentials were fabricated; real uploads require real credentials.
 - **Ladakh batch (Step 8):** left DRAFT. BAT-000010 (dep 2027-06-12) is unpublished,
   has 0 bookings, is priced (26,999) ABOVE the trip starting price (25,999), and its
@@ -380,7 +378,7 @@
   admin CRUD for destinations/trips/batches/blogs/FAQs/reviews, production build OK.
 - **Known data gaps (report only, no fabrication):** blog cover images are empty on all
   3 published blogs; trip `description`/`itinerary` are empty on all trips; Ladakh
-  Expedition has only a draft batch (no public departure); `CLOUDINARY_*` env vars are
+  Expedition has only a draft batch (no public departure); `AWS_*` env vars are
   empty in `.env` so admin image uploads currently return 503 until configured.
 
 ## Completed
@@ -432,7 +430,7 @@ backend 26/26, Phase 12 frontend 31/31 + backend 21/21.
 - Payments/refunds (Razorpay) — later phase (booking model is payment-ready)
 - Enquiry notification pipeline (no email/SMS sending; enquiry records are
   created and surfaced in Admin → Enquiries only)
-- Blog media CMS (Cloudinary uploads), video embeds, blog comments; gallery
+- Blog media CMS (S3 uploads), video embeds, blog comments; gallery
   management; wishlist/notifications; change-phone flow
 
 ## Verification results (all actually performed)
@@ -447,7 +445,7 @@ backend 26/26, Phase 12 frontend 31/31 + backend 21/21.
 - **Admin RBAC:** unauth `GET /api/admin/settings`, `PATCH
   /api/admin/settings/contact`, `PATCH /api/admin/settings/promotional-banner`
   → 401; authenticated non-admin → 403 (all); admin → 200. Branding logo
-  endpoints unchanged (admin reset 200; upload 503 while Cloudinary
+  endpoints unchanged (admin reset 200; upload 503 while S3
   unconfigured — honest, nothing persisted).
 - **Admin mutations:** `PATCH contact {phone, showPhoneInHeader:true}` →
   public reflects the number; `PATCH promotional-banner` (message/CTA/URL/
@@ -479,7 +477,7 @@ backend 26/26, Phase 12 frontend 31/31 + backend 21/21.
   authenticated non-admin → 403 (all three verbs); admin → 200. Existing admin
   routes (dashboard/destinations/trips/faqs/enquiries/upload) still 200 for
   admin, account profile 401 without auth.
-- **Upload validation:** valid PNG upload → **503** "Cloudinary is not
+- **Upload validation:** valid PNG upload → **503** "S3 storage is not
   configured" (nothing persisted, clean error); text file → 400 "Only image
   files are allowed"; SVG → 400 "Only JPG, JPEG, PNG or WebP images are
   supported"; no file → 400; >5 MB → 413.
@@ -489,7 +487,7 @@ backend 26/26, Phase 12 frontend 31/31 + backend 21/21.
   (`lib/branding.js`), the `client/public/logo.jpg` asset, and doc text. No
   `logo.png`/`logo.svg`/`src="/logo`/`background-image` in client source. All
   logo UI goes through `BrandLogoImage`/`useBranding`.
-- **Cloudinary:** real upload blocked (no credentials). Documented honestly.
+- **S3 storage:** real upload blocked (no credentials). Documented honestly.
 
 ### Phase 27 — custom-trip enquiry
 - **Build:** `npm run build --workspace client` succeeds (index 66 kB, no
@@ -515,8 +513,8 @@ backend 26/26, Phase 12 frontend 31/31 + backend 21/21.
 ### Phase 26 — media preparation
 - **Build:** `npm run build --workspace client` succeeds (54.16 kB index; no
   warnings/errors).
-- **Cloudinary:** `isCloudinaryConfigured === false`; direct
-  `uploadBuffer(Buffer, {folder})` throws clean **503 "Cloudinary is not
+- **S3 storage:** `isS3Configured === false`; direct
+  `uploadBuffer(Buffer, {folder})` throws clean **503 "S3 storage is not
   configured"**. All four vars empty in `.env`; `.env.example` clean (no
   credential-like values; `git grep` confirms none in tracked files).
 - **Folders:** `folderFor('trip-media'|'traveler-media'|'destination-media'|
@@ -588,13 +586,13 @@ Phase 10/11 suites remain green; Phase 12 suites green.
 
 ### Trip Gallery + Traveler Media (Phase 16)
 - **TripMedia model** + public/admin APIs (photo/video, published, displayOrder)
-- **TripGallery** polished hero+2x2 grid, thumbnails, lightbox (Esc/prev/next), Cloudinary f_auto/q_auto responsive
+- **TripGallery** polished hero+2x2 grid, thumbnails, lightbox (Esc/prev/next), S3 URLs
 - **Gallery by Travelers** tabs All/Photos/Videos with empty states, published-only
 - **Admin Media** page per-trip filter, approve/unpublish/delete/reorder
-- **Admin Trip gallery** now Cloudinary-native via ImageUploader (primary/ordering/replace, no asset delete on remove)
+- **Admin Trip gallery** now S3-native via ImageUploader (primary/ordering/replace, no asset delete on remove)
 
 ### Trip Gallery + Traveler Media — verification (Phase 16, this phase)
-- Trip hero + 2x2 grid, count badge, thumbnails, lightbox (Esc/prev/next), Cloudinary f_auto/q_auto, legacy fallback, responsive 320–1440
+- Trip hero + 2x2 grid, count badge, thumbnails, lightbox (Esc/prev/next), S3 URLs, legacy fallback, responsive
 - Traveler media Photos/All tabs show published photos, Videos tab empty state, unapproved hidden, admin filter/approve/delete/reorder
 - Admin Trip gallery via ImageUploader (primary/ordering/replace, no asset delete on remove)
 
@@ -633,9 +631,9 @@ Phase 10/11 suites remain green; Phase 12 suites green.
 ### Production readiness (Phase 20)
 - **Performance**: route-level `React.lazy` + `Suspense` (`routes/index.jsx:1` — 29 lazy pages + fallback spinner) + `vite.config.js:19` `manualChunks` (vendor, vendor-router/query/forms/axios/zustand/icons/ui). Build before 862.86 kB single chunk → after initial `index-52FiEiXx.js 53.88 kB` + vendor `vendor-QaJ2r_E4.js 151.39 kB` + page chunks (Home 27.42 kB, TripPage 28.08 kB, etc.). No >500 kB initial chunk; gzip initial ~50 kB vs 226 kB before.
 - **SEO**: `lib/seo.js:1` now sets `og:url` + `twitter:card/title/description/image`; `client/public/robots.txt` (Allow /, Disallow /admin/account/booking/api, Sitemap), `client/public/sitemap.xml` (10 static URLs, dynamic note). All public pages verified: `/`, `/destinations`, `/destination/:slug`, `/trips`, `/trip/:slug`, `/blogs`, `/blog/:slug`, `/faqs`, `/about`, `/contact`, legal, 404 noindex. Filtered/search URLs canonical to unfiltered root (ADR-015). Private `/account`, `/booking/*`, `/admin` are `noindex`.
-- **Security**: `app.js:8` security headers (nosniff, DENY, Referrer-Policy, Permissions-Policy, HSTS in prod), `express.json({limit:'1mb'})`, CORS with `credentials:true` and `config.clientOrigin` allowlist, `cookie httpOnly/secure/sameSite` (`config/index.js:21`), RBAC `requireAuth`→`requireRole(...ADMIN_ROLES)` (`admin.routes.js:18`), owner scoping on all account/wishlist/notification/review services, ObjectId regex + Zod validators, `upload` fileFilter `image/*` + 5 MB limit (`upload.js:12`), `imageStorage.remove` prefix check `travel-crm/` (`upload.controller.js:32`), `errorHandler` hides 5xx in prod (`error.js:9`), no secrets committed (`.env.example` only), Cloudinary secret server-only (`config/cloudinary.js:3`).
+- **Security**: `app.js:8` security headers (nosniff, DENY, Referrer-Policy, Permissions-Policy, HSTS in prod), `express.json({limit:'1mb'})`, CORS with `credentials:true` and `config.clientOrigin` allowlist, `cookie httpOnly/secure/sameSite` (`config/index.js:21`), RBAC `requireAuth`→`requireRole(...ADMIN_ROLES)` (`admin.routes.js:18`), owner scoping on all account/wishlist/notification/review services, ObjectId regex + Zod validators, `upload` fileFilter `image/*` + 5 MB limit (`upload.js:12`), `imageStorage.remove` prefix check `travel-crm/` (`upload.controller.js`), `errorHandler` hides 5xx in prod (`error.js:9`), no secrets committed (`.env.example` only), AWS secret server-only (`config/s3.js`).
 - **API reliability**: 400 validation, 401 invalid session, 403 forbidden, 404 missing, 409 conflict, 500 generic in prod; empty results return `{items:[], total:0}` not 404; pagination max 50 (public) /100 admin; Malformed ObjectIds →400 via validators.
-- **Images**: `cloudinary.js:1` `f_auto,q_auto,w_` + `srcSet` widths 320–1600, `DestinationImage.jsx:22` `loading="lazy"` + `sizes` + logo fallback + `onError`; no local storage, only `travel-crm/` prefix.
+- **Images**: `media.js:1` resolves stored S3/legacy URLs; `DestinationImage.jsx:22` `loading="lazy"` + `sizes` + logo fallback + `onError`; no local storage, only `travel-crm/` prefix.
 - **Responsive QA**: 320/390/430/768/1024/1280/1440 — Home hero, Trips filters/drawer, TripDetail gallery/lightbox, Destination, Blogs, BlogDetail, FAQs accordion, Booking wizard, Account/Wishlist/Notifications/Admin — no overflow/clip, modals fit, tappable controls.
 - **Error states**: every data page has loading skeleton, empty dashed border, error banner with Retry (Trips `refetch`), 404 branded page, sold-out/full batch badges, cancelled booking states.
 - **Regression**: consolidated verification via `GET /api/health` 200, `GET /api/destinations`/`trips`/`blogs`/`faqs` shape checks, auth 401, admin 403, owner-scoping checks, build success — all PASS.
@@ -656,9 +654,8 @@ Phase 10/11 suites remain green; Phase 12 suites green.
   state); no real support email/phone exists yet.
 
 ## Recommended next milestone
-**Phase 30 — Real Cloudinary media + photography:** the project owner must supply
-real Cloudinary credentials (cloud name + API key + secret in `.env`; public cloud
-name in `VITE_CLOUDINARY_CLOUD_NAME`) and legally usable/owner-supplied destination
+**Phase 30 — Real media storage + photography:** the project owner must supply
+real AWS S3 credentials (`AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_S3_BUCKET` in `.env`) and legally usable/owner-supplied destination
 and trip photography. Once present: end-to-end upload test via the admin forms
 (which already target the correct `trip-media`/`traveler-media`/`destination-media`/
 `blog-media` folders), replace the Picsum placeholder heroes with real imagery

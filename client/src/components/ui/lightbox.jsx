@@ -1,11 +1,11 @@
 import * as React from 'react'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
-import { resolveImageSrc } from '@/lib/cloudinary'
+import { resolveImageSrc } from '@/lib/media'
 
 // Shared fullscreen image lightbox. Keyboard accessible (Esc/arrow keys),
 // scroll-locks the page, shows a position counter. Used by the trip gallery
-// and the destination gallery so both behave consistently. Cloudinary-aware
-// (publicId → responsive delivery URL) with plain URL fallback.
+// and the destination gallery so both behave consistently. Resolves stored
+// media URLs (S3 object URLs or legacy URLs) with a plain URL fallback.
 export function Lightbox({ images, index, onClose, onPrev, onNext }) {
   React.useEffect(() => {
     const onKey = (e) => {

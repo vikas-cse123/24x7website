@@ -1,4 +1,12 @@
-import 'dotenv/config'
+import dotenv from 'dotenv'
+import { fileURLToPath } from 'node:url'
+import { dirname, resolve } from 'node:path'
+
+// Load the project-root .env explicitly. The server runs from server/ (npm
+// workspaces), so the default `dotenv/config` cwd lookup would miss it and the
+// app would silently fall back to defaults.
+const __dirname = dirname(fileURLToPath(import.meta.url))
+dotenv.config({ path: resolve(__dirname, '../../../.env') })
 
 const isProduction = process.env.NODE_ENV === 'production'
 

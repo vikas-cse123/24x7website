@@ -20,7 +20,7 @@ modern travel platforms, but the implementation is entirely our own.
 | Database  | MongoDB + Mongoose |
 
 Additional tools (Lucide React, Sonner, date-fns) and later-stage libraries
-(JWT, bcrypt, Multer, Cloudinary, Nodemailer, Razorpay, Recharts, TanStack
+(JWT, bcrypt, Multer, AWS S3, Nodemailer, Razorpay, Recharts, TanStack
 Table) are planned as their features are built.
 
 ## Repository structure
@@ -161,7 +161,7 @@ a **real homepage**:
   placeholders for reviews/blogs/community-moments/videos. All data comes from
   the real Destination/Trip APIs; no fake business content.
 - **Image architecture:** `heroImage` + `gallery` as `{ url, publicId, alt }`;
-  URL-based until Cloudinary is integrated.
+  URL-based; new uploads stored in AWS S3.
 
 **Not yet implemented:** TripBatch (departure dates), booking, travellers,
 payments, advanced search, reviews, blogs, global FAQs, coupons, wishlist,

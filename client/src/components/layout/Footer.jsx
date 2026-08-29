@@ -48,7 +48,7 @@ export function Footer() {
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           {/* Brand + contact */}
           <div>
-            <Logo imgClassName="h-11" />
+            <Logo imgClassName="h-12 w-[96px] object-contain sm:h-[55px] sm:w-[110px]" />
             <p className="mt-4 max-w-xs text-sm text-muted-foreground">
               24x7Chhutti — travel packages with departure dates, itineraries and
               pricing. Group and customised trips, available around the clock.

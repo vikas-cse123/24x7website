@@ -134,7 +134,7 @@ consequences where useful.
      return **published only**; drafts are editable in admin and return 404
      publicly. No preview mechanism is implemented yet.
   3. Images (`heroImage`, `gallery[]`) are stored as `{ url, publicId, alt }`.
-     Until Cloudinary credentials exist, images are **URL-based** (development);
+     Until AWS credentials exist, images are **URL-based** (development);
      `publicId` will be populated by the future media service.
 - **Reason:** Stable URLs and explicit publish control are core to a
   production travel site; URL-based image entry keeps the milestone self
@@ -144,7 +144,7 @@ consequences where useful.
   - The update schema intentionally has **no Zod defaults** so omitted fields
     (e.g. `published`) are never reset to defaults on PATCH — a trap identified
     and fixed in this milestone.
-  - Cloudinary integration later only needs to populate `publicId`/`url`; the
+  - Storage integration later only needs to populate `publicId`/`url`; the
     model and form shapes already accommodate it.
 
 ## ADR-012 — Trip entity: embedded content, server-generated tripCode, publish-guard delete
@@ -410,7 +410,7 @@ consequences where useful.
 - **Decision:** Website branding (the logo) is admin-managed through a single
   `app_settings` collection (`key: 'branding'`, `data.logo = { url, publicId,
   alt, updatedAt }`). Uploads reuse the existing Multer → imageStorage →
-  Cloudinary pipeline into the canonical `brand-media` folder (stored in
+  S3 pipeline into the canonical `brand-media` folder (stored in
   `imageFolders.js`); only metadata is persisted, never the binary. The client
   consumes one centralized source — `useBranding()` (React Query, dedicated
   `['branding']` key) rendered via `BrandLogoImage`/`Logo` — so Header, mobile
@@ -423,12 +423,12 @@ consequences where useful.
   components, so changing it required editing source. A centralized
   settings-driven logo makes brand changes a no-code admin action while the
   default file guarantees the site never loses its identity.
-- **Consequences:** Uploaded Cloudinary URLs are unique per upload
+- **Consequences:** Uploaded S3 URLs are unique per upload
   (`unique_filename: true`), which naturally avoids stale browser caches; the
   static default may remain cached since it is only the fallback. Old
-  Cloudinary assets are intentionally not deleted on replace/reset
+  stored assets are intentionally not deleted on replace/reset
   (non-destructive). SVG uploads remain disabled (no sanitizer); only
-  JPG/JPEG/PNG/WebP are accepted. When Cloudinary is unconfigured uploads keep
+  JPG/JPEG/PNG/WebP are accepted. When S3 is unconfigured uploads keep
   the existing clean 503 behavior and nothing is persisted.
 
 ## ADR-025 — Admin-editable header: promotional banner, contact phone, Login CTA
