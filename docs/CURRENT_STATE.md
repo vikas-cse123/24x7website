@@ -4,7 +4,126 @@
 > and update it after every meaningful milestone.
 
 ## Current status
-**PHASE 27 — CUSTOM TRIP ENQUIRY FEATURE (no payments)**
+**PHASE 29 — REBUILD TOP HEADER + EDITABLE PROMOTIONAL BANNER**
+
+### Phase 29 (header + admin-editable promotional banner — end-to-end)
+> Phase numbering note: the admin-managed branding system is recorded below as
+> Phase 28, so this header/banner milestone is Phase 29 to keep the timeline
+> sequential.
+- **Page structure fixed:** every public page now renders **Promotional banner →
+  Main header → Navigation → content**. The banner is the very first element
+  (full-width strip, `components/layout/PromoBanner.jsx`), mounted in
+  `PublicLayout` above the sticky `Header`; it was previously a homepage-only
+  section below the header.
+- **Admin-editable promotional banner:** new `app_settings` documents
+  `key: 'promotionalBanner'` → `data = { enabled, message, ctaText, ctaUrl,
+  shimmerEnabled, dismissible, backgroundColor, textColor }`. Defaults (empty DB
+  never breaks the site): enabled, "Early Bird Sale — Save on upcoming group
+  trips", CTA "Explore trips" → `/trips`, shimmer on. CTA supports internal
+  paths (router) and external http(s) links; unsafe schemes (`javascript:`/
+  `data:`/`vbscript:`) are rejected server-side by Zod and guarded client-side.
+- **White shimmer sweep:** CSS-only `banner-shimmer` animation in
+  `styles/index.css` — an absolutely positioned, pointer-events-none translucent
+  white band that sweeps LEFT → RIGHT, clipped by the banner's `overflow-hidden`.
+  No layout shift, no horizontal scroll, no click interference, and it is
+  disabled under `prefers-reduced-motion` and by the admin "Shimmer effect"
+  toggle.
+- **Banner dismissal:** the X close button hides the banner for the current
+  browser session only (`sessionStorage`), never changing the global admin
+  setting.
+- **Main header rebuilt** (`components/layout/Header.jsx`): **logo (left,
+  admin-managed branding, clickable → "/") | compact centered search | phone +
+  Login (right)**. On mobile the search moves to a dedicated row below the logo
+  so the top row never overflows. Logo uses the centralized branding system
+  (Phase 28) — no hardcoded `/logo.jpg`.
+- **Phone number:** new `key: 'contact'` setting →
+  `data = { phone, showPhoneInHeader }`. `HeaderPhone` shows the number in the
+  header row only when configured + enabled (`tel:` link). Default is empty
+  (no real number exists in the project; none was invented).
+- **Login button:** now just **"Login"** — dark/black pill (70–90px × 36–42px),
+  opening the existing auth flow. "Login / Sign Up" removed everywhere
+  (header, mobile nav, booking/account CTAs); the LoginModal heading keeps its
+  descriptive "Login or Sign Up" title.
+- **Header search:** compact pill (white bg, thin border, search icon left,
+  "Search your trip..." placeholder, subtle focus), still navigates to
+  `/trips?search=…`. Search backend/behaviour untouched.
+- **Navigation row:** existing 24x7Chhutti nav items kept, now full-width and
+  centered under the header with cleaner hover states. Mobile uses the existing
+  drawer.
+- **Public settings API:** `GET /api/settings` (no auth) returns the bundle
+  `{ logo, contact, promotionalBanner }` (defaults applied) so the top area
+  renders from one call. `GET /api/settings/branding` kept for back-compat.
+- **Admin settings API (RBAC — requireAuth + admin at the parent router,
+  unweakened):** `GET /api/admin/settings` (aggregate), `PATCH
+  /api/admin/settings/contact`, `PATCH /api/admin/settings/promotional-banner`,
+  plus the existing branding endpoints.
+- **Admin UI:** `/admin/settings` now has three cards — **Branding** (existing),
+  **Contact Information** (phone + "Show in header"), and **Promotional Banner**
+  (show toggle, message, CTA text, CTA URL, shimmer toggle, live preview).
+  Saving invalidates `['settings','public']`, `['admin','settings']` and
+  `['branding']` so the public site updates immediately.
+- **Database safety:** only the `app_settings` collection was used (keyed
+  `contact`/`promotionalBanner` docs) and left empty after testing; test users
+  removed. No destinations/trips/batches/bookings/users/reviews/FAQs/blogs/
+  wishlists/notifications touched. `logo.jpg` untouched.
+- **Regression:** production build passes; `/api/settings` + all existing APIs
+  200; admin RBAC 401/403 intact; `npm run dev` (client Vite + server) running
+  and serving the changed modules. No payments, no auth/booking changes.
+
+### Phase 28 (admin-managed website logo — end-to-end)
+- **Centralized branding settings:** a new `app_settings` collection
+  (`server/src/models/AppSetting.js`, one doc per `key`) holds `key:
+  'branding'` → `data.logo = { url, publicId, alt, updatedAt }`. Only image
+  metadata is stored — never the binary. No existing model was modified and no
+  other collection is touched.
+- **Public API:** `GET /api/settings/branding` (no auth) →
+  `{ success, data: { logo: { url, alt } } }`. With no custom logo (or on any
+  failure) it returns the guaranteed default: `{ url: "/logo.jpg", alt:
+  "24x7Chhutti" }`.
+- **Admin API (RBAC — `requireAuth` + `requireRole` at the parent admin
+  router, unweakened):**
+  - `GET /api/admin/settings/branding` — admin shape incl. `publicId`,
+    `updatedAt`, `isCustom` and `cloudinaryConfigured`.
+  - `POST /api/admin/settings/branding/logo` — multipart `image`, restricted to
+    JPG/JPEG/PNG/WebP (SVG stays disabled), 5 MB limit, optional `alt`. Uploads
+    through the existing Multer → `imageStorage` → Cloudinary pipeline into the
+    new canonical `brand-media` folder (`imageFolders.js`), then persists the
+    returned metadata.
+  - `DELETE /api/admin/settings/branding/logo` — removes the branding setting;
+    the site falls back to `/logo.jpg`. Non-destructive (old Cloudinary assets
+    and `client/public/logo.jpg` are never deleted).
+- **Cloudinary status:** `isCloudinaryConfigured === false`
+  (`CLOUDINARY_CLOUD_NAME` empty in `.env`). Real uploads return the existing
+  clean **503 "Cloudinary is not configured"** and nothing is persisted — no
+  fake uploads, no fabricated publicIds. The admin Settings page shows a clear
+  "Cloudinary is not configured" warning and surfaces the 503 message on save
+  attempts. **End-to-end upload verification is blocked until real credentials
+  are supplied.**
+- **Centralized frontend branding:** `lib/branding.js` (brand name + fallback
+  constant), `services/settings.js`, `hooks/useBranding.js` (React Query,
+  dedicated `['branding']` key, defaults to `/logo.jpg` on any failure) and
+  `components/brand/BrandLogoImage.jsx`. `components/brand/Logo.jsx` now
+  consumes branding. **No component hardcodes `src="/logo.jpg"` anymore** —
+  Header, MobileNav, Footer, AdminSidebar, LoginModal, HeroSection watermark
+  and DestinationImage fallback all resolve the single active logo.
+- **Admin UI:** `/admin/settings` is now a real `AdminSettingsPage` (was a
+  placeholder) with a Branding section: current-logo preview + Default/Custom
+  badge, upload control (JPG/JPEG/PNG/WebP, max 5 MB), **local preview before
+  save** (object URL, cancel/change supported), Save Logo, and Reset to Default
+  (confirm dialog, shown only when a custom logo is active). After save/reset
+  the `['branding']` and `['admin','settings','branding']` queries are
+  invalidated so public components update immediately. Uploaded Cloudinary URLs
+  are unique per upload, so the active logo updates without relying on browser
+  cache invalidation.
+- **Database safety:** only the `app_settings` collection was used during
+  testing and left clean (empty). Test users created for RBAC checks were
+  removed. Destinations/trips/batches/bookings/users/reviews/FAQs/blogs/
+  wishlists/notifications untouched. `logo.jpg` (root + `client/public/`) both
+  byte-identical and untouched.
+- **Regression:** production build passes; public branding 200 (default +
+  custom + reset); all existing public/admin APIs 200; admin RBAC 401/403
+  intact; `/api/account/*` still 401 without auth. No payments, no booking
+  logic, no auth changes.
 
 ### Phase 27 (custom-trip lead generation — end-to-end)
 - **Enquiry system built (was a placeholder):** the Admin → Enquiries area and
@@ -318,6 +437,60 @@ backend 26/26, Phase 12 frontend 31/31 + backend 21/21.
 
 ## Verification results (all actually performed)
 
+### Phase 29 — header + promotional banner
+- **Build:** `npm run build --workspace client` succeeds (index 70.50 kB, no
+  warnings/errors).
+- **Public settings:** `GET /api/settings` → 200 with default
+  `{ logo, contact:{phone:"",showPhoneInHeader:false}, promotionalBanner
+  {enabled, "Early Bird Sale — Save on upcoming group trips", "Explore trips",
+  "/trips", shimmer:true} }`. `GET /api/settings/branding` (back-compat) → 200.
+- **Admin RBAC:** unauth `GET /api/admin/settings`, `PATCH
+  /api/admin/settings/contact`, `PATCH /api/admin/settings/promotional-banner`
+  → 401; authenticated non-admin → 403 (all); admin → 200. Branding logo
+  endpoints unchanged (admin reset 200; upload 503 while Cloudinary
+  unconfigured — honest, nothing persisted).
+- **Admin mutations:** `PATCH contact {phone, showPhoneInHeader:true}` →
+  public reflects the number; `PATCH promotional-banner` (message/CTA/URL/
+  shimmer/color) → public reflects; banner `enabled:false` → public
+  `enabled:false`.
+- **Validation:** `ctaUrl:"javascript:alert(1)"` → 400 "Unsafe URL scheme";
+  `backgroundColor:"red; background:url(x)"` → 400 "Use a hex color".
+- **DB state after tests:** `appsettings` collection empty; test user removed;
+  no other collections touched. `client/public/logo.jpg` checksum unchanged.
+- **Search audit:** "Early Bird Sale"/"Explore trips" remain only as intentional
+  default fallbacks (`lib/settings.js`, `settings.service.js`); "/logo.jpg" only
+  in the centralized branding fallback; "Login / Sign Up" gone; no hardcoded
+  phone numbers; no `logo.png/svg`/`src="/logo` in client source.
+- **Dev servers:** `npm run dev` verified — Vite (:5173) serves the new
+  Header/PromoBanner/AdminSettingsPage/usePublicSettings modules (200), backend
+  (:5000, `node --watch`) serves `/api/settings` and `/api/admin/settings`
+  (401 unauth).
+
+### Phase 28 — admin-managed branding
+- **Build:** `npm run build --workspace client` succeeds (index 66.96 kB, no
+  warnings/errors).
+- **Service:** no branding setting → public `{logo:{url:"/logo.jpg",alt:
+  "24x7Chhutti"}}`; `setBrandingLogo` persists and public API returns the custom
+  URL; `clearBrandingLogo` restores the default. SVG mimetype blocked, JPEG
+  allowed (direct service assertions).
+- **Public API:** `GET /api/settings/branding` → 200 default; after persisting a
+  custom logo → 200 with custom URL; after DELETE reset → 200 default again.
+- **Admin RBAC:** unauth GET/POST/DELETE `/api/admin/settings/branding*` → 401;
+  authenticated non-admin → 403 (all three verbs); admin → 200. Existing admin
+  routes (dashboard/destinations/trips/faqs/enquiries/upload) still 200 for
+  admin, account profile 401 without auth.
+- **Upload validation:** valid PNG upload → **503** "Cloudinary is not
+  configured" (nothing persisted, clean error); text file → 400 "Only image
+  files are allowed"; SVG → 400 "Only JPG, JPEG, PNG or WebP images are
+  supported"; no file → 400; >5 MB → 413.
+- **DB state after tests:** `appsettings` collection empty; test user removed;
+  no other collections touched.
+- **Search audit:** `logo.jpg` remains only as the centralized fallback
+  (`lib/branding.js`), the `client/public/logo.jpg` asset, and doc text. No
+  `logo.png`/`logo.svg`/`src="/logo`/`background-image` in client source. All
+  logo UI goes through `BrandLogoImage`/`useBranding`.
+- **Cloudinary:** real upload blocked (no credentials). Documented honestly.
+
 ### Phase 27 — custom-trip enquiry
 - **Build:** `npm run build --workspace client` succeeds (index 66 kB, no
   warnings/errors).
@@ -483,7 +656,7 @@ Phase 10/11 suites remain green; Phase 12 suites green.
   state); no real support email/phone exists yet.
 
 ## Recommended next milestone
-**Phase 28 — Real Cloudinary media + photography:** the project owner must supply
+**Phase 30 — Real Cloudinary media + photography:** the project owner must supply
 real Cloudinary credentials (cloud name + API key + secret in `.env`; public cloud
 name in `VITE_CLOUDINARY_CLOUD_NAME`) and legally usable/owner-supplied destination
 and trip photography. Once present: end-to-end upload test via the admin forms

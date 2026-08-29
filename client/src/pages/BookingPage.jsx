@@ -292,7 +292,7 @@ export function BookingPage() {
             complete your booking.
           </p>
           <Button className="mt-6 w-full" onClick={() => openAuthModal()}>
-            Login / Sign Up
+            Login
           </Button>
           <Link
             to={`/trip/${trip.slug}`}

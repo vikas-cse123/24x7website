@@ -15,20 +15,11 @@ import {
 // Homepage content configuration.
 //
 // These are the configurable marketing/homepage content blocks. They are plain
-// data so a future CMS can manage them (promo banner, benefits, USPs, FAQs,
-// section visibility/order) without code changes. Nothing here invents business
-// numbers — where real data does not exist yet, the section renders a clean
+// data so a future CMS can manage them (benefits, USPs, FAQs, section
+// visibility/order) without code changes. Nothing here invents business numbers
+// — where real data does not exist yet, the section renders a clean
 // placeholder/empty state (see each section component).
 // ---------------------------------------------------------------------------
-
-// 1. Top promotional / announcement bar.
-export const PROMO_BANNER_CONFIG = {
-  enabled: true,
-  dismissible: true,
-  text: 'Early Bird Sale — Save on upcoming group trips',
-  ctaLabel: 'Explore trips',
-  ctaHref: '/trips',
-}
 
 // 4. Community / social proof. `value: null` means the number is not known yet —
 //    the section shows a "coming soon" placeholder instead of a fake statistic.
@@ -148,7 +139,6 @@ export const HOMEPAGE_FAQS = [
 // 15. Homepage section visibility + order. A future CMS can manage this.
 export const HOMEPAGE_SECTIONS = {
   order: [
-    'promoBanner',
     'hero',
     'communityStats',
     'destinationExplorer',
@@ -164,7 +154,6 @@ export const HOMEPAGE_SECTIONS = {
     'realityTrips',
   ],
   visibility: {
-    promoBanner: true,
     hero: true,
     communityStats: true,
     destinationExplorer: true,

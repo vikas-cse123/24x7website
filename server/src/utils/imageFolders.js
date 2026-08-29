@@ -8,6 +8,8 @@ export const IMAGE_FOLDERS = {
   'traveler-media': 'travel-crm/traveler-media',
   'destination-media': 'travel-crm/destination-media',
   'blog-media': 'travel-crm/blog-media',
+  // admin-managed website branding (logo uploads)
+  'brand-media': 'travel-crm/brand-media',
   // logical buckets for future masters; keep centralized so renames are one-file
   hotels: 'travel-crm/hotels',
   sightseeing: 'travel-crm/sightseeing',

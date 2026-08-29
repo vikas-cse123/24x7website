@@ -44,7 +44,7 @@ export function BookingConfirmationPage() {
             Booking details are private. Log in with the account used to book.
           </p>
           <Button className="mt-6 w-full" onClick={() => openAuthModal()}>
-            Login / Sign Up
+            Login
           </Button>
         </div>
       </Container>

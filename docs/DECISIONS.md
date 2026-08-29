@@ -404,3 +404,56 @@ consequences where useful.
 - **Decision:** A reusable notification service is invoked (fire-and-forget, `.catch`) from the Booking, TripBatch and Review services at real event points only (booking created/confirmed/cancelled/status, batch date-change/cancel for affected booked users, review submitted/approved/rejected to the owner). A deterministic `eventKey` (`<entity>:<id>:<type>`) with a unique `{userId,eventKey}` index makes retries idempotent. `userId` always comes from server context; cross-user reads/actions → 404.
 - **Reason:** Notifications must follow the real domain events without coupling controllers; dedupe prevents retries/duplicate admin saves from spamming users.
 - **Consequences:** Payment/marketing notifications remain out of scope. Future event sources add a call to the same service.
+
+## ADR-024 — Admin-managed branding: centralized settings + guaranteed logo fallback
+- **Date:** 2026-08-29
+- **Decision:** Website branding (the logo) is admin-managed through a single
+  `app_settings` collection (`key: 'branding'`, `data.logo = { url, publicId,
+  alt, updatedAt }`). Uploads reuse the existing Multer → imageStorage →
+  Cloudinary pipeline into the canonical `brand-media` folder (stored in
+  `imageFolders.js`); only metadata is persisted, never the binary. The client
+  consumes one centralized source — `useBranding()` (React Query, dedicated
+  `['branding']` key) rendered via `BrandLogoImage`/`Logo` — so Header, mobile
+  nav, login/signup, footer, hero watermark and image fallbacks all resolve the
+  same active logo. If the branding setting is missing/empty or the branding
+  API fails, the site falls back to `/logo.jpg` (`client/public/logo.jpg` is
+  never deleted or modified). Admin mutations invalidate the branding query so
+  public surfaces update immediately.
+- **Reason:** The logo was previously hardcoded as `src="/logo.jpg"` in several
+  components, so changing it required editing source. A centralized
+  settings-driven logo makes brand changes a no-code admin action while the
+  default file guarantees the site never loses its identity.
+- **Consequences:** Uploaded Cloudinary URLs are unique per upload
+  (`unique_filename: true`), which naturally avoids stale browser caches; the
+  static default may remain cached since it is only the fallback. Old
+  Cloudinary assets are intentionally not deleted on replace/reset
+  (non-destructive). SVG uploads remain disabled (no sanitizer); only
+  JPG/JPEG/PNG/WebP are accepted. When Cloudinary is unconfigured uploads keep
+  the existing clean 503 behavior and nothing is persisted.
+
+## ADR-025 — Admin-editable header: promotional banner, contact phone, Login CTA
+- **Date:** 2026-08-29
+- **Decision:** The top of every public page is now **promotional banner → main
+  header (logo | search | phone | Login) → navigation → content**. The banner and
+  header phone are admin-driven through the existing `app_settings` collection
+  (`key: 'promotionalBanner'` and `key: 'contact'`), read publicly via one
+  aggregate `GET /api/settings` and written only via `PATCH
+  /api/admin/settings/{contact,promotional-banner}` behind the existing
+  `requireAuth` + admin RBAC. The banner is a full-width strip with a CSS-only
+  white shimmer sweep (absolute, pointer-events-none, `overflow-hidden` clipped,
+  disabled under `prefers-reduced-motion` and by an admin toggle) and a
+  session-scoped dismiss (sessionStorage — never touches the global setting).
+  The header Login button reads just "Login" (dark pill) and the header search
+  is a compact pill; both reuse existing auth/search behaviour.
+- **Reason:** The header previously rendered logo + nav first with a hardcoded,
+  homepage-only promo banner below it. A settings-driven banner/phone lets the
+  team change messaging without code, and the reference layout (banner first,
+  compact centered search, phone + Login right) improves conversion and visual
+  polish while keeping 24x7Chhutti's own brand (logo via the Phase 28 branding
+  system, our nav, our content). No real phone number exists in the project, so
+  the default is empty and hidden — none was invented.
+- **Consequences:** Banner CTA URLs are restricted to internal paths and
+  external http(s); unsafe schemes rejected server-side (Zod) and guarded
+  client-side. Colors are hex-only to avoid CSS injection. The mobile header
+  gains a search row below the logo; the mobile drawer no longer duplicates
+  search. Existing search logic, auth, RBAC, bookings and media are untouched.

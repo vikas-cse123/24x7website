@@ -333,6 +333,23 @@ An in-app/email notification for a user.
 - `userId`, `type`, `title`, `body`
 - `read`, `data`
 
+### AppSetting — IMPLEMENTED (Phase 28/29, settings)
+`server/src/models/AppSetting.js`. Centralized application settings — one
+document per `key` with an arbitrary `data` payload.
+
+| Key | `data` shape |
+| --- | ------------ |
+| `branding` | `{ logo: { url, publicId, alt, updatedAt } }` |
+| `contact` | `{ phone, showPhoneInHeader }` |
+| `promotionalBanner` | `{ enabled, message, ctaText, ctaUrl, shimmerEnabled, dismissible, backgroundColor, textColor }` |
+
+No image binary is stored in MongoDB — only metadata/reference. The default
+fallback logo `client/public/logo.jpg` is never stored or modified. Defaults
+for `contact` (`phone: ''`, `showPhoneInHeader: false`) and
+`promotionalBanner` (enabled, "Early Bird Sale — Save on upcoming group trips",
+"Explore trips" → `/trips`, shimmer on) guarantee a fresh database still renders
+correctly. See `docs/API.md` for the settings endpoints.
+
 ## Conventions
 
 - Use Mongoose models in `server/src/models/`.

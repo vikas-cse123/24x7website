@@ -1,17 +1,14 @@
 import * as React from 'react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { BrandLogoImage } from '@/components/brand/BrandLogoImage'
+import { BRAND_NAME } from '@/lib/branding'
 
-// Official 24x7Chhutti logo. References client/public/logo.jpg (a copy of the
-// root logo.jpg). Never modify the source logo.
+// Official 24x7Chhutti logo. Resolves the admin-managed active logo and falls
+// back to client/public/logo.jpg (the default logo) automatically. Never
+// modify the source logo files.
 export function Logo({ className, imgClassName, to = '/', withLink = true }) {
-  const img = (
-    <img
-      src="/logo.jpg"
-      alt="24x7Chhutti"
-      className={cn('h-10 w-auto object-contain', imgClassName)}
-    />
-  )
+  const img = <BrandLogoImage imgClassName={imgClassName} />
 
   if (!withLink) {
     return <span className={cn('inline-block', className)}>{img}</span>
@@ -20,7 +17,7 @@ export function Logo({ className, imgClassName, to = '/', withLink = true }) {
   return (
     <Link
       to={to}
-      aria-label="24x7Chhutti home"
+      aria-label={`${BRAND_NAME} home`}
       className={cn('inline-flex items-center', className)}
     >
       {img}

@@ -34,10 +34,10 @@ export function HeaderSearch({ onSearch, className, inputClassName }) {
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search destinations, trips…"
+        placeholder="Search your trip..."
         aria-label="Search destinations and trips"
         className={cn(
-          'h-10 w-full rounded-full border border-input bg-muted/50 pl-9 pr-4 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          'h-10 w-full rounded-full border border-input bg-background pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           inputClassName
         )}
       />

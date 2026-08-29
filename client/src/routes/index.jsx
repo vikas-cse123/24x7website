@@ -51,6 +51,7 @@ const AdminMediaPage = React.lazy(() => import('@/pages/admin/AdminMediaPage').t
 const AdminFaqsPage = React.lazy(() => import('@/pages/admin/AdminFaqsPage').then(m => ({ default: m.AdminFaqsPage })))
 const AdminFaqFormPage = React.lazy(() => import('@/pages/admin/AdminFaqFormPage').then(m => ({ default: m.AdminFaqFormPage })))
 const AdminEnquiriesPage = React.lazy(() => import('@/pages/admin/AdminEnquiriesPage').then(m => ({ default: m.AdminEnquiriesPage })))
+const AdminSettingsPage = React.lazy(() => import('@/pages/admin/AdminSettingsPage').then(m => ({ default: m.AdminSettingsPage })))
 
 function RouteFallback() {
   return (
@@ -170,7 +171,7 @@ export function AppRoutes() {
           <Route path="coupons" element={adminPlaceholder('Coupons')} />
           <Route path="media" element={<AdminMediaPage />} />
           <Route path="users" element={adminPlaceholder('Users')} />
-          <Route path="settings" element={adminPlaceholder('Settings')} />
+          <Route path="settings" element={<AdminSettingsPage />} />
           <Route path="*" element={adminPlaceholder('Not found')} />
         </Route>
       </Routes>

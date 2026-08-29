@@ -186,6 +186,48 @@ Admin (RBAC — `requireAuth` + admin role at the parent admin router):
 
 Unauthenticated → 401; authenticated non-admin → 403.
 
+### Settings / Branding (`/api/settings`) — IMPLEMENTED (Phase 28/29)
+Admin-managed website settings, stored in `app_settings` documents keyed by
+`key` (`branding`, `contact`, `promotionalBanner`). No image binary is stored
+in MongoDB.
+
+Public (no auth — the whole website reads these):
+- `GET /api/settings` → aggregate bundle (defaults applied when missing):
+  ```json
+  { "success": true, "data": {
+    "logo": { "url": "/logo.jpg", "alt": "24x7Chhutti" },
+    "contact": { "phone": "", "showPhoneInHeader": false },
+    "promotionalBanner": {
+      "enabled": true,
+      "message": "Early Bird Sale — Save on upcoming group trips",
+      "ctaText": "Explore trips",
+      "ctaUrl": "/trips",
+      "shimmerEnabled": true,
+      "dismissible": true,
+      "backgroundColor": "",
+      "textColor": ""
+    }
+  } }
+  ```
+  Default promotional-banner values are the guaranteed fallbacks when no
+  setting exists (or on failure) so an empty database never breaks the site.
+- `GET /api/settings/branding` → `{ logo: { url, alt } }` (back-compat with the
+  branding system; default `/logo.jpg`).
+
+Admin (RBAC — `requireAuth` + admin role at the parent admin router):
+- `GET /api/admin/settings` → aggregate admin bundle (branding metadata incl.
+  `isCustom`/`cloudinaryConfigured`, contact, promotionalBanner).
+- `GET /api/admin/settings/branding`, `POST
+  /api/admin/settings/branding/logo` (multipart `image`, JPG/JPEG/PNG/WebP,
+  5 MB), `DELETE /api/admin/settings/branding/logo` — branding (Phase 28).
+- `PATCH /api/admin/settings/contact` — body `{ phone, showPhoneInHeader }`.
+- `PATCH /api/admin/settings/promotional-banner` — body `{ enabled, message,
+  ctaText, ctaUrl, shimmerEnabled, dismissible, backgroundColor, textColor }`.
+  `backgroundColor`/`textColor` are hex-only; `ctaUrl` must not use unsafe
+  schemes (`javascript:`/`data:`/`vbscript:` → 400).
+
+Unauthenticated → 401; authenticated non-admin → 403 (verified).
+
 ### Reviews (`/api/reviews`) — IMPLEMENTED
 Public:
 - `GET /api/reviews/trips/:slugOrId/reviews?page&limit` — approved reviews for a
@@ -283,7 +325,9 @@ role (`requireRole('admin')`). Unauthenticated → 401; authenticated non-admin 
 - `PATCH  /api/admin/bookings/:id/cancel` — cancel + release seats
 - User/role management — PLANNED
 - Coupons (`/api/admin/coupons`) — PLANNED
-- Settings — PLANNED
+- Settings — IMPLEMENTED (`/api/admin/settings`, `/api/admin/settings/contact`,
+  `/api/admin/settings/promotional-banner`, `/api/admin/settings/branding*`;
+  see the Settings section above)
 - (Other admin operations live under their respective resources)
 
 ## Dashboard response shape

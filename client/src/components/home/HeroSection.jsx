@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Search, Plane } from 'lucide-react'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
 import { destinationApi } from '@/services/destinations'
+import { BrandLogoImage } from '@/components/brand/BrandLogoImage'
 
 // Homepage hero — travel imagery (real featured destination when available,
 // logo fallback otherwise) with the main discovery search.
@@ -36,7 +37,12 @@ export function HeroSection() {
             loading="eager"
           />
         ) : (
-          <img src="/logo.jpg" alt="" loading="eager" className="h-full w-full object-cover opacity-[0.06]" />
+          <BrandLogoImage
+            aria-hidden="true"
+            alt=""
+            loading="eager"
+            imgClassName="h-full w-full object-cover opacity-[0.06]"
+          />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
       </div>

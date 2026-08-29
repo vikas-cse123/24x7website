@@ -109,11 +109,13 @@ export function HeaderAuth({ className }) {
 
   return (
     <Button
-      variant="default"
-      className={cn('h-9 rounded-full px-4', className)}
+      className={cn(
+        'h-10 min-w-[88px] rounded-full bg-foreground px-6 text-background shadow-sm transition-colors hover:bg-foreground/85 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        className
+      )}
       onClick={openAuthModal}
     >
-      Login / Sign Up
+      Login
     </Button>
   )
 }

@@ -11,6 +11,7 @@ import blogRouter from './blog.routes.js'
 import faqRouter from './faq.routes.js'
 import tripMediaRouter from './tripMedia.routes.js'
 import enquiryRouter from './enquiry.routes.js'
+import settingsRouter from './settings.routes.js'
 
 const router = Router()
 
@@ -25,6 +26,7 @@ router.use('/reviews', reviewRouter)
 router.use('/blogs', blogRouter)
 router.use('/faqs', faqRouter)
 router.use('/enquiries', enquiryRouter)
+router.use('/settings', settingsRouter)
 router.use('/', tripMediaRouter)
 
 export default router

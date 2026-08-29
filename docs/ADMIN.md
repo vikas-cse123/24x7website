@@ -140,6 +140,34 @@ contact channel:
 - Delete with confirmation (`DELETE /api/admin/enquiries/:id`).
 - RBAC unchanged: `/api/admin/*` requires auth + admin role (401/403).
 
+## Settings / Branding — IMPLEMENTED (Phase 28/29)
+
+`/admin/settings` (`AdminSettingsPage`) manages three cards:
+
+**Branding** — the website logo:
+- **Current logo** — preview of the active logo with a Default/Custom badge and
+  (for custom) the update time and Cloudinary publicId.
+- **Upload New Logo** — pick a JPG/JPEG/PNG/WebP file (max 5 MB). A **local
+  preview** is shown immediately and is NOT saved; Cancel/change are supported.
+  **Save Logo** persists it. When Cloudinary is not configured the page shows a
+  warning banner and uploads return a clean 503 (nothing is persisted).
+- **Reset to Default** — appears only when a custom logo is active; a confirm
+  dialog, then the site falls back to the default `/logo.jpg`.
+
+**Contact Information** — the header phone number:
+- **Phone number** input and a **Show in header** toggle. The header shows the
+  number (as a `tel:` link) only when both are set. Default is empty/hidden.
+
+**Promotional Banner** — the full-width strip at the very top of the site:
+- **Show banner** toggle, **Message**, **Button Text**, **Button URL**
+  (internal path or external http(s)), **Shimmer effect** toggle, and a live
+  **preview** strip. Unsafe URLs and non-hex colors are rejected.
+
+After save/reset the `['settings','public']` query is invalidated so the whole
+public site updates immediately. Backed by `GET /api/admin/settings`, `PATCH
+/api/admin/settings/contact`, `PATCH /api/admin/settings/promotional-banner`,
+and the branding endpoints (all admin RBAC).
+
 ## Destinations — IMPLEMENTED
 
 Manage destinations at `/admin/destinations`:
@@ -254,6 +282,7 @@ added without restructuring.
   inclusions/exclusions, FAQs), **trip batch management** (departure CRUD,
   pricing, capacity, booking window, status workflow, publish/unpublish,
   delete safety), destination + trip + trip-batch admin APIs, **enquiries**
-  (list/status/delete for custom-trip leads, Phase 27).
-- **Planned (placeholders):** Bookings, Customers, Reviews, Blogs,
-  FAQs, Coupons, Media, Users, Settings.
+  (list/status/delete for custom-trip leads, Phase 27), **FAQs**,
+  **blogs**, **reviews**, **traveler media**, and **settings/branding**
+  (admin-managed logo, contact phone, promotional banner — Phases 28/29).
+- **Planned (placeholders):** Bookings, Customers, Coupons, Users.

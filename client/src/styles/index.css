@@ -113,3 +113,50 @@
 .animate-scale-in {
   animation: scale-in 0.18s ease-out both;
 }
+
+/* Promotional banner white shimmer — a wide, diagonal, translucent light beam
+   that sweeps LEFT → RIGHT across the green banner (soft glass/reflection
+   shine). It is absolutely positioned, pointer-events-none, taller than the
+   banner and clipped by the banner's overflow-hidden, so it never affects
+   layout, clicks or readability. Container-relative `left` guarantees a full
+   crossing (off-left → off-right) on any viewport; `rotate()` gives the
+   diagonal angle; a blurred center-bright gradient gives the soft falloff.
+   Respects reduced motion. */
+@keyframes banner-shimmer {
+  0%,
+  10% {
+    left: -45%;
+  }
+  55%,
+  100% {
+    left: 130%;
+  }
+}
+
+.banner-shimmer {
+  position: absolute;
+  top: -45%;
+  left: -45%;
+  height: 190%;
+  width: clamp(60px, 8vw, 115px);
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.22) 38%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0.22) 62%,
+    transparent 100%
+  );
+  filter: blur(6px);
+  transform: rotate(22deg);
+  will-change: left;
+  animation: banner-shimmer 9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner-shimmer {
+    animation: none;
+    display: none;
+  }
+}

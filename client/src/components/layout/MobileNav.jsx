@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Logo } from '@/components/brand/Logo'
-import { HeaderSearch } from '@/components/layout/HeaderSearch'
 import { Button } from '@/components/ui/button'
 import { NAV_ITEMS } from '@/lib/nav'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
@@ -73,10 +72,6 @@ export function MobileNav({ open, onOpenChange }) {
           <Logo imgClassName="h-8" />
         </div>
 
-        <div className="px-4 py-4">
-          <HeaderSearch />
-        </div>
-
         <nav aria-label="Mobile" className="flex-1 overflow-y-auto px-3 pb-4">
           <ul className="space-y-1">
             {NAV_ITEMS.map((item) => (
@@ -99,7 +94,7 @@ export function MobileNav({ open, onOpenChange }) {
             </Link>
           ) : (
             <Button className="w-full" onClick={handleLogin}>
-              Login / Sign Up
+              Login
             </Button>
           )}
         </div>

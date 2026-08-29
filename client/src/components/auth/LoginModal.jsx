@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { sendOtpSchema, otpSchema, COUNTRY_CODE } from '@/schemas/auth'
 import { authApi } from '@/services/auth'
 import { useAuth } from '@/hooks/useAuth'
+import { BrandLogoImage } from '@/components/brand/BrandLogoImage'
 import { cn } from '@/lib/utils'
 
 const RESEND_DELAY_SECONDS = 30
@@ -162,11 +163,7 @@ function PhoneStep({ form, sendingOtp, phoneValid, onSendOtp, onNavigate }) {
   return (
     <form onSubmit={handleSubmit(onSendOtp)} noValidate className="flex flex-col">
       <div className="mb-6 flex justify-center">
-        <img
-          src="/logo.jpg"
-          alt="24x7Chhutti"
-          className="h-14 w-auto object-contain"
-        />
+        <BrandLogoImage imgClassName="h-14" />
       </div>
       <h2 className="text-center text-2xl font-bold tracking-tight">Login or Sign Up</h2>
       <p className="mt-2 text-center text-sm text-muted-foreground">
@@ -256,11 +253,7 @@ function OtpStep({
   return (
     <form onSubmit={handleSubmit(onVerifyOtp)} noValidate className="flex flex-col">
       <div className="mb-6 flex justify-center">
-        <img
-          src="/logo.jpg"
-          alt="24x7Chhutti"
-          className="h-14 w-auto object-contain"
-        />
+        <BrandLogoImage imgClassName="h-14" />
       </div>
       <h2 className="text-center text-2xl font-bold tracking-tight">Verify OTP</h2>
       <p className="mt-2 text-center text-sm text-muted-foreground">

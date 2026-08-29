@@ -1,4 +1,3 @@
-import { PromoBanner } from '@/components/home/PromoBanner'
 import { HeroSection } from '@/components/home/HeroSection'
 import { CommunityStats } from '@/components/home/CommunityStats'
 import { DestinationExplorer } from '@/components/home/DestinationExplorer'
@@ -16,7 +15,6 @@ import { HOMEPAGE_SECTIONS } from '@/lib/homeContent'
 import { useSeo } from '@/lib/seo'
 
 const SECTIONS = {
-  promoBanner: <PromoBanner />,
   hero: <HeroSection />,
   communityStats: <CommunityStats />,
   destinationExplorer: <DestinationExplorer />,

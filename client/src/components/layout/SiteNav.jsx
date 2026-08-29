@@ -32,7 +32,7 @@ function Dropdown({ item }) {
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          'inline-flex items-center gap-0.5 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+          'inline-flex items-center gap-0.5 rounded-md px-3 py-2 text-sm font-medium text-foreground/90 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
         )}
       >
         {item.label}
@@ -60,7 +60,10 @@ export function SiteNav({ className }) {
   const { pathname } = useLocation()
 
   return (
-    <nav aria-label="Primary" className={cn('hidden items-center gap-1 lg:flex', className)}>
+    <nav
+      aria-label="Primary"
+      className={cn('hidden w-full items-center justify-center gap-0.5 lg:flex', className)}
+    >
       {NAV_ITEMS.map((item) =>
         item.children ? (
           <Dropdown key={item.label} item={item} />
@@ -69,7 +72,7 @@ export function SiteNav({ className }) {
             key={item.label}
             to={item.href}
             className={cn(
-              'rounded-md px-3 py-2 text-sm font-medium transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'rounded-md px-3 py-2 text-sm font-medium text-foreground/90 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               pathname === item.href && 'text-primary'
             )}
           >
