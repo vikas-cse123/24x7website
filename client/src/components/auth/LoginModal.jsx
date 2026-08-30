@@ -1,21 +1,106 @@
 import * as React from 'react'
-import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { Loader2, Smartphone } from 'lucide-react'
+import { Loader2, ChevronDown } from 'lucide-react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import { sendOtpSchema, otpSchema, COUNTRY_CODE } from '@/schemas/auth'
 import { authApi } from '@/services/auth'
 import { useAuth } from '@/hooks/useAuth'
-import { BrandLogoImage } from '@/components/brand/BrandLogoImage'
 import { cn } from '@/lib/utils'
 
 const RESEND_DELAY_SECONDS = 30
+
+// Popular calling codes; India is the default. `iso` drives the flag image
+// (flagcdn.com) because Windows does not render flag emoji glyphs.
+const COUNTRIES = [
+  { code: '+91', iso: 'in', name: 'India' },
+  { code: '+1', iso: 'us', name: 'USA / Canada' },
+  { code: '+44', iso: 'gb', name: 'United Kingdom' },
+  { code: '+971', iso: 'ae', name: 'UAE' },
+  { code: '+65', iso: 'sg', name: 'Singapore' },
+  { code: '+61', iso: 'au', name: 'Australia' },
+  { code: '+966', iso: 'sa', name: 'Saudi Arabia' },
+  { code: '+880', iso: 'bd', name: 'Bangladesh' },
+  { code: '+49', iso: 'de', name: 'Germany' },
+  { code: '+33', iso: 'fr', name: 'France' },
+]
+
+function Flag({ iso, name }) {
+  return (
+    <img
+      src={`https://flagcdn.com/w40/${iso}.png`}
+      srcSet={`https://flagcdn.com/w80/${iso}.png 2x`}
+      alt={name}
+      className="h-3.5 w-5 shrink-0 rounded-[2px] object-cover"
+      loading="lazy"
+    />
+  )
+}
+
+function CountrySelect({ value, onChange }) {
+  const [open, setOpen] = React.useState(false)
+  const ref = React.useRef(null)
+
+  React.useEffect(() => {
+    if (!open) return undefined
+    function onDocClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [open])
+
+  const current = COUNTRIES.find((c) => c.code === value) || COUNTRIES[0]
+
+  return (
+    <div className="relative shrink-0" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label="Select country code"
+        className="flex h-full items-center gap-1 rounded-l-full pl-4 pr-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/60"
+      >
+        <Flag iso={current.iso} name={current.name} />
+        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+        <span>{current.code}</span>
+      </button>
+
+      {open && (
+        <ul
+          role="listbox"
+          className="absolute bottom-full left-0 z-20 mb-2 max-h-56 w-56 overflow-auto rounded-xl border border-border bg-background py-1 shadow-lg"
+        >
+          {COUNTRIES.map((c) => (
+            <li key={`${c.code}-${c.name}`}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={c.code === value}
+                onClick={() => {
+                  onChange(c.code)
+                  setOpen(false)
+                }}
+                className={cn(
+                  'flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-muted',
+                  c.code === value && 'bg-muted/60 font-medium'
+                )}
+              >
+                <Flag iso={c.iso} name={c.name} />
+                <span className="flex-1 text-left">{c.name}</span>
+                <span className="text-muted-foreground">{c.code}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
 
 export function LoginModal({ open, onOpenChange }) {
   const [step, setStep] = React.useState('phone') // 'phone' | 'otp'
@@ -28,7 +113,7 @@ export function LoginModal({ open, onOpenChange }) {
   const phoneForm = useForm({
     mode: 'onChange',
     resolver: zodResolver(sendOtpSchema),
-    defaultValues: { countryCode: COUNTRY_CODE, mobile: '', terms: false },
+    defaultValues: { countryCode: COUNTRY_CODE, mobile: '' },
   })
 
   const otpForm = useForm({
@@ -126,7 +211,6 @@ export function LoginModal({ open, onOpenChange }) {
               sendingOtp={sendingOtp}
               phoneValid={phoneValid}
               onSendOtp={handleSendOtp}
-              onNavigate={close}
             />
           ) : (
             <OtpStep
@@ -135,6 +219,7 @@ export function LoginModal({ open, onOpenChange }) {
               resendCountdown={resendCountdown}
               sendingOtp={sendingOtp}
               otpValid={otpValid}
+              countryCode={phoneContext?.countryCode}
               mobile={phoneContext?.mobile}
               onChangeNumber={() => {
                 setStep('phone')
@@ -150,7 +235,7 @@ export function LoginModal({ open, onOpenChange }) {
   )
 }
 
-function PhoneStep({ form, sendingOtp, phoneValid, onSendOtp, onNavigate }) {
+function PhoneStep({ form, sendingOtp, phoneValid, onSendOtp }) {
   const {
     register,
     handleSubmit,
@@ -158,32 +243,38 @@ function PhoneStep({ form, sendingOtp, phoneValid, onSendOtp, onNavigate }) {
     setValue,
     watch,
   } = form
-  const terms = watch('terms')
+  const countryCode = watch('countryCode')
+  const isIndia = countryCode === '+91'
 
   return (
     <form onSubmit={handleSubmit(onSendOtp)} noValidate className="flex flex-col">
-      <div className="mb-6 flex justify-center">
-        <BrandLogoImage imgClassName="h-14" />
-      </div>
-      <h2 className="text-center text-2xl font-bold tracking-tight">Login or Sign Up</h2>
-      <p className="mt-2 text-center text-sm text-muted-foreground">
-        Enter your mobile number to get started
-      </p>
+      <h2 className="text-center text-xl font-semibold tracking-tight">Login or Sign Up</h2>
+      <p className="mt-2 text-center text-sm text-muted-foreground">Enter your mobile number</p>
 
       <div className="mt-6">
-        <Label htmlFor="mobile">Mobile number</Label>
-        <div className="mt-1.5 flex items-stretch gap-2">
-          <span className="inline-flex h-11 shrink-0 items-center rounded-md border border-input bg-muted px-3 text-sm font-medium text-muted-foreground">
-            {COUNTRY_CODE}
-          </span>
+        <div
+          className={cn(
+            'flex h-12 w-full items-center rounded-full border border-input bg-background transition-colors focus-within:ring-2 focus-within:ring-ring',
+            errors.mobile && 'border-destructive'
+          )}
+        >
+          <CountrySelect
+            value={countryCode}
+            onChange={(code) => setValue('countryCode', code, { shouldValidate: true })}
+          />
           <Input
             id="mobile"
             inputMode="numeric"
             autoComplete="tel-national"
-            maxLength={10}
-            placeholder="98765 43210"
+            maxLength={isIndia ? 10 : 14}
+            placeholder="Enter phone number"
+            className="h-full flex-1 rounded-full border-0 bg-transparent pl-1 pr-4 text-[15px] shadow-none focus-visible:ring-0"
             aria-invalid={!!errors.mobile}
-            {...register('mobile')}
+            {...register('mobile', {
+              onChange: (e) => {
+                e.target.value = e.target.value.replace(/\D/g, '').slice(0, isIndia ? 10 : 14)
+              },
+            })}
           />
         </div>
         {errors.mobile && (
@@ -191,42 +282,15 @@ function PhoneStep({ form, sendingOtp, phoneValid, onSendOtp, onNavigate }) {
         )}
       </div>
 
-      <label className="mt-4 flex items-start gap-2.5 text-xs text-muted-foreground">
-        <Checkbox
-          className="mt-0.5"
-          checked={terms}
-          onCheckedChange={(v) => setValue('terms', v, { shouldValidate: true })}
-        />
-        <span>
-          I agree to the{' '}
-          <Link
-            to="/terms-and-conditions"
-            onClick={onNavigate}
-            className="font-medium text-primary hover:underline"
-          >
-            Terms &amp; Conditions
-          </Link>{' '}
-          and{' '}
-          <Link
-            to="/privacy-policy"
-            onClick={onNavigate}
-            className="font-medium text-primary hover:underline"
-          >
-            Privacy Policy
-          </Link>
-        </span>
-      </label>
-      {errors.terms && (
-        <p className="mt-1.5 text-xs text-destructive">{errors.terms.message}</p>
-      )}
-
       <Button
         type="submit"
-        size="lg"
-        className="mt-6 w-full"
         disabled={!phoneValid || sendingOtp}
+        className={cn(
+          'mt-6 h-11 w-full rounded-full text-[15px] font-medium',
+          !phoneValid && 'bg-gray-100 text-gray-400 hover:bg-gray-100'
+        )}
       >
-        {sendingOtp ? <Loader2 className="animate-spin" /> : <Smartphone />}
+        {sendingOtp ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
         {sendingOtp ? 'Sending...' : 'Send OTP'}
       </Button>
     </form>
@@ -239,6 +303,7 @@ function OtpStep({
   resendCountdown,
   sendingOtp,
   otpValid,
+  countryCode,
   mobile,
   onChangeNumber,
   onVerifyOtp,
@@ -252,24 +317,22 @@ function OtpStep({
 
   return (
     <form onSubmit={handleSubmit(onVerifyOtp)} noValidate className="flex flex-col">
-      <div className="mb-6 flex justify-center">
-        <BrandLogoImage imgClassName="h-14" />
-      </div>
-      <h2 className="text-center text-2xl font-bold tracking-tight">Verify OTP</h2>
+      <h2 className="text-center text-xl font-semibold tracking-tight">Verify OTP</h2>
       <p className="mt-2 text-center text-sm text-muted-foreground">
         Enter the 6-digit code sent to{' '}
-        <span className="font-medium text-foreground">+91 {mobile}</span>
+        <span className="font-medium text-foreground">
+          {countryCode} {mobile}
+        </span>
       </p>
 
       <div className="mt-6">
-        <Label htmlFor="otp">OTP</Label>
         <Input
           id="otp"
           inputMode="numeric"
           autoComplete="one-time-code"
           maxLength={6}
           placeholder="000000"
-          className="mt-1.5 text-center text-lg tracking-[0.4em]"
+          className="h-12 rounded-full text-center text-lg tracking-[0.4em]"
           aria-invalid={!!errors.otp}
           {...register('otp')}
         />
@@ -278,11 +341,13 @@ function OtpStep({
 
       <Button
         type="submit"
-        size="lg"
-        className="mt-6 w-full"
         disabled={!otpValid || verifying}
+        className={cn(
+          'mt-6 h-11 w-full rounded-full text-[15px] font-medium',
+          !otpValid && 'bg-gray-100 text-gray-400 hover:bg-gray-100'
+        )}
       >
-        {verifying ? <Loader2 className="animate-spin" /> : null}
+        {verifying ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
         {verifying ? 'Verifying...' : 'Verify OTP'}
       </Button>
 

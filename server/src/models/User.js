@@ -6,8 +6,9 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      // Stored in E.164-ish local form (countryCode + mobile).
-      match: [/^[0-9]{10}$/, 'Mobile must be a valid 10-digit number'],
+      // Stored in E.164-ish local form (countryCode + mobile). 6-15 digits
+      // supports international numbers; India stays 10 digits via validation.
+      match: [/^[0-9]{6,15}$/, 'Mobile must be a valid number'],
     },
     countryCode: {
       type: String,

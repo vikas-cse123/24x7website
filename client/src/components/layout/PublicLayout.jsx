@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { PromoBanner } from '@/components/layout/PromoBanner'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { WhatsAppButton } from '@/components/layout/WhatsAppButton'
 import { LoginModal } from '@/components/auth/LoginModal'
 import { PlanTripModal } from '@/components/enquiry/PlanTripModal'
 import { useUIStore } from '@/stores/ui'
@@ -29,6 +30,7 @@ export function PublicLayout() {
         <Outlet />
       </main>
       <Footer />
+      <WhatsAppButton />
       <LoginModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
       <PlanTripModal />
     </div>

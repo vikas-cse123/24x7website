@@ -18,13 +18,15 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background shadow-header">
-      {/* Top row: full-width, no max-width, only ~24-32px side padding */}
-      <div className="flex h-16 items-center gap-3 px-6 lg:h-20 lg:px-8">
+      {/* Top row: full-width, no max-width, only ~24-32px side padding.
+          Search is absolutely centered on the page (like the reference site)
+          instead of centering in the leftover space between logo and Login. */}
+      <div className="relative flex h-16 items-center gap-3 px-6 lg:h-20 lg:px-8">
         <Logo imgClassName="h-10 w-[80px] object-contain sm:h-12 sm:w-[96px] lg:h-[55px] lg:w-[110px]" />
 
-        {/* Desktop / tablet search — compact and centered */}
-        <div className="hidden min-w-0 flex-1 justify-center md:flex">
-          <HeaderSearch className="w-full max-w-[220px] lg:max-w-[260px]" />
+        {/* Desktop / tablet search — compact, page-centered */}
+        <div className="absolute left-1/2 hidden -translate-x-1/2 md:block">
+          <HeaderSearch className="w-[220px] lg:w-[260px]" />
         </div>
 
         {/* Right cluster: phone + Login + mobile menu */}

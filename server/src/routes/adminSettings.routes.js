@@ -7,9 +7,17 @@ import {
   clearLogo,
   updateContact,
   updatePromotionalBanner,
+  getAdminWhatsapp,
+  updateWhatsapp,
+  uploadWhatsappIcon,
+  clearWhatsappIcon,
 } from '../controllers/settings.controller.js'
 import { validate } from '../utils/validate.js'
-import { updateContactSchema, updatePromotionalBannerSchema } from '../validators/settings.validator.js'
+import {
+  updateContactSchema,
+  updatePromotionalBannerSchema,
+  updateWhatsappSchema,
+} from '../validators/settings.validator.js'
 
 const router = Router()
 
@@ -25,5 +33,11 @@ router.post('/branding/logo', (req, res, next) =>
 router.delete('/branding/logo', clearLogo)
 router.patch('/contact', validate(updateContactSchema), updateContact)
 router.patch('/promotional-banner', validate(updatePromotionalBannerSchema), updatePromotionalBanner)
+router.get('/whatsapp', getAdminWhatsapp)
+router.patch('/whatsapp', validate(updateWhatsappSchema), updateWhatsapp)
+router.post('/whatsapp/icon', (req, res, next) =>
+  uploadSingle(req, res, (err) => (err ? handleMulterError(err, req, res, next) : uploadWhatsappIcon(req, res, next)))
+)
+router.delete('/whatsapp/icon', clearWhatsappIcon)
 
 export default router

@@ -42,14 +42,21 @@ function DeleteDialog({ destination, open, onOpenChange, onConfirm, deleting }) 
 
 export function AdminDestinationsPage() {
   const queryClient = useQueryClient()
+  const [page, setPage] = React.useState(1)
   const [deleteTarget, setDeleteTarget] = React.useState(null)
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['admin', 'destinations', { page: 1, limit: PAGE_SIZE }],
-    queryFn: () => adminDestinationApi.list({ page: 1, limit: PAGE_SIZE }),
+    queryKey: ['admin', 'destinations', { page, limit: PAGE_SIZE }],
+    queryFn: () => adminDestinationApi.list({ page, limit: PAGE_SIZE }),
+    placeholderData: (prev) => prev,
   })
 
   const list = data?.data?.data
+
+  // Keep local page in sync with server-corrected safePage (e.g., after deletions).
+  React.useEffect(() => {
+    if (list && list.page !== page) setPage(list.page)
+  }, [list?.page]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ['admin', 'destinations'] })
@@ -232,11 +239,46 @@ export function AdminDestinationsPage() {
             ))}
           </div>
 
-          {list.totalPages > 1 && (
-            <p className="mt-4 text-center text-sm text-muted-foreground">
+          <div className="mt-4 flex flex-col items-center gap-3">
+            <p className="text-center text-sm text-muted-foreground">
               Showing {list.items.length} of {list.total} destinations
+              {list.totalPages > 1 ? ` — Page ${list.page} of ${list.totalPages}` : ''}
             </p>
-          )}
+            {list.totalPages > 1 && (
+              <nav aria-label="Pagination" className="flex items-center gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={list.page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  aria-label="Previous page"
+                >
+                  Previous
+                </Button>
+                {Array.from({ length: list.totalPages }, (_, i) => i + 1).map((num) => (
+                  <Button
+                    key={num}
+                    variant={num === list.page ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setPage(num)}
+                    aria-label={`Go to page ${num}`}
+                    aria-current={num === list.page ? 'page' : undefined}
+                  >
+                    {num}
+                  </Button>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={list.page >= list.totalPages}
+                  onClick={() => setPage((p) => Math.min(list.totalPages, p + 1))}
+                  aria-label="Next page"
+                >
+                  Next
+                </Button>
+              </nav>
+            )}
+          </div>
         </>
       )}
 

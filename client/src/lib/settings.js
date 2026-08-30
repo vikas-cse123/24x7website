@@ -19,6 +19,16 @@ export const DEFAULT_PROMOTIONAL_BANNER = {
   textColor: '',
 }
 
+export const DEFAULT_WHATSAPP = {
+  enabled: true,
+  phoneNumber: '919310660016',
+  prefilledMessage: 'Hey! Capture A Trip I am interested in your trips',
+  iconUrl: null,
+  position: 'bottom-right',
+  size: 'medium',
+  backgroundColor: '#25D366',
+}
+
 // Banner CTA URLs: internal paths (/, ?…, #…) use router navigation; external
 // http(s) links render as real anchors. Anything else is unsafe and ignored.
 export function isSafeBannerUrl(url) {

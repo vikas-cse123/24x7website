@@ -21,7 +21,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { adminBrandingApi, adminSettingsApi } from '@/services/settings'
 import { BRANDING_QUERY_KEY } from '@/hooks/useBranding'
 import { PUBLIC_SETTINGS_QUERY_KEY } from '@/hooks/usePublicSettings'
-import { DEFAULT_PROMOTIONAL_BANNER } from '@/lib/settings'
+import { DEFAULT_PROMOTIONAL_BANNER, DEFAULT_WHATSAPP } from '@/lib/settings'
 import { BRAND_NAME } from '@/lib/branding'
 import { cn } from '@/lib/utils'
 
@@ -86,12 +86,17 @@ export function AdminSettingsPage() {
   const [previewUrl, setPreviewUrl] = React.useState(null)
   const [resetOpen, setResetOpen] = React.useState(false)
 
+  const whatsappInputRef = React.useRef(null)
+  const [whatsappSelectedFile, setWhatsappSelectedFile] = React.useState(null)
+  const [whatsappPreviewUrl, setWhatsappPreviewUrl] = React.useState(null)
+
   const [contactForm, setContactForm] = React.useState({
     phone: '',
     showCountryCode: true,
     showPhoneInHeader: false,
   })
   const [bannerForm, setBannerForm] = React.useState({ ...DEFAULT_PROMOTIONAL_BANNER })
+  const [whatsappForm, setWhatsappForm] = React.useState({ ...DEFAULT_WHATSAPP })
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ADMIN_SETTINGS_QUERY_KEY,
@@ -109,12 +114,28 @@ export function AdminSettingsPage() {
       showPhoneInHeader: settings.contact?.showPhoneInHeader ?? false,
     })
     setBannerForm({ ...DEFAULT_PROMOTIONAL_BANNER, ...settings.promotionalBanner })
+    const w = settings.whatsapp
+    if (w) {
+      setWhatsappForm({
+        enabled: typeof w.enabled === 'boolean' ? w.enabled : DEFAULT_WHATSAPP.enabled,
+        phoneNumber: w.phoneNumber ?? w.phone ?? DEFAULT_WHATSAPP.phoneNumber,
+        prefilledMessage: w.prefilledMessage ?? w.message ?? DEFAULT_WHATSAPP.prefilledMessage,
+        position: w.position || DEFAULT_WHATSAPP.position,
+        size: w.size || DEFAULT_WHATSAPP.size,
+        backgroundColor: w.backgroundColor || DEFAULT_WHATSAPP.backgroundColor,
+        iconUrl: w.icon?.url || w.iconUrl || null,
+        iconPublicId: w.icon?.publicId || w.iconPublicId || null,
+      })
+    }
   }, [settings])
 
   // Revoke the object URL on unmount to avoid leaks.
   React.useEffect(() => () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl)
   }, [previewUrl])
+  React.useEffect(() => () => {
+    if (whatsappPreviewUrl) URL.revokeObjectURL(whatsappPreviewUrl)
+  }, [whatsappPreviewUrl])
 
   function handleFileChange(e) {
     const file = e.target.files?.[0]
@@ -129,6 +150,21 @@ export function AdminSettingsPage() {
     setSelectedFile(null)
     setPreviewUrl(null)
     if (inputRef.current) inputRef.current.value = ''
+  }
+
+  function handleWhatsappFileChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (whatsappPreviewUrl) URL.revokeObjectURL(whatsappPreviewUrl)
+    setWhatsappSelectedFile(file)
+    setWhatsappPreviewUrl(URL.createObjectURL(file))
+  }
+
+  function clearWhatsappSelection() {
+    if (whatsappPreviewUrl) URL.revokeObjectURL(whatsappPreviewUrl)
+    setWhatsappSelectedFile(null)
+    setWhatsappPreviewUrl(null)
+    if (whatsappInputRef.current) whatsappInputRef.current.value = ''
   }
 
   const invalidate = () => {
@@ -188,6 +224,53 @@ export function AdminSettingsPage() {
       invalidate()
     },
     onError: (err) => toast.error(getApiError(err) || 'Save failed'),
+  })
+
+  const whatsappMutation = useMutation({
+    mutationFn: () =>
+      adminSettingsApi.updateWhatsapp({
+        enabled: whatsappForm.enabled,
+        phoneNumber: whatsappForm.phoneNumber,
+        prefilledMessage: whatsappForm.prefilledMessage,
+        position: whatsappForm.position,
+        size: whatsappForm.size,
+        backgroundColor: whatsappForm.backgroundColor,
+      }),
+    onSuccess: () => {
+      toast.success('WhatsApp settings updated successfully.')
+      invalidate()
+    },
+    onError: (err) => toast.error(getApiError(err) || 'Save failed'),
+  })
+
+  const whatsappIconUploadMutation = useMutation({
+    mutationFn: () => {
+      const form = new FormData()
+      form.append('image', whatsappSelectedFile)
+      return adminSettingsApi.uploadWhatsappIcon(form)
+    },
+    onSuccess: () => {
+      toast.success('WhatsApp icon updated')
+      clearWhatsappSelection()
+      invalidate()
+    },
+    onError: (err) => {
+      if (err.response?.status === 503) {
+        toast.error('S3 storage is not configured. Icon upload requires AWS S3.')
+      } else {
+        toast.error(err.response?.data?.message || err.message || 'Upload failed')
+      }
+    },
+  })
+
+  const whatsappIconClearMutation = useMutation({
+    mutationFn: () => adminSettingsApi.clearWhatsappIcon(),
+    onSuccess: () => {
+      toast.success('WhatsApp icon reset to default')
+      clearWhatsappSelection()
+      invalidate()
+    },
+    onError: (err) => toast.error(err.message || 'Reset failed'),
   })
 
   return (
@@ -328,7 +411,7 @@ export function AdminSettingsPage() {
               </div>
               <ToggleField
                 label="Show +91 country code"
-                description="Prefix the header phone number with +91 (display only — never saved into the stored number)."
+                description="Prefix the header phone number with (+91) (display only — never saved into the stored number)."
                 checked={contactForm.showCountryCode}
                 onCheckedChange={(v) => setContactForm((f) => ({ ...f, showCountryCode: !!v }))}
               />
@@ -389,12 +472,6 @@ export function AdminSettingsPage() {
 
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <ToggleField
-                  label="Show banner"
-                  description="Globally show/hide the promotional banner."
-                  checked={bannerForm.enabled}
-                  onCheckedChange={(v) => setBannerForm((f) => ({ ...f, enabled: !!v }))}
-                />
-                <ToggleField
                   label="Shimmer effect"
                   description="Subtle white light sweep moving left → right."
                   checked={bannerForm.shimmerEnabled}
@@ -416,10 +493,12 @@ export function AdminSettingsPage() {
                 >
                   {bannerForm.shimmerEnabled && <div className="banner-shimmer" aria-hidden="true" />}
                   <div className="relative z-10 flex min-h-9 items-center justify-center gap-2 px-8 py-1.5 text-xs font-medium">
-                    <span className="truncate">{bannerForm.message || DEFAULT_PROMOTIONAL_BANNER.message}</span>
-                    <span className="shrink-0 font-semibold underline underline-offset-2">
-                      {bannerForm.ctaText || DEFAULT_PROMOTIONAL_BANNER.ctaText}
-                    </span>
+                    <span className="truncate">{bannerForm.message}</span>
+                    {bannerForm.ctaText.trim() && (
+                      <span className="shrink-0 font-semibold underline underline-offset-2">
+                        {bannerForm.ctaText}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -428,6 +507,135 @@ export function AdminSettingsPage() {
                 <Button onClick={() => bannerMutation.mutate()} disabled={bannerMutation.isPending}>
                   {bannerMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Save className="h-4 w-4" aria-hidden="true" />}
                   {bannerMutation.isPending ? 'Saving…' : 'Save Changes'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* WhatsApp Floating Button */}
+          <Card>
+            <CardHeader>
+              <CardTitle>WhatsApp</CardTitle>
+              <CardDescription>Floating WhatsApp button at bottom corner — phone, message, icon, position, size and color.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {settings?.whatsapp?.storageConfigured === false && (
+                <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  <p>
+                    S3 storage is not configured. Custom WhatsApp icon upload requires AWS S3 environment variables.
+                  </p>
+                </div>
+              )}
+
+              <ToggleField
+                label="Enable WhatsApp Button"
+                description="Show the floating WhatsApp button on the public website."
+                checked={whatsappForm.enabled}
+                onCheckedChange={(v) => setWhatsappForm((f) => ({ ...f, enabled: !!v }))}
+              />
+
+              <div className="grid gap-2 sm:max-w-sm">
+                <Label htmlFor="whatsapp-phone">WhatsApp Phone Number</Label>
+                <Input
+                  id="whatsapp-phone"
+                  value={whatsappForm.phoneNumber}
+                  onChange={(e) => setWhatsappForm((f) => ({ ...f, phoneNumber: e.target.value }))}
+                  placeholder="919310660016"
+                />
+                <p className="text-xs text-muted-foreground">Digits only, e.g. 919310660016 — +91, spaces or dashes are stripped automatically.</p>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="whatsapp-message">Prefilled WhatsApp Message</Label>
+                <textarea
+                  id="whatsapp-message"
+                  value={whatsappForm.prefilledMessage}
+                  onChange={(e) => setWhatsappForm((f) => ({ ...f, prefilledMessage: e.target.value }))}
+                  placeholder={DEFAULT_WHATSAPP.prefilledMessage}
+                  rows={3}
+                  className="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label>WhatsApp Icon</Label>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-muted/50 p-2" style={{ backgroundColor: whatsappForm.backgroundColor }}>
+                    {whatsappPreviewUrl ? (
+                      <img src={whatsappPreviewUrl} alt="Preview" className="h-8 w-8 rounded-full object-cover" />
+                    ) : whatsappForm.iconUrl ? (
+                      <img src={whatsappForm.iconUrl} alt="Current WhatsApp icon" className="h-8 w-8 rounded-full object-cover" />
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 text-white"><path d="M19.05 4.91A9.89 9.89 0 0 0 12.02 2C6.57 2 2.14 6.42 2.14 11.88c0 1.74.46 3.44 1.32 4.94L2 22l5.33-1.4a9.86 9.86 0 0 0 4.69 1.19h.01c5.45 0 9.88-4.42 9.88-9.88 0-2.64-1.03-5.12-2.86-6.98Zm-7.03 14.88h-.01a8.13 8.13 0 0 1-4.15-1.14l-.3-.18-3.16.83.84-3.09-.2-.32a8.11 8.11 0 0 1-1.26-4.33c0-4.49 3.66-8.14 8.14-8.14 2.18 0 4.22.85 5.76 2.38a8.09 8.09 0 0 1 2.38 5.76c0 4.49-3.66 8.13-8.14 8.13Zm6.78-5.92c-.37-.19-2.2-1.09-2.54-1.21-.34-.12-.59-.19-.84.19-.25.37-.97 1.21-1.19 1.46-.22.25-.44.28-.81.09-.37-.19-1.57-.58-2.99-1.85-.91-.81-1.52-1.81-1.7-2.12-.18-.31-.02-.48.13-.63.13-.13.28-.34.42-.5.14-.17.19-.28.28-.47.09-.19.05-.35-.02-.5-.07-.15-.84-2.03-1.15-2.78-.3-.72-.61-.62-.84-.63l-.72-.01c-.25 0-.5.07-.76.34-.25.28-.97.95-.97 2.31s.99 2.68 1.13 2.87c.14.19 1.95 2.98 4.73 4.18.66.28 1.17.45 1.57.58.66.21 1.26.18 1.74.11.53-.08 2.2-.9 2.51-1.77.31-.87.31-1.62.22-1.77-.09-.15-.34-.22-.71-.41Z" /></svg>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <label className="inline-flex cursor-pointer items-center rounded-md border border-input bg-background px-3 py-1.5 text-sm hover:bg-accent">
+                      <input ref={whatsappInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleWhatsappFileChange} />
+                      Upload New Icon
+                    </label>
+                    {whatsappPreviewUrl ? (
+                      <Button type="button" variant="outline" size="sm" onClick={clearWhatsappSelection}>Cancel</Button>
+                    ) : whatsappForm.iconUrl ? (
+                      <Button type="button" variant="outline" size="sm" onClick={() => whatsappIconClearMutation.mutate()} disabled={whatsappIconClearMutation.isPending}>
+                        {whatsappIconClearMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Remove Custom Icon
+                      </Button>
+                    ) : null}
+                    {whatsappSelectedFile && (
+                      <Button type="button" size="sm" onClick={() => whatsappIconUploadMutation.mutate()} disabled={whatsappIconUploadMutation.isPending}>
+                        {whatsappIconUploadMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />} Upload
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                {whatsappSelectedFile && <p className="text-xs text-muted-foreground">{whatsappSelectedFile.name} · {(whatsappSelectedFile.size / 1024).toFixed(1)} KB — click Upload to save</p>}
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Button Position</Label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 text-sm"><input type="radio" name="whatsapp-position" checked={whatsappForm.position === 'bottom-right'} onChange={() => setWhatsappForm((f) => ({ ...f, position: 'bottom-right' }))} /> Bottom Right</label>
+                    <label className="flex items-center gap-2 text-sm"><input type="radio" name="whatsapp-position" checked={whatsappForm.position === 'bottom-left'} onChange={() => setWhatsappForm((f) => ({ ...f, position: 'bottom-left' }))} /> Bottom Left</label>
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="whatsapp-size">Button Size</Label>
+                  <select id="whatsapp-size" value={whatsappForm.size} onChange={(e) => setWhatsappForm((f) => ({ ...f, size: e.target.value }))} className="h-9 rounded-md border border-input bg-background px-3 text-sm">
+                    <option value="small">Small</option>
+                    <option value="medium">Medium</option>
+                    <option value="large">Large</option>
+                  </select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="whatsapp-bg">Background Color</Label>
+                  <div className="flex gap-2">
+                    <input id="whatsapp-bg" type="color" value={/^#[0-9a-fA-F]{3,8}$/.test(whatsappForm.backgroundColor) ? whatsappForm.backgroundColor : '#25D366'} onChange={(e) => setWhatsappForm((f) => ({ ...f, backgroundColor: e.target.value }))} className="h-9 w-12 rounded border border-input p-1" />
+                    <Input value={whatsappForm.backgroundColor} onChange={(e) => setWhatsappForm((f) => ({ ...f, backgroundColor: e.target.value }))} placeholder="#25D366" className="flex-1" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-4">
+                <p className="mb-2 text-xs font-medium text-muted-foreground">Preview</p>
+                <div className="relative h-28 overflow-hidden rounded-lg border border-border bg-muted/30">
+                  <div className={`absolute bottom-3 flex h-14 w-14 items-center justify-center rounded-full shadow-lg ${whatsappForm.position === 'bottom-left' ? 'left-3' : 'right-3'}`} style={{ backgroundColor: whatsappForm.backgroundColor }}>
+                    {whatsappPreviewUrl ? (
+                      <img src={whatsappPreviewUrl} alt="preview" className="h-7 w-7 rounded-full object-cover" />
+                    ) : whatsappForm.iconUrl ? (
+                      <img src={whatsappForm.iconUrl} alt="preview" className="h-7 w-7 rounded-full object-cover" />
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7 text-white"><path d="M19.05 4.91A9.89 9.89 0 0 0 12.02 2C6.57 2 2.14 6.42 2.14 11.88c0 1.74.46 3.44 1.32 4.94L2 22l5.33-1.4a9.86 9.86 0 0 0 4.69 1.19h.01c5.45 0 9.88-4.42 9.88-9.88 0-2.64-1.03-5.12-2.86-6.98Z" /></svg>
+                    )}
+                  </div>
+                  <div className="absolute inset-x-0 bottom-0 bg-background/80 px-3 py-1 text-center text-[11px] text-muted-foreground">wa.me/{String(whatsappForm.phoneNumber || '').replace(/\D/g, '')}{whatsappForm.prefilledMessage ? `?text=${encodeURIComponent(whatsappForm.prefilledMessage).slice(0, 40)}…` : ''}</div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 border-t border-border pt-4">
+                <Button onClick={() => whatsappMutation.mutate()} disabled={whatsappMutation.isPending}>
+                  {whatsappMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save Changes
                 </Button>
               </div>
             </CardContent>

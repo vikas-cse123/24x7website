@@ -38,4 +38,24 @@ export const adminSettingsApi = {
   updatePromotionalBanner(data) {
     return httpClient.patch('/admin/settings/promotional-banner', data)
   },
+  getWhatsapp() {
+    return httpClient.get('/admin/settings/whatsapp')
+  },
+  updateWhatsapp(data) {
+    return httpClient.patch('/admin/settings/whatsapp', data)
+  },
+  uploadWhatsappIcon(formData) {
+    return httpClient.post('/admin/settings/whatsapp/icon', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+  clearWhatsappIcon() {
+    return httpClient.delete('/admin/settings/whatsapp/icon')
+  },
+}
+
+export const publicWhatsappApi = {
+  get() {
+    return httpClient.get('/settings/whatsapp')
+  },
 }

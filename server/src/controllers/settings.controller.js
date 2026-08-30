@@ -106,3 +106,68 @@ export async function clearLogo(_req, res, next) {
     next(err)
   }
 }
+
+// GET /api/settings/whatsapp — public, no auth
+export async function getPublicWhatsapp(_req, res, next) {
+  try {
+    const data = await settingsService.getWhatsappPublic()
+    res.status(200).json({ success: true, data, message: 'WhatsApp settings' })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// GET /api/admin/settings/whatsapp — admin-only
+export async function getAdminWhatsapp(_req, res, next) {
+  try {
+    const data = await settingsService.getWhatsappAdmin()
+    res.status(200).json({ success: true, data, message: 'WhatsApp settings' })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// PATCH /api/admin/settings/whatsapp — admin-only
+export async function updateWhatsapp(req, res, next) {
+  try {
+    // Normalize alternate field names
+    const payload = { ...req.body }
+    if (payload.phone && !payload.phoneNumber) payload.phoneNumber = payload.phone
+    if (payload.message && !payload.prefilledMessage) payload.prefilledMessage = payload.message
+    const data = await settingsService.updateWhatsapp(payload)
+    res.status(200).json({ success: true, data, message: 'WhatsApp settings updated' })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// POST /api/admin/settings/whatsapp/icon — admin-only, multipart `image`
+export async function uploadWhatsappIcon(req, res, next) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image provided' })
+    }
+    if (!settingsService.isAllowedLogoMime(req.file.mimetype)) {
+      return res.status(400).json({ success: false, message: 'Only JPG, JPEG, PNG or WebP images are supported' })
+    }
+    const meta = await imageStorage.upload(req.file.buffer, {
+      folder: folderFor('whatsapp-media'),
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+    })
+    const data = await settingsService.setWhatsappIcon({ url: meta.url, publicId: meta.publicId })
+    res.status(200).json({ success: true, data, message: 'WhatsApp icon updated' })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// DELETE /api/admin/settings/whatsapp/icon — admin-only, remove custom icon
+export async function clearWhatsappIcon(_req, res, next) {
+  try {
+    const data = await settingsService.clearWhatsappIcon()
+    res.status(200).json({ success: true, data, message: 'WhatsApp icon reset to default' })
+  } catch (err) {
+    next(err)
+  }
+}

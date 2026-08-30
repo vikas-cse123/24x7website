@@ -4,6 +4,7 @@ import { isS3Configured } from '../config/s3.js'
 export const BRANDING_KEY = 'branding'
 export const CONTACT_KEY = 'contact'
 export const PROMOTIONAL_BANNER_KEY = 'promotionalBanner'
+export const WHATSAPP_KEY = 'whatsapp'
 
 export const BRAND_NAME = '24x7Chhutti'
 // client/public/logo.jpg — the official default/fallback logo. Never modified,
@@ -32,6 +33,17 @@ export const DEFAULT_PROMOTIONAL_BANNER = {
   dismissible: true,
   backgroundColor: '',
   textColor: '',
+}
+
+// WhatsApp floating button defaults — safe fallbacks only, never override DB values.
+export const DEFAULT_WHATSAPP = {
+  enabled: true,
+  phoneNumber: '919310660016',
+  prefilledMessage: 'Hey! Capture A Trip I am interested in your trips',
+  icon: null, // { url, publicId } when custom, null → default icon
+  position: 'bottom-right', // bottom-right | bottom-left
+  size: 'medium', // small | medium | large
+  backgroundColor: '#25D366',
 }
 
 // Uploads are restricted to raster formats; SVG stays disabled (no sanitizer).
@@ -113,12 +125,14 @@ export async function clearBrandingLogo() {
 // --- contact -----------------------------------------------------------------
 
 function normalizeContact(data = {}) {
-  // Store only the local number: a leading +91 / 91 prefix typed by the admin
-  // is stripped so the stored value never contains the country code. The
-  // header re-adds +91 purely for display when `showCountryCode` is enabled.
+  // Store only the local number: an explicit "+91 " prefix typed by the admin
+  // is stripped so the stored value never contains the country code. A number
+  // that merely STARTS with 91 (e.g. 9167834595) is kept intact — only the
+  // "+"-prefixed form is treated as a country code. The header re-adds (+91)
+  // purely for display when `showCountryCode` is enabled.
   const phone =
     typeof data.phone === 'string' ? data.phone.trim().replace(/\s+/g, ' ').slice(0, 30) : ''
-  const phoneWithoutCode = phone.replace(/^\+?91[\s-]*/, '')
+  const phoneWithoutCode = phone.replace(/^\+91[\s-]*/, '')
   return {
     phone: phoneWithoutCode,
     showCountryCode:
@@ -145,16 +159,14 @@ export async function updateContact(input = {}) {
 // --- promotional banner -------------------------------------------------------
 
 function normalizePromotionalBanner(data = {}) {
-  const take = (value, fallback, max) => {
-    const v = typeof value === 'string' ? value.trim() : ''
-    return v ? v.slice(0, max) : fallback
-  }
-  const ctaText =
-    typeof data.ctaText === 'string' ? data.ctaText.trim().slice(0, 60) : DEFAULT_PROMOTIONAL_BANNER.ctaText
+  // An explicitly saved empty string must persist (admin cleared the field).
+  // Defaults apply only when the field is absent entirely (never set).
+  const take = (value, fallback, max) =>
+    typeof value === 'string' ? value.trim().slice(0, max) : fallback
   return {
     enabled: typeof data.enabled === 'boolean' ? data.enabled : DEFAULT_PROMOTIONAL_BANNER.enabled,
     message: take(data.message, DEFAULT_PROMOTIONAL_BANNER.message, 300),
-    ctaText,
+    ctaText: take(data.ctaText, DEFAULT_PROMOTIONAL_BANNER.ctaText, 60),
     ctaUrl: take(data.ctaUrl, DEFAULT_PROMOTIONAL_BANNER.ctaUrl, 300),
     shimmerEnabled:
       typeof data.shimmerEnabled === 'boolean'
@@ -184,24 +196,144 @@ export async function updatePromotionalBanner(input = {}) {
   return next
 }
 
+// --- whatsapp -------------------------------------------------------------------
+// Normalize phone: strip non-digits, allow +91 / 91 prefix, store as digits only (e.g. 919310660016)
+function normalizePhone(value) {
+  const raw = String(value || '').trim()
+  const digits = raw.replace(/\D/g, '')
+  return digits.slice(0, 15)
+}
+
+const WHATSAPP_POSITIONS = ['bottom-right', 'bottom-left']
+const WHATSAPP_SIZES = ['small', 'medium', 'large']
+const HEX_COLOR = /^#[0-9a-fA-F]{3,8}$/
+
+function normalizeWhatsapp(data = {}) {
+  // Same rule as the banner: an explicitly saved empty string persists;
+  // defaults apply only when the field was never set.
+  const rawPhone = typeof data.phoneNumber === 'string' ? data.phoneNumber : typeof data.phone === 'string' ? data.phone : DEFAULT_WHATSAPP.phoneNumber
+  const phoneNumber = typeof data.phoneNumber === 'string' || typeof data.phone === 'string' ? normalizePhone(rawPhone) : DEFAULT_WHATSAPP.phoneNumber
+  const prefilledMessage =
+    typeof data.prefilledMessage === 'string'
+      ? data.prefilledMessage.trim().slice(0, 500)
+      : DEFAULT_WHATSAPP.prefilledMessage
+  const position = WHATSAPP_POSITIONS.includes(data.position) ? data.position : DEFAULT_WHATSAPP.position
+  const size = WHATSAPP_SIZES.includes(data.size) ? data.size : DEFAULT_WHATSAPP.size
+  const backgroundColor =
+    typeof data.backgroundColor === 'string' && HEX_COLOR.test(data.backgroundColor.trim())
+      ? data.backgroundColor.trim()
+      : DEFAULT_WHATSAPP.backgroundColor
+
+  // Icon is stored as {url, publicId} or null
+  let icon = null
+  if (data.icon && typeof data.icon === 'object' && data.icon.url) {
+    icon = { url: String(data.icon.url).trim().slice(0, 500), publicId: String(data.icon.publicId || '').trim().slice(0, 300) }
+  } else if (typeof data.iconUrl === 'string' && data.iconUrl.trim()) {
+    icon = { url: data.iconUrl.trim().slice(0, 500), publicId: String(data.iconPublicId || '').trim().slice(0, 300) }
+  } else if (data.iconUrl === null || data.icon === null) {
+    icon = null
+  } else {
+    // Preserve existing icon if not explicitly cleared - caller merges
+    icon = undefined
+  }
+
+  const out = {
+    enabled: typeof data.enabled === 'boolean' ? data.enabled : DEFAULT_WHATSAPP.enabled,
+    phoneNumber,
+    prefilledMessage,
+    position,
+    size,
+    backgroundColor,
+  }
+  if (icon !== undefined) out.icon = icon
+  return out
+}
+
+export async function getWhatsappPublic() {
+  const data = await getSettingData(WHATSAPP_KEY)
+  const normalized = normalizeWhatsapp({ ...DEFAULT_WHATSAPP, ...data })
+  // Public exposure: only needed fields, no internal ids
+  return {
+    enabled: normalized.enabled,
+    phoneNumber: normalized.phoneNumber,
+    prefilledMessage: normalized.prefilledMessage,
+    iconUrl: normalized.icon?.url || null,
+    position: normalized.position,
+    size: normalized.size,
+    backgroundColor: normalized.backgroundColor,
+  }
+}
+
+export async function getWhatsappAdmin() {
+  const data = await getSettingData(WHATSAPP_KEY)
+  const normalized = normalizeWhatsapp({ ...DEFAULT_WHATSAPP, ...data, icon: data.icon !== undefined ? data.icon : DEFAULT_WHATSAPP.icon })
+  const raw = await getSettingData(WHATSAPP_KEY)
+  return {
+    enabled: normalized.enabled,
+    phoneNumber: normalized.phoneNumber,
+    prefilledMessage: normalized.prefilledMessage,
+    icon: normalized.icon || null,
+    iconUrl: normalized.icon?.url || null,
+    iconPublicId: normalized.icon?.publicId || null,
+    position: normalized.position,
+    size: normalized.size,
+    backgroundColor: normalized.backgroundColor,
+    // For admin UI to know if S3 is available for icon upload
+    storageConfigured: isS3Configured,
+    raw,
+  }
+}
+
+export async function updateWhatsapp(input = {}) {
+  const existing = await getSettingData(WHATSAPP_KEY)
+  const merged = { ...DEFAULT_WHATSAPP, ...existing, ...input }
+  // If icon not supplied, keep existing
+  if (input.icon === undefined && input.iconUrl === undefined && existing.icon !== undefined) {
+    merged.icon = existing.icon
+  }
+  const next = normalizeWhatsapp(merged)
+  // Ensure icon is preserved as object
+  if (next.icon === undefined) next.icon = existing.icon || null
+  await AppSetting.updateOne({ key: WHATSAPP_KEY }, { $set: { data: next } }, { upsert: true })
+  return getWhatsappAdmin()
+}
+
+export async function setWhatsappIcon({ url, publicId = '' }) {
+  const existing = await getSettingData(WHATSAPP_KEY)
+  const base = normalizeWhatsapp({ ...DEFAULT_WHATSAPP, ...existing })
+  base.icon = { url, publicId }
+  await AppSetting.updateOne({ key: WHATSAPP_KEY }, { $set: { data: base } }, { upsert: true })
+  return getWhatsappAdmin()
+}
+
+export async function clearWhatsappIcon() {
+  const existing = await getSettingData(WHATSAPP_KEY)
+  const base = normalizeWhatsapp({ ...DEFAULT_WHATSAPP, ...existing })
+  base.icon = null
+  await AppSetting.updateOne({ key: WHATSAPP_KEY }, { $set: { data: base } }, { upsert: true })
+  return getWhatsappAdmin()
+}
+
 // --- aggregate ----------------------------------------------------------------
 
 // Everything the public website needs in one call (no auth required).
 export async function getPublicSettings() {
-  const [branding, contact, promotionalBanner] = await Promise.all([
+  const [branding, contact, promotionalBanner, whatsapp] = await Promise.all([
     getBrandingPublic(),
     getContactPublic(),
     getPromotionalBannerPublic(),
+    getWhatsappPublic(),
   ])
-  return { logo: branding.logo, contact, promotionalBanner }
+  return { logo: branding.logo, contact, promotionalBanner, whatsapp }
 }
 
 // Full admin settings bundle (admin-only; parent router guards).
 export async function getAdminSettings() {
-  const [branding, contact, promotionalBanner] = await Promise.all([
+  const [branding, contact, promotionalBanner, whatsapp] = await Promise.all([
     getBrandingAdmin(),
     getContactPublic(),
     getPromotionalBannerPublic(),
+    getWhatsappAdmin(),
   ])
-  return { branding, contact, promotionalBanner }
+  return { branding, contact, promotionalBanner, whatsapp }
 }

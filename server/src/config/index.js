@@ -18,7 +18,7 @@ const config = {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
-  mongoUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/24x7chhutti',
+  mongoUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/24x7-website',
 
   jwt: {
     secret: process.env.JWT_SECRET || 'dev-only-jwt-secret-change-me',

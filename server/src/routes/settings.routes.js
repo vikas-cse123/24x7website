@@ -2,6 +2,7 @@ import { Router } from 'express'
 import {
   getPublicSettings,
   getPublicBranding,
+  getPublicWhatsapp,
 } from '../controllers/settings.controller.js'
 
 const router = Router()
@@ -10,5 +11,6 @@ const router = Router()
 // logo, phone number and promotional banner without a session.
 router.get('/', getPublicSettings)
 router.get('/branding', getPublicBranding)
+router.get('/whatsapp', getPublicWhatsapp)
 
 export default router

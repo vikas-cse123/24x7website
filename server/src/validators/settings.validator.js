@@ -37,3 +37,19 @@ export const updatePromotionalBannerSchema = z
       })
     }
   })
+
+export const updateWhatsappSchema = z.object({
+  enabled: z.boolean().optional(),
+  phoneNumber: z.string().trim().max(20).optional(),
+  phone: z.string().trim().max(20).optional(),
+  prefilledMessage: z.string().trim().max(500).optional(),
+  message: z.string().trim().max(500).optional(),
+  position: z.enum(['bottom-right', 'bottom-left']).optional(),
+  size: z.enum(['small', 'medium', 'large']).optional(),
+  backgroundColor: z
+    .string()
+    .trim()
+    .regex(HEX_COLOR, 'Use a hex color, e.g. #25D366')
+    .optional()
+    .or(z.literal('')),
+})

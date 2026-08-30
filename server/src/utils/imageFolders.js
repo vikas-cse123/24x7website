@@ -10,6 +10,7 @@ export const IMAGE_FOLDERS = {
   'blog-media': 'travel-crm/blog-media',
   // admin-managed website branding (logo uploads)
   'brand-media': 'travel-crm/brand-media',
+  'whatsapp-media': 'travel-crm/whatsapp',
   // logical buckets for future masters; keep centralized so renames are one-file
   hotels: 'travel-crm/hotels',
   sightseeing: 'travel-crm/sightseeing',
