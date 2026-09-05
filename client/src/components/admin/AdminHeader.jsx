@@ -30,35 +30,35 @@ export function AdminHeader({ onMenuClick }) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur lg:px-6">
+    <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-slate-200 bg-white/90 px-3 backdrop-blur sm:px-4">
       <button
         type="button"
         onClick={onMenuClick}
         aria-label="Open menu"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
       >
-        <Menu className="h-5 w-5" />
+        <Menu className="h-4 w-4" />
       </button>
 
-      {/* Breadcrumb / page title */}
-      <div className="flex min-w-0 items-center gap-1.5 text-sm">
-        <span className="hidden text-muted-foreground sm:inline">Admin</span>
-        <ChevronRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:inline" />
-        <span className="truncate font-medium">{pageLabel}</span>
+      {/* Breadcrumb */}
+      <div className="flex min-w-0 items-center gap-1 text-xs">
+        <span className="hidden rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 sm:inline">Admin</span>
+        <ChevronRight className="hidden h-3 w-3 text-slate-400 sm:inline" />
+        <span className="truncate text-sm font-semibold tracking-tight">{pageLabel}</span>
       </div>
 
       <div className="ml-auto flex items-center gap-2">
         <div className="hidden items-center gap-2 sm:flex">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-            <UserIcon className="h-4 w-4" />
-          </span>
-          <div className="leading-tight">
-            <p className="text-sm font-medium">+{user?.countryCode} {user?.mobile}</p>
-            <p className="text-xs capitalize text-muted-foreground">{user?.role}</p>
+          <div className="text-right leading-none">
+            <p className="text-xs font-semibold">+{user?.countryCode} {user?.mobile}</p>
+            <p className="text-[11px] capitalize text-slate-500">{user?.role}</p>
           </div>
+          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-white">
+            <UserIcon className="h-3.5 w-3.5" />
+          </span>
         </div>
-        <Button variant="outline" size="sm" onClick={handleLogout}>
-          <LogOut className="h-4 w-4" />
+        <Button variant="outline" size="sm" onClick={handleLogout} className="h-8 rounded-lg text-xs">
+          <LogOut className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Logout</span>
         </Button>
       </div>

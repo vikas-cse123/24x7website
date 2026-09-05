@@ -5,15 +5,12 @@ import { Card, CardContent } from '@/components/ui/card'
 // working feature.
 export function AdminPlaceholderPage({ title }) {
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-bold tracking-tight">{title}</h1>
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center gap-2 p-12 text-center">
-          <p className="text-sm font-medium">{title}</p>
-          <p className="text-sm text-muted-foreground">
-            This section is not implemented yet. It will be built in a later
-            milestone.
-          </p>
+    <div className="space-y-3">
+      <h1 className="text-lg font-bold tracking-tight">{title}</h1>
+      <Card className="border-slate-200 bg-white">
+        <CardContent className="flex flex-col items-center justify-center gap-1 p-8 text-center">
+          <p className="text-sm font-semibold">{title}</p>
+          <p className="text-xs text-slate-500">This section is not implemented yet — will be built in a later milestone.</p>
         </CardContent>
       </Card>
     </div>

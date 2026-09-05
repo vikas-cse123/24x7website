@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useParams, Link } from 'react-router-dom'
 import * as React from 'react'
-import { MapPin, IndianRupee, ArrowLeft, HelpCircle } from 'lucide-react'
+import { MapPin, IndianRupee, ArrowLeft, HelpCircle, X } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
 import { DestinationCard } from '@/components/destinations/DestinationCard'
@@ -13,10 +13,100 @@ import { destinationApi } from '@/services/destinations'
 import { tripApi } from '@/services/trips'
 import { faqApi } from '@/services/faqs'
 import { useSeo, destinationSeoTitle } from '@/lib/seo'
+import { createPortal } from 'react-dom'
+
+function stripHtml(html) {
+  if (!html) return ''
+  // Create temp element to strip tags safely
+  try {
+    const tmp = document.createElement('div')
+    tmp.innerHTML = html
+    return (tmp.textContent || tmp.innerText || '').replace(/\s+/g, ' ').trim()
+  } catch {
+    return String(html).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  }
+}
+
+function getPreviewText(description, maxChars = 180) {
+  if (!description) return ''
+  const text = /<[a-z][\s\S]*>/i.test(description) ? stripHtml(description) : String(description).replace(/\s+/g, ' ').trim()
+  if (text.length <= maxChars) return text
+  const sliced = text.slice(0, maxChars)
+  const lastSpace = sliced.lastIndexOf(' ')
+  const truncated = lastSpace > 100 ? sliced.slice(0, lastSpace) : sliced
+  return truncated + '...'
+}
+
+function DescriptionModal({ open, onClose, title, description }) {
+  React.useEffect(() => {
+    if (!open) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [open, onClose])
+
+  if (!open) return null
+
+  const isRich = /<[a-z][\s\S]*>/i.test(String(description || ''))
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${title} description`}
+        className="relative z-10 flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
+      >
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <h2 className="pr-8 text-base font-semibold sm:text-lg">{title} Tour Packages</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close description"
+            className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="overflow-y-auto px-6 py-5">
+          {isRich ? (
+            <div
+              className="prose prose-sm max-w-none break-words prose-headings:font-semibold prose-h2:text-base prose-h3:text-sm prose-p:my-3 prose-a:text-primary prose-a:underline prose-strong:font-semibold prose-ul:list-disc prose-ol:list-decimal prose-li:my-1 prose-blockquote:border-l-2 prose-blockquote:border-primary prose-blockquote:pl-3 prose-blockquote:italic"
+              dangerouslySetInnerHTML={{ __html: String(description) }}
+            />
+          ) : (
+            <div className="space-y-4 text-sm leading-relaxed text-gray-700">
+              {String(description || '')
+                .split(/\n{2,}/)
+                .map((p) => p.trim())
+                .filter(Boolean)
+                .flatMap((p) => p.split(/\n/).map((s) => s.trim()).filter(Boolean))
+                .map((para, i) => (
+                  <p key={i} className="whitespace-pre-wrap break-words">
+                    {para}
+                  </p>
+                ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
 
 export function DestinationPage() {
   const { slug } = useParams()
   const [galleryIndex, setGalleryIndex] = React.useState(null)
+  const [showDescriptionModal, setShowDescriptionModal] = React.useState(false)
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['destinations', 'slug', slug],
@@ -36,7 +126,7 @@ export function DestinationPage() {
 
   useSeo({
     title: destination ? destinationSeoTitle(destination.name) : undefined,
-    description: destination?.seoDescription || destination?.shortDescription,
+    description: destination?.seoDescription || destination?.description?.slice(0, 160),
     canonical: destination ? `${window.location.origin}/destination/${destination.slug}` : undefined,
   })
 
@@ -70,6 +160,17 @@ export function DestinationPage() {
 
   const hasPrice = destination.startingPrice !== null && destination.startingPrice !== undefined
 
+  // Media fallback: heroImage -> homepageImage -> gallery[0]
+  const heroMedia = destination.heroImage?.url || destination.heroImage?.secureUrl
+    ? destination.heroImage
+    : destination.homepageImage?.url || destination.homepageImage?.secureUrl
+      ? destination.homepageImage
+      : destination.gallery?.[0] || null
+
+  const description = destination.description || ''
+  const preview = getPreviewText(description)
+  const needsReadMore = description && description.replace(/\s+/g, ' ').trim().length > 180
+
   return (
     <Container className="py-8 lg:py-12">
       <Link
@@ -80,20 +181,26 @@ export function DestinationPage() {
         All destinations
       </Link>
 
-      {/* Hero */}
+      {/* Large Destination Media */}
       <div className="mt-4 overflow-hidden rounded-2xl">
-        <DestinationImage
-          src={destination.heroImage?.url}
-          alt={destination.heroImage?.alt || destination.name}
-          className="aspect-[16/7] w-full"
-        />
+        {heroMedia ? (
+          <DestinationImage
+            image={heroMedia}
+            alt={heroMedia.alt || destination.name}
+            className="aspect-[16/7] w-full"
+          />
+        ) : (
+          <div className="flex aspect-[16/7] w-full items-center justify-center bg-muted text-muted-foreground">
+            No media yet
+          </div>
+        )}
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              {destination.name}
+              {destination.name} Tour Packages
             </h1>
             {destination.featured && (
               <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground">
@@ -107,17 +214,23 @@ export function DestinationPage() {
             {destination.region ? ` · ${destination.region}` : ''}
           </p>
 
-          {destination.shortDescription && (
-            <p className="mt-4 text-lg text-muted-foreground">
-              {destination.shortDescription}
-            </p>
-          )}
-
-          {destination.description && (
-            <div className="mt-6 space-y-3 whitespace-pre-line text-foreground/90">
-              <p>{destination.description}</p>
+          {/* Description preview */}
+          {description ? (
+            <div className="mt-4">
+              <p className="line-clamp-2 text-sm leading-relaxed text-foreground/80 sm:text-base">
+                {preview}
+              </p>
+              {needsReadMore && (
+                <button
+                  type="button"
+                  onClick={() => setShowDescriptionModal(true)}
+                  className="mt-2 text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                >
+                  Read More
+                </button>
+              )}
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Price card */}
@@ -142,7 +255,6 @@ export function DestinationPage() {
             Browse trips
           </Link>
 
-          {/* Custom-trip lead CTA — preselects this destination. */}
           <PlanTripTrigger
             destinationId={destination.id}
             variant="outline"
@@ -152,6 +264,14 @@ export function DestinationPage() {
           </PlanTripTrigger>
         </aside>
       </div>
+
+      {/* Description Modal */}
+      <DescriptionModal
+        open={showDescriptionModal}
+        onClose={() => setShowDescriptionModal(false)}
+        title={destination.name}
+        description={description}
+      />
 
       {/* Trips for this destination */}
       <div className="mt-12">

@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
 import { BLOG_CATEGORIES, BLOG_CATEGORY_LABELS, CONTENT_BLOCK_TYPES } from '@/schemas/blog'
 import { ImageUploader } from '@/components/ui/ImageUploader'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 
 // ---- schema (mirrors server; author/slug/publishedAt server-controlled) ----
 const blockSchema = z.object({
@@ -182,7 +183,14 @@ export function BlogForm({ initialValues, destinations = [], isSubmitting, submi
           </div>
           <div className="sm:col-span-2">
             <Label htmlFor="b-excerpt">Excerpt *</Label>
-            <Textarea id="b-excerpt" rows={2} maxLength={400} className="mt-1.5" aria-invalid={!!errors.excerpt} {...register('excerpt')} />
+            <div className="mt-1.5">
+              <RichTextEditor
+                value={watch('excerpt') || ''}
+                onChange={(html) => setValue('excerpt', html, { shouldValidate: true, shouldDirty: true })}
+                placeholder="Excerpt…"
+                error={!!errors.excerpt}
+              />
+            </div>
             {errors.excerpt && <p className="mt-1 text-xs text-destructive">{errors.excerpt.message}</p>}
           </div>
           <div>
@@ -232,7 +240,7 @@ export function BlogForm({ initialValues, destinations = [], isSubmitting, submi
           <CardTitle className="text-base">Content</CardTitle>
         </CardHeader>
         <CardContent>
-          <ContentBlocks control={control} register={register} errors={errors} />
+          <ContentBlocks control={control} register={register} watch={watch} setValue={setValue} errors={errors} />
         </CardContent>
       </Card>
 
@@ -271,7 +279,7 @@ export function BlogForm({ initialValues, destinations = [], isSubmitting, submi
 }
 
 // Content block editor (own component so useFieldArray stays hook-legal).
-function ContentBlocks({ control, register, errors }) {
+function ContentBlocks({ control, register, watch, setValue, errors }) {
   const { fields, append, remove, move } = useFieldArray({ control, name: 'content' })
 
   const addBlock = (type) =>
@@ -353,13 +361,14 @@ function ContentBlocks({ control, register, errors }) {
               <Label htmlFor={`c-${index}-text`}>
                 {field.type === 'paragraph' ? 'Paragraph *' : 'Quote *'}
               </Label>
-              <Textarea
-                id={`c-${index}-text`}
-                rows={3}
-                className="mt-1.5"
-                placeholder={field.type === 'paragraph' ? 'Text… links like [example](https://example.com) are supported' : ''}
-                {...register(`content.${index}.text`)}
-              />
+              <div className="mt-1.5">
+                <RichTextEditor
+                  value={watch ? watch(`content.${index}.text`) || '' : ''}
+                  onChange={(html) => setValue && setValue(`content.${index}.text`, html, { shouldValidate: true, shouldDirty: true })}
+                  placeholder={field.type === 'paragraph' ? 'Paragraph text…' : 'Quote text…'}
+                  error={!!errors.content?.[index]?.text}
+                />
+              </div>
               {errors.content?.[index]?.text && (
                 <p className="mt-1 text-xs text-destructive">{errors.content[index].text.message}</p>
               )}

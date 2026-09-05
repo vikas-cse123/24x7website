@@ -2,6 +2,9 @@ import Blog, { computeReadingTime } from '../models/Blog.js'
 import Destination from '../models/Destination.js'
 import User from '../models/User.js'
 import { slugify, ensureUniqueSlug } from '../utils/slugify.js'
+import * as imageStorage from './imageStorage.service.js'
+import { isAppKey } from '../utils/imageFolders.js'
+import { s3Config } from '../config/s3.js'
 
 const PUBLIC_PROJECTION = '-createdBy -updatedBy -__v'
 const DEST_POPULATE = 'name slug country'
@@ -24,6 +27,14 @@ async function ensureDestinationExists(destinationId) {
   if (!exists) throw badRequest('Selected destination does not exist')
 }
 
+function proxifyImage(img) {
+  if (!img || typeof img !== 'object') return img || {}
+  if (img.publicId && isAppKey(img.publicId)) {
+    const p = s3Config.getProxyUrl(img.publicId)
+    return { ...img, url: p, secureUrl: p }
+  }
+  return img
+}
 export function toPublicBlog(doc, options = {}) {
   if (!doc) return null
   const dest = doc.destinationId && typeof doc.destinationId === 'object' ? doc.destinationId : null
@@ -33,7 +44,7 @@ export function toPublicBlog(doc, options = {}) {
     slug: doc.slug,
     excerpt: doc.excerpt,
     content: options.includeContent ? doc.content : undefined,
-    coverImage: doc.coverImage || {},
+    coverImage: proxifyImage(doc.coverImage) || {},
     category: doc.category,
     tags: doc.tags || [],
     destination: dest
@@ -128,8 +139,15 @@ export async function update(id, data, adminUser) {
   if (patch.published === true && !existing.published) patch.publishedAt = existing.publishedAt || new Date()
   if (patch.published === false) patch.publishedAt = null
 
+  const keysBefore = imageStorage.collectKeys(existing.toObject())
   Object.assign(existing, patch, { updatedBy: adminUser.id })
   await existing.save()
+
+  // Delete S3 images that were removed/replaced by this update.
+  // Reference-aware: objects still referenced by other records are skipped.
+  const staleKeys = imageStorage.removedKeys(keysBefore, existing.toObject())
+  await imageStorage.cleanupUnreferenced(staleKeys, `Blog ${id} update`)
+
   return toPublicBlog(await existing.populate('destinationId', DEST_POPULATE), { includeContent: true })
 }
 
@@ -147,6 +165,8 @@ export async function setPublished(id, published, adminUserId) {
 export async function remove(id) {
   const doc = await Blog.findByIdAndDelete(id).lean()
   if (!doc) return null
+  // Reference-aware S3 cleanup of the cover image object.
+  await imageStorage.cleanupUnreferenced(imageStorage.collectKeys(doc), `Blog ${id} delete`)
   return { id: doc._id.toString(), deleted: true }
 }
 

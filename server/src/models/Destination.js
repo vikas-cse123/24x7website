@@ -1,4 +1,6 @@
 import mongoose from 'mongoose'
+import { isAppKey } from '../utils/imageFolders.js'
+import { s3Config } from '../config/s3.js'
 
 const imageSchema = new mongoose.Schema(
   {
@@ -55,6 +57,7 @@ const destinationSchema = new mongoose.Schema(
       enum: ['international', 'domestic', 'weekend', 'other'],
       default: 'other',
     },
+    // Legacy: kept for DB compatibility, not exposed in Admin UI
     shortDescription: {
       type: String,
       trim: true,
@@ -65,6 +68,11 @@ const destinationSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: '',
+    },
+    // Homepage Explore Destinations card image
+    homepageImage: {
+      type: imageSchema,
+      default: () => ({}),
     },
     heroImage: {
       type: imageSchema,
@@ -120,6 +128,17 @@ destinationSchema.index({ slug: 1 }, { unique: true })
 destinationSchema.index({ published: 1, featured: 1, displayOrder: 1 })
 
 // Public-facing shape. Never exposes createdBy/updatedBy.
+// Rewrites stored S3 direct URLs to backend proxy (`/api/media/<key>`) so
+// destinations display even when bucket policy blocks direct S3 GET for
+// clean prefixes like `destinations/`.
+function proxifyImage(img) {
+  if (!img || typeof img !== 'object') return img || {}
+  if (img.publicId && isAppKey(img.publicId)) {
+    const p = s3Config.getProxyUrl(img.publicId)
+    return { ...img, url: p, secureUrl: p }
+  }
+  return img
+}
 export function toPublicDestination(doc) {
   return {
     id: doc.id || doc._id?.toString(),
@@ -131,8 +150,9 @@ export function toPublicDestination(doc) {
     category: doc.category || 'other',
     shortDescription: doc.shortDescription,
     description: doc.description,
-    heroImage: doc.heroImage || {},
-    gallery: doc.gallery || [],
+    homepageImage: proxifyImage(doc.homepageImage) || {},
+    heroImage: proxifyImage(doc.heroImage) || {},
+    gallery: Array.isArray(doc.gallery) ? doc.gallery.map(proxifyImage) : [],
     startingPrice: doc.startingPrice ?? null,
     currency: doc.currency,
     featured: doc.featured,

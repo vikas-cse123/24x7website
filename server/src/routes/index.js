@@ -12,6 +12,7 @@ import faqRouter from './faq.routes.js'
 import tripMediaRouter from './tripMedia.routes.js'
 import enquiryRouter from './enquiry.routes.js'
 import settingsRouter from './settings.routes.js'
+import mediaProxyRouter from './mediaProxy.routes.js'
 
 const router = Router()
 
@@ -27,6 +28,7 @@ router.use('/blogs', blogRouter)
 router.use('/faqs', faqRouter)
 router.use('/enquiries', enquiryRouter)
 router.use('/settings', settingsRouter)
+router.use('/media', mediaProxyRouter)
 router.use('/', tripMediaRouter)
 
 export default router

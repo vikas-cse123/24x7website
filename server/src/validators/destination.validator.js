@@ -2,13 +2,18 @@ import { z } from 'zod'
 import { SLUG_PATTERN } from '../utils/slugify.js'
 
 const imageSchema = z.object({
-  url: z.string().trim().url('Image URL must be a valid URL').or(z.literal('')),
+  url: z
+    .string()
+    .trim()
+    .refine((v) => v === '' || /^https?:\/\//.test(v) || v.startsWith('/api/media/'), 'Image URL must be a valid URL')
+    .or(z.literal('')),
   publicId: z.string().trim().max(200).optional().default(''),
   alt: z.string().trim().max(200).optional().default(''),
 })
 
 // Field definitions WITHOUT defaults so the partial update schema never
 // overwrites omitted fields with default values.
+// shortDescription is kept for DB compat but not used in new Admin UI.
 const destinationFields = {
   name: z.string().trim().min(1, 'Name is required').max(120),
   slug: z
@@ -22,6 +27,7 @@ const destinationFields = {
   category: z.enum(['international', 'domestic', 'weekend', 'other']).optional(),
   shortDescription: z.string().trim().max(300).optional(),
   description: z.string().trim().optional(),
+  homepageImage: imageSchema.optional(),
   heroImage: imageSchema.optional(),
   gallery: z.array(imageSchema).max(20).optional(),
   startingPrice: z.coerce.number().min(0).nullable().optional(),
@@ -34,6 +40,11 @@ const destinationFields = {
   seoKeywords: z.string().trim().max(300).optional(),
 }
 
+// Keys uploaded to S3 during the current form session, reported by the admin
+// UI so the server can garbage-collect uploads removed before saving. Never
+// persisted — the destination service strips it from the stored document.
+const sessionUploadKeysField = z.array(z.string().trim().max(200)).max(50).optional()
+
 // Create: apply defaults for omitted optional fields.
 export const createDestinationSchema = z.object({
   name: destinationFields.name,
@@ -44,6 +55,7 @@ export const createDestinationSchema = z.object({
   category: destinationFields.category.default('other'),
   shortDescription: destinationFields.shortDescription.default(''),
   description: destinationFields.description.default(''),
+  homepageImage: destinationFields.homepageImage.default({}),
   heroImage: destinationFields.heroImage.default({}),
   gallery: destinationFields.gallery.default([]),
   startingPrice: destinationFields.startingPrice.default(null),
@@ -54,10 +66,13 @@ export const createDestinationSchema = z.object({
   seoTitle: destinationFields.seoTitle.default(''),
   seoDescription: destinationFields.seoDescription.default(''),
   seoKeywords: destinationFields.seoKeywords.default(''),
+  sessionUploadKeys: sessionUploadKeysField,
 })
 
 // Update: partial with NO defaults so omitted fields stay untouched.
-export const updateDestinationSchema = z.object(destinationFields).partial()
+export const updateDestinationSchema = z.object(destinationFields).partial().extend({
+  sessionUploadKeys: sessionUploadKeysField,
+})
 
 // Public list query: pagination + optional filters.
 export const listDestinationsQuerySchema = z.object({

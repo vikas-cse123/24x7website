@@ -6,27 +6,13 @@ import { Loader2, ChevronDown } from 'lucide-react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { sendOtpSchema, otpSchema, COUNTRY_CODE } from '@/schemas/auth'
+import { sendOtpSchema, otpSchema, COUNTRY_CODE, INDIAN_MOBILE_PATTERN, INTERNATIONAL_MOBILE_PATTERN, OTP_PATTERN } from '@/schemas/auth'
+import { COUNTRIES } from '@/lib/countries'
 import { authApi } from '@/services/auth'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 
 const RESEND_DELAY_SECONDS = 30
-
-// Popular calling codes; India is the default. `iso` drives the flag image
-// (flagcdn.com) because Windows does not render flag emoji glyphs.
-const COUNTRIES = [
-  { code: '+91', iso: 'in', name: 'India' },
-  { code: '+1', iso: 'us', name: 'USA / Canada' },
-  { code: '+44', iso: 'gb', name: 'United Kingdom' },
-  { code: '+971', iso: 'ae', name: 'UAE' },
-  { code: '+65', iso: 'sg', name: 'Singapore' },
-  { code: '+61', iso: 'au', name: 'Australia' },
-  { code: '+966', iso: 'sa', name: 'Saudi Arabia' },
-  { code: '+880', iso: 'bd', name: 'Bangladesh' },
-  { code: '+49', iso: 'de', name: 'Germany' },
-  { code: '+33', iso: 'fr', name: 'France' },
-]
 
 function Flag({ iso, name }) {
   return (
@@ -63,7 +49,7 @@ function CountrySelect({ value, onChange }) {
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label="Select country code"
-        className="flex h-full items-center gap-1 rounded-l-full pl-4 pr-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/60"
+        className="flex h-full items-center gap-1 rounded-l-full pl-4 pr-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none"
       >
         <Flag iso={current.iso} name={current.name} />
         <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
@@ -110,17 +96,41 @@ export function LoginModal({ open, onOpenChange }) {
   const [verifying, setVerifying] = React.useState(false)
   const { setAuthenticated } = useAuth()
 
+  // mode 'onSubmit': RHF never surfaces its own errors during typing or
+  // blurs. Error visibility and button state are DERIVED from the watched
+  // value below (single source of truth: the schema patterns), so they update
+  // reactively on every keystroke without any click.
   const phoneForm = useForm({
-    mode: 'onChange',
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
     resolver: zodResolver(sendOtpSchema),
     defaultValues: { countryCode: COUNTRY_CODE, mobile: '' },
   })
 
   const otpForm = useForm({
-    mode: 'onChange',
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
     resolver: zodResolver(otpSchema),
     defaultValues: { otp: '' },
   })
+
+  // Derived phone state (never stored in separate mutable state).
+  const watchedCountryCode = phoneForm.watch('countryCode')
+  const watchedMobile = phoneForm.watch('mobile')
+  const isIndia = watchedCountryCode === '+91'
+  const mobileDigits = (watchedMobile || '').replace(/\D/g, '')
+  const isValidPhone = isIndia
+    ? INDIAN_MOBILE_PATTERN.test(mobileDigits)
+    : INTERNATIONAL_MOBILE_PATTERN.test(mobileDigits)
+  // Error only for a COMPLETE but invalid number. Empty or incomplete input
+  // stays silent — even on focus or blur.
+  const phoneInvalid = isIndia
+    ? mobileDigits.length === 10 && !isValidPhone
+    : false
+
+  // Derived OTP state: exactly 6 digits.
+  const watchedOtp = otpForm.watch('otp')
+  const isValidOtp = OTP_PATTERN.test(watchedOtp || '')
 
   const close = React.useCallback(() => {
     onOpenChange(false)
@@ -175,7 +185,12 @@ export function LoginModal({ open, onOpenChange }) {
       onOpenChange(false)
     } catch (err) {
       toast.error(err.message || 'Verification failed')
+      // Clear the wrong code so the user retypes it. `setValue` (unlike
+      // `resetField`) keeps the server error message visible; `isValid`
+      // re-evaluates so Verify stays disabled until 6 fresh digits.
+      otpForm.setValue('otp', '', { shouldValidate: false, shouldDirty: true })
       otpForm.setError('otp', { message: err.message || 'Invalid OTP' })
+      otpForm.setFocus('otp')
     } finally {
       setVerifying(false)
     }
@@ -198,8 +213,8 @@ export function LoginModal({ open, onOpenChange }) {
     }
   }
 
-  const phoneValid = phoneForm.formState.isValid
-  const otpValid = otpForm.formState.isValid
+  const phoneValid = isValidPhone
+  const otpValid = isValidOtp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -210,11 +225,14 @@ export function LoginModal({ open, onOpenChange }) {
               form={phoneForm}
               sendingOtp={sendingOtp}
               phoneValid={phoneValid}
+              phoneInvalid={phoneInvalid}
+              isIndia={isIndia}
               onSendOtp={handleSendOtp}
             />
           ) : (
             <OtpStep
               form={otpForm}
+              otp={watchedOtp}
               verifying={verifying}
               resendCountdown={resendCountdown}
               sendingOtp={sendingOtp}
@@ -235,16 +253,14 @@ export function LoginModal({ open, onOpenChange }) {
   )
 }
 
-function PhoneStep({ form, sendingOtp, phoneValid, onSendOtp }) {
+function PhoneStep({ form, sendingOtp, phoneValid, phoneInvalid, isIndia, onSendOtp }) {
   const {
     register,
     handleSubmit,
-    formState: { errors },
     setValue,
     watch,
   } = form
   const countryCode = watch('countryCode')
-  const isIndia = countryCode === '+91'
 
   return (
     <form onSubmit={handleSubmit(onSendOtp)} noValidate className="flex flex-col">
@@ -252,10 +268,13 @@ function PhoneStep({ form, sendingOtp, phoneValid, onSendOtp }) {
       <p className="mt-2 text-center text-sm text-muted-foreground">Enter your mobile number</p>
 
       <div className="mt-6">
+        {/* The pill keeps ONE constant border — no focus-state change. Inner
+            sections (flag/select, code, input) are borderless and
+            outline-free so no nested focus ring can appear. */}
         <div
           className={cn(
-            'flex h-12 w-full items-center rounded-full border border-input bg-background transition-colors focus-within:ring-2 focus-within:ring-ring',
-            errors.mobile && 'border-destructive'
+            'flex h-12 w-full items-center rounded-full border border-input bg-background transition-colors',
+            phoneInvalid && 'border-destructive'
           )}
         >
           <CountrySelect
@@ -265,11 +284,13 @@ function PhoneStep({ form, sendingOtp, phoneValid, onSendOtp }) {
           <Input
             id="mobile"
             inputMode="numeric"
-            autoComplete="tel-national"
+            // autoComplete off: Chrome treats tel-national as an address autofill
+            // target — its dropdown + autofill background paint a square fill
+            // that ignores the pill radius and clips the border.
+            autoComplete="off"
             maxLength={isIndia ? 10 : 14}
             placeholder="Enter phone number"
-            className="h-full flex-1 rounded-full border-0 bg-transparent pl-1 pr-4 text-[15px] shadow-none focus-visible:ring-0"
-            aria-invalid={!!errors.mobile}
+            className="h-full flex-1 rounded-full border-0 bg-transparent pl-1 pr-4 text-[15px] shadow-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             {...register('mobile', {
               onChange: (e) => {
                 e.target.value = e.target.value.replace(/\D/g, '').slice(0, isIndia ? 10 : 14)
@@ -277,8 +298,8 @@ function PhoneStep({ form, sendingOtp, phoneValid, onSendOtp }) {
             })}
           />
         </div>
-        {errors.mobile && (
-          <p className="mt-1.5 text-xs text-destructive">{errors.mobile.message}</p>
+        {phoneInvalid && (
+          <p className="mt-1.5 text-xs text-destructive">Enter a valid mobile number</p>
         )}
       </div>
 
@@ -287,7 +308,7 @@ function PhoneStep({ form, sendingOtp, phoneValid, onSendOtp }) {
         disabled={!phoneValid || sendingOtp}
         className={cn(
           'mt-6 h-11 w-full rounded-full text-[15px] font-medium',
-          !phoneValid && 'bg-gray-100 text-gray-400 hover:bg-gray-100'
+          !phoneValid && 'border border-gray-300 bg-white text-gray-500 hover:bg-white'
         )}
       >
         {sendingOtp ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
@@ -299,6 +320,7 @@ function PhoneStep({ form, sendingOtp, phoneValid, onSendOtp }) {
 
 function OtpStep({
   form,
+  otp,
   verifying,
   resendCountdown,
   sendingOtp,
@@ -314,10 +336,16 @@ function OtpStep({
     handleSubmit,
     formState: { errors },
   } = form
+  const [otpFocused, setOtpFocused] = React.useState(false)
+
+  // Segmented display: filled slots show their digit, empty slots show a
+  // short dash; the next-to-fill slot highlights while the input is focused.
+  const slots = Array.from({ length: 6 }, (_, i) => otp[i] || '')
+  const activeSlot = Math.min(otp.length, 5)
 
   return (
     <form onSubmit={handleSubmit(onVerifyOtp)} noValidate className="flex flex-col">
-      <h2 className="text-center text-xl font-semibold tracking-tight">Verify OTP</h2>
+      <h2 className="text-center text-xl font-semibold tracking-tight">Login or Sign Up</h2>
       <p className="mt-2 text-center text-sm text-muted-foreground">
         Enter the 6-digit code sent to{' '}
         <span className="font-medium text-foreground">
@@ -325,30 +353,59 @@ function OtpStep({
         </span>
       </p>
 
-      <div className="mt-6">
+      <div className="relative mt-6">
+        {/* Visible slot strip — purely presentational (aria-hidden).
+            Dashes sit at the bottom of each cell (underline style); typed
+            digits render centered above them. */}
+        <div aria-hidden="true" className="flex h-12 w-full items-stretch justify-center gap-1 rounded-full border border-input bg-background px-4">
+          {slots.map((ch, i) => (
+            <div key={i} className="relative flex h-full w-7 items-center justify-center">
+              {ch ? (
+                <span className="text-lg font-medium">{ch}</span>
+              ) : (
+                <span
+                  className={cn(
+                    'absolute bottom-2.5 left-1/2 h-0.5 w-5 -translate-x-1/2 rounded-full transition-colors',
+                    otpFocused && i === activeSlot ? 'bg-foreground/70' : 'bg-muted-foreground/40'
+                  )}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+        {/* The real input sits invisibly on top — typing, backspace, paste and
+            focus all behave exactly as before. Digits-only sanitizer. */}
         <Input
           id="otp"
           inputMode="numeric"
           autoComplete="one-time-code"
           maxLength={6}
-          placeholder="000000"
-          className="h-12 rounded-full text-center text-lg tracking-[0.4em]"
+          placeholder=""
+          aria-label="Enter 6-digit OTP"
+          autoFocus
+          className="absolute inset-0 h-full w-full cursor-pointer rounded-full border-0 bg-transparent text-center text-lg opacity-0 shadow-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
           aria-invalid={!!errors.otp}
-          {...register('otp')}
+          onFocus={() => setOtpFocused(true)}
+          onBlur={() => setOtpFocused(false)}
+          {...register('otp', {
+            onChange: (e) => {
+              e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6)
+            },
+          })}
         />
-        {errors.otp && <p className="mt-1.5 text-xs text-destructive">{errors.otp.message}</p>}
       </div>
+      {errors.otp && <p className="mt-1.5 text-xs text-destructive">{errors.otp.message}</p>}
 
       <Button
         type="submit"
         disabled={!otpValid || verifying}
         className={cn(
           'mt-6 h-11 w-full rounded-full text-[15px] font-medium',
-          !otpValid && 'bg-gray-100 text-gray-400 hover:bg-gray-100'
+          !otpValid && 'border border-gray-300 bg-white text-gray-500 hover:bg-white'
         )}
       >
         {verifying ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-        {verifying ? 'Verifying...' : 'Verify OTP'}
+        Login
       </Button>
 
       <div className="mt-4 flex flex-col items-center gap-1.5">

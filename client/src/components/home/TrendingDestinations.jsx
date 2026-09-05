@@ -58,6 +58,7 @@ export function TrendingDestinations() {
 
 export function TrendingDestinationCard({ destination }) {
   const hasPrice = destination.startingPrice !== null && destination.startingPrice !== undefined
+  const imgSrc = destination.heroImage?.url || destination.homepageImage?.url || destination.heroImage?.secureUrl || destination.homepageImage?.secureUrl
 
   return (
     <Link
@@ -65,8 +66,8 @@ export function TrendingDestinationCard({ destination }) {
       className="group block overflow-hidden rounded-xl shadow-card transition-shadow hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <DestinationImage
-        src={destination.heroImage?.url}
-        alt={destination.heroImage?.alt || destination.name}
+        src={imgSrc}
+        alt={destination.heroImage?.alt || destination.homepageImage?.alt || destination.name}
         className="aspect-[4/5] w-full"
       />
       <div className="bg-card p-3">

@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2, ExternalLink, Globe, Ban } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
 import { adminTripApi } from '@/services/trips'
@@ -76,131 +77,103 @@ export function AdminTripsPage() {
     setDeleteTarget(trip)
   }
 
+  const [search, setSearch] = React.useState('')
+  const filtered = React.useMemo(() => {
+    if (!list?.items) return []
+    if (!search.trim()) return list.items
+    const q = search.toLowerCase()
+    return list.items.filter((t) => `${t.name} ${t.slug} ${t.tripCode} ${t.destination?.name || ''}`.toLowerCase().includes(q))
+  }, [list, search])
+
   return (
-    <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Trips</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage trips. Publish to make them visible on the public site.
-          </p>
+          <h1 className="text-lg font-bold tracking-tight">Trips</h1>
+          <p className="text-xs text-slate-500">Manage trips. Publish to make them visible.</p>
         </div>
         <Link to="/admin/trips/new">
-          <Button>
-            <Plus className="h-4 w-4" />
-            New trip
+          <Button size="sm" className="h-7 rounded-md bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-800">
+            <Plus className="h-3.5 w-3.5" /> New trip
           </Button>
         </Link>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[180px] flex-1">
+          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+          </span>
+          <Input placeholder="Search trips..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-7 pl-8 text-xs" />
+        </div>
+      </div>
+
       {isLoading ? (
-        <div className="space-y-3">
+        <div className="space-y-1">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-muted" />
+            <div key={i} className="h-11 animate-pulse rounded-md bg-slate-100" />
           ))}
         </div>
       ) : isError ? (
-        <Card className="border-destructive/40 p-6 text-sm text-destructive">
-          Could not load trips. {error?.message || 'Please try again.'}
-        </Card>
-      ) : list && list.items.length === 0 ? (
-        <Card className="p-16 text-center">
-          <p className="text-lg font-medium">No trips yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Create your first trip to get started.
-          </p>
+        <Card className="border-red-200 bg-red-50 p-3 text-xs text-red-700">Could not load trips. {error?.message || 'Please try again.'}</Card>
+      ) : list && filtered.length === 0 ? (
+        <Card className="border-slate-200 bg-white p-8 text-center">
+          <p className="text-sm font-semibold">{search ? `No results for "${search}"` : 'No trips yet'}</p>
+          <p className="mt-1 text-xs text-slate-500">Create your first trip to get started.</p>
         </Card>
       ) : (
         <>
-          <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <th className="px-4 py-3 font-medium">Trip</th>
-                  <th className="px-4 py-3 font-medium">Code</th>
-                  <th className="px-4 py-3 font-medium">Destination</th>
-                  <th className="px-4 py-3 font-medium">Type</th>
-                  <th className="px-4 py-3 font-medium">Duration</th>
-                  <th className="px-4 py-3 font-medium">Price</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Featured</th>
-                  <th className="px-4 py-3 text-right font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {list.items.map((t) => (
-                  <tr key={t.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <DestinationImage src={t.heroImage?.url} alt={t.name} className="h-10 w-14 shrink-0 rounded-md" />
-                        <div>
-                          <Link
-                            to={`/admin/trips/${t.id}/edit`}
-                            className="font-medium hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-                          >
-                            {t.name}
-                          </Link>
-                          <p className="text-xs text-muted-foreground">/{t.slug}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{t.tripCode}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{t.destination?.name || '—'}</td>
-                    <td className="px-4 py-3 capitalize text-muted-foreground">{TRIP_TYPE_LABELS[t.tripType] || t.tripType}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{t.durationDays}D / {t.durationNights}N</td>
-                    <td className="px-4 py-3">
-                      {t.startingPrice !== null && t.startingPrice !== undefined
-                        ? `₹${t.startingPrice.toLocaleString('en-IN')}`
-                        : '—'}
-                    </td>
-                    <td className="px-4 py-3">
-                      {t.published ? <Badge variant="success">Published</Badge> : <Badge variant="secondary">Draft</Badge>}
-                    </td>
-                    <td className="px-4 py-3">
-                      {t.featured ? <Badge variant="warning">Featured</Badge> : <span className="text-muted-foreground">—</span>}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        <AdminActions
-                          trip={t}
-                          onDelete={() => handleDeleteClick(t)}
-                          onPublish={() => publishMutation.mutate(t.id)}
-                          onUnpublish={() => unpublishMutation.mutate(t.id)}
-                        />
-                      </div>
-                    </td>
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+            <div className="max-h-[60vh] overflow-auto">
+              <table className="w-full text-xs">
+                <thead className="sticky top-0 bg-slate-50">
+                  <tr className="border-b border-slate-200 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="w-10 px-2 py-2"></th>
+                    <th className="px-2 py-2">Trip</th>
+                    <th className="px-2 py-2">Code</th>
+                    <th className="px-2 py-2">Destination</th>
+                    <th className="px-2 py-2">Duration</th>
+                    <th className="px-2 py-2">Price</th>
+                    <th className="px-2 py-2">Status</th>
+                    <th className="px-2 py-2 text-right"></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="space-y-3 md:hidden">
-            {list.items.map((t) => (
-              <Card key={t.id} className="p-4">
-                <div className="flex items-center gap-3">
-                  <DestinationImage src={t.heroImage?.url} alt={t.name} className="h-12 w-16 shrink-0 rounded-md" />
-                  <div className="min-w-0 flex-1">
-                    <Link to={`/admin/trips/${t.id}/edit`} className="font-medium hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
-                      {t.name}
-                    </Link>
-                    <p className="font-mono text-xs text-muted-foreground">{t.tripCode} · {t.destination?.name || '—'}</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                      {t.published ? <Badge variant="success">Published</Badge> : <Badge variant="secondary">Draft</Badge>}
-                      {t.featured && <Badge variant="warning">Featured</Badge>}
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-3 flex items-center justify-end gap-1">
-                  <AdminActions
-                    trip={t}
-                    onDelete={() => handleDeleteClick(t)}
-                    onPublish={() => publishMutation.mutate(t.id)}
-                    onUnpublish={() => unpublishMutation.mutate(t.id)}
-                  />
-                </div>
-              </Card>
-            ))}
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filtered.map((t) => (
+                    <tr key={t.id} className="hover:bg-slate-50">
+                      <td className="px-2 py-1.5">
+                        <DestinationImage src={t.heroImage?.url} alt={t.name} className="h-7 w-10 shrink-0 rounded border border-slate-200" />
+                      </td>
+                      <td className="px-2 py-1.5">
+                        <Link to={`/admin/trips/${t.id}/edit`} className="font-medium text-slate-900 hover:underline">
+                          {t.name}
+                        </Link>
+                        <p className="font-mono text-xs text-slate-500">/{t.slug}</p>
+                      </td>
+                      <td className="px-2 py-1.5 font-mono text-xs text-slate-500">{t.tripCode}</td>
+                      <td className="px-2 py-1.5 text-slate-600">{t.destination?.name || '—'}</td>
+                      <td className="px-2 py-1.5 text-slate-600">
+                        {t.durationDays}D/{t.durationNights}N
+                      </td>
+                      <td className="px-2 py-1.5 font-medium">{t.startingPrice != null ? `₹${Number(t.startingPrice).toLocaleString('en-IN')}` : '—'}</td>
+                      <td className="px-2 py-1.5">
+                        {t.published ? (
+                          <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">Published</span>
+                        ) : (
+                          <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600">Draft</span>
+                        )}
+                      </td>
+                      <td className="px-2 py-1.5 text-right">
+                        <TripsActionMenu trip={t} onDelete={() => handleDeleteClick(t)} onPublish={() => publishMutation.mutate(t.id)} onUnpublish={() => unpublishMutation.mutate(t.id)} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </>
       )}
@@ -216,35 +189,43 @@ export function AdminTripsPage() {
   )
 }
 
-function AdminActions({ trip, onDelete, onPublish, onUnpublish }) {
-  const btn =
-    'inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+function TripsActionMenu({ trip, onDelete, onPublish, onUnpublish }) {
+  const [open, setOpen] = React.useState(false)
+  const ref = React.useRef(null)
+  React.useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [])
   return (
-    <div className="flex items-center gap-1">
-      <a href={`/trip/${trip.slug}`} target="_blank" rel="noopener noreferrer" title="View public page" aria-label="View public page" className={btn}>
-        <ExternalLink className="h-4 w-4" />
-      </a>
-      <Link to={`/admin/trips/${trip.id}/edit`} title="Edit" aria-label="Edit" className={btn}>
-        <Pencil className="h-4 w-4" />
-      </Link>
-      {trip.published ? (
-        <button type="button" onClick={onUnpublish} title="Unpublish" aria-label="Unpublish" className={btn}>
-          <Ban className="h-4 w-4" />
-        </button>
-      ) : (
-        <button type="button" onClick={onPublish} title="Publish" aria-label="Publish" className={btn}>
-          <Globe className="h-4 w-4" />
-        </button>
-      )}
-      <button
-        type="button"
-        onClick={onDelete}
-        title="Delete"
-        aria-label="Delete"
-        className={`${btn} hover:bg-destructive/10 hover:text-destructive`}
-      >
-        <Trash2 className="h-4 w-4" />
+    <div className="relative" ref={ref}>
+      <button type="button" onClick={() => setOpen((v) => !v)} className="grid h-7 w-7 place-items-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
       </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-20 w-40 rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+          <Link to={`/admin/trips/${trip.id}/edit`} className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-slate-50" onClick={() => setOpen(false)}>
+            <Pencil className="h-3.5 w-3.5" /> Edit
+          </Link>
+          <a href={`/trip/${trip.slug}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-slate-50" onClick={() => setOpen(false)}>
+            <ExternalLink className="h-3.5 w-3.5" /> Preview
+          </a>
+          {trip.published ? (
+            <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-xs hover:bg-slate-50" onClick={() => { onUnpublish(); setOpen(false)}}>
+              <Ban className="h-3.5 w-3.5" /> Unpublish
+            </button>
+          ) : (
+            <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-xs hover:bg-slate-50" onClick={() => { onPublish(); setOpen(false)}}>
+              <Globe className="h-3.5 w-3.5" /> Publish
+            </button>
+          )}
+          <div className="my-1 border-t border-slate-100" />
+          <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50" onClick={() => { onDelete(); setOpen(false)}}>
+            <Trash2 className="h-3.5 w-3.5" /> Delete
+          </button>
+        </div>
+      )}
     </div>
   )
 }
+function AdminActions(props) { return <TripsActionMenu {...props} /> }

@@ -6,6 +6,15 @@
 ## Current status
 **PHASE 29 — REBUILD TOP HEADER + EDITABLE PROMOTIONAL BANNER**
 
+### Dev convenience (demo admin login)
+- Mobile `9876543210` (+91) is promoted to `admin` on OTP login
+  (`server/src/services/auth.service.js` → `DEMO_ADMIN_MOBILE`). The demo OTP is
+  the standard dev mock `123456`. Other numbers stay `user`. Verified
+  end-to-end: send-otp → verify-otp returns `role: admin`, `/api/auth/me`
+  confirms the session; a regular number still returns `role: user`. This is
+  dev-only and must be removed/promotion logic replaced before production. See
+  `docs/AUTHENTICATION.md` → "Demo admin login".
+
 ### Phase 29 (header + admin-editable promotional banner — end-to-end)
 > Phase numbering note: the admin-managed branding system is recorded below as
 > Phase 28, so this header/banner milestone is Phase 29 to keep the timeline

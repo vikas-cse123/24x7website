@@ -2,14 +2,21 @@ import { z } from 'zod'
 
 export const COUNTRY_CODE = '+91'
 
+// Single source of truth for phone/OTP patterns. The LoginModal derives its
+// button state and error visibility from these same values instead of
+// maintaining a second validation implementation.
+export const INDIAN_MOBILE_PATTERN = /^[6-9]\d{9}$/
+export const INTERNATIONAL_MOBILE_PATTERN = /^\d{6,14}$/
+export const OTP_PATTERN = /^\d{6}$/
+
 const mobileBase = z
   .string()
-  .regex(/^\d{6,14}$/, 'Enter a valid mobile number')
+  .regex(INTERNATIONAL_MOBILE_PATTERN, 'Enter a valid mobile number')
 
 // India keeps strict 10-digit validation; other countries accept 6-14 digits.
 function refineMobile(schema) {
   return schema.superRefine((v, ctx) => {
-    if (v.countryCode === '+91' && !/^[6-9]\d{9}$/.test(v.mobile)) {
+    if (v.countryCode === '+91' && !INDIAN_MOBILE_PATTERN.test(v.mobile)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['mobile'],
@@ -29,5 +36,5 @@ export const sendOtpSchema = refineMobile(
 export const otpSchema = z.object({
   otp: z
     .string()
-    .regex(/^\d{6}$/, 'OTP must be exactly 6 digits'),
+    .regex(OTP_PATTERN, 'OTP must be exactly 6 digits'),
 })

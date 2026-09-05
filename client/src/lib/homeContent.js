@@ -1,9 +1,4 @@
 import {
-  Wallet,
-  CreditCard,
-  CalendarX,
-  RefreshCcw,
-  Headphones,
   Sparkles,
   ShieldCheck,
   Users,
@@ -29,60 +24,74 @@ export const COMMUNITY_STATS = [
   { key: 'rating', label: 'Average rating', value: null, note: 'Coming soon' },
 ]
 
-// 7. Book with Confidence benefit cards.
+// 7. Book with Confidence benefit strip (reference-style: playful icon + bold
+// line). `icon` is an emoji — matches the site's emoji icon language (nav,
+// stats strip) and echoes the reference's colorful illustration style.
 export const CONFIDENCE_BENEFITS = [
   {
-    title: 'Low upfront payment',
+    title: 'Secure Your Spot by Paying 20% of the Trip',
     description: 'Secure your spot with a small initial payment and pay the balance later.',
-    icon: Wallet,
+    icon: '🛡️',
   },
   {
-    title: 'Easy EMI options',
+    title: 'Book Your Trip on Easy Zero-Cost EMI',
     description: 'Split your trip cost into easy monthly instalments where available.',
-    icon: CreditCard,
+    icon: '💳',
   },
   {
-    title: 'Flexible cancellation',
-    description: 'Clear and fair cancellation options on group trips.',
-    icon: CalendarX,
+    title: 'Free Cancellation on Group Trips',
+    description: 'Clear and fair cancellation policies on group trips.',
+    icon: '🚫',
   },
   {
-    title: 'Free rescheduling',
-    description: 'Reschedule your departure to another date at no extra charge.',
-    icon: RefreshCcw,
+    title: 'Reschedule at No Extra Charges',
+    description: 'Reschedule your departure at no extra cost.',
+    icon: '🔄',
   },
   {
-    title: '24x7 support & trip captains',
+    title: '24*7 Support & Trained Trip Captains',
     description: 'Trained trip captains and round-the-clock assistance throughout your trip.',
-    icon: Headphones,
+    icon: '🎧',
   },
 ]
 
-// 8. Reasons / USP cards.
+// 8. Reasons / USP cards ("Reasons To Make Us Your Travel Bestie").
+// `emoji` drives the homepage card style; `icon` (Lucide) remains for the
+// About page, which renders the same values in its own layout.
 export const WHY_CHOOSE_US = [
   {
-    title: 'Solo travel is safe',
-    description: 'No need to wait for family or friends. Pack your bags and join a group of like-minded travellers.',
+    title: 'Solo is safe.',
+    emoji: '🧳',
+    description:
+      "Girlies, you're safe AF. No need to wait on fam or besties—just pack and go! Explore stress-free with 100% freedom!",
     icon: Users,
   },
   {
-    title: 'Verified stays & transport',
-    description: 'We work with verified stays and reliable transport for a comfortable, hassle-free trip.',
+    title: "We're the greenest flag.",
+    emoji: '💚',
+    description:
+      'We ensure safety with verified stays, reliable transport, and trained guides for a secure, comfy, and hassle-free trip.',
     icon: ShieldCheck,
   },
   {
-    title: 'Trained trip captains',
-    description: 'Our captains are part guide, part friend, and full-time experience curators.',
+    title: 'Our Group Captains are fire.',
+    emoji: '🧑‍✈️',
+    description:
+      'Our awesome trip captains are part-guide, part-friend and full time vibe curators.',
     icon: Sparkles,
   },
   {
-    title: 'Transparent pricing',
-    description: 'No hidden fees, no middlemen. Direct bookings at fair prices.',
+    title: 'No kebab main haddi.',
+    emoji: '🍢',
+    description:
+      'No middlemen, no hidden fees. Enjoy direct bookings, lower costs, and personalized support for a seamless and affordable trip.',
     icon: PackageX,
   },
   {
-    title: 'Vibe-matched groups',
-    description: 'Trips are built around age groups and interests so the energy matches.',
+    title: 'Vibe check comes first.',
+    emoji: '🤘',
+    description:
+      "We customize your trips based on age groups, so you're not stuck vibing to someone else's playlist without permission.",
     icon: HeartHandshake,
   },
 ]
@@ -143,30 +152,46 @@ export const HOMEPAGE_SECTIONS = {
     'communityStats',
     'destinationExplorer',
     'upcomingTrips',
-    'planTripCta',
+    'promoBannerCarousel',
     'bookWithConfidence',
+    'vibeWithUs',
     'whyChooseUs',
+    'planTripCta',
     'trendingDestinations',
-    'reviews',
+    'reviewsFromTravellers',
     'faq',
+    'lovedByTravellers',
+    'reviews',
     'communityMoments',
     'relatedBlogs',
+    'adventureBanner',
     'realityTrips',
   ],
   visibility: {
     hero: true,
-    communityStats: true,
+    // Hidden: the same three statistics are now presented by the animated
+    // "Loved by Travellers Across India" section below the FAQ — showing
+    // both would duplicate the numbers on the homepage.
+    communityStats: false,
     destinationExplorer: true,
+    promoBannerCarousel: true,
     upcomingTrips: true,
     planTripCta: true,
     bookWithConfidence: true,
+    vibeWithUs: true,
     whyChooseUs: true,
     trendingDestinations: true,
-    reviews: true,
+    reviewsFromTravellers: true,
+    reviews: false,
     faq: true,
-    communityMoments: true,
+    lovedByTravellers: true,
+    communityMoments: false,
     relatedBlogs: true,
-    realityTrips: true,
+    // Replaced by the large "Adventure awaits you." area built into the footer.
+    adventureBanner: false,
+    // Hidden per request: "The Reality Of A Trip" placeholder section removed
+    // from the homepage (videos not available yet).
+    realityTrips: false,
   },
 }
 

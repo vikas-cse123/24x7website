@@ -1,4 +1,6 @@
 import mongoose from 'mongoose'
+import { isAppKey } from '../utils/imageFolders.js'
+import { s3Config } from '../config/s3.js'
 
 const imageSchema = new mongoose.Schema(
   {
@@ -114,6 +116,16 @@ function toPublicDestination(destination) {
 
 // Public-facing shape. Never exposes createdBy/updatedBy. `destination` is
 // populated by the service where available.
+// Rewrites S3 direct URLs to backend proxy (`/api/media/<key>`) for clean
+// prefixes so trips display even when bucket blocks direct S3 GET.
+function proxifyImage(img) {
+  if (!img || typeof img !== 'object') return img || {}
+  if (img.publicId && isAppKey(img.publicId)) {
+    const p = s3Config.getProxyUrl(img.publicId)
+    return { ...img, url: p, secureUrl: p }
+  }
+  return img
+}
 export function toPublicTrip(doc) {
   const rawDest = doc.destinationId
   const destinationId =
@@ -136,8 +148,8 @@ export function toPublicTrip(doc) {
     maxGroupSize: doc.maxGroupSize,
     startingPrice: doc.startingPrice ?? null,
     currency: doc.currency,
-    heroImage: doc.heroImage || {},
-    gallery: doc.gallery || [],
+    heroImage: proxifyImage(doc.heroImage) || {},
+    gallery: Array.isArray(doc.gallery) ? doc.gallery.map(proxifyImage) : [],
     itinerary: doc.itinerary || [],
     inclusions: doc.inclusions || [],
     exclusions: doc.exclusions || [],

@@ -14,6 +14,7 @@ import { ImageUploader } from '@/components/ui/ImageUploader'
 import { ListItemEditor } from '@/components/trips/ListItemEditor'
 import { FaqListEditor } from '@/components/trips/FaqListEditor'
 import { TripItineraryBuilder } from '@/components/trips/TripItineraryBuilder'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 
 function FieldError({ message }) {
   if (!message) return null
@@ -102,10 +103,20 @@ export function TripForm({ initialValues, destinations, tripCode, isSubmitting, 
         </div>
         <div className="mt-4 space-y-4">
           <Field label="Short description" error={errors.shortDescription?.message}>
-            <Textarea rows={2} maxLength={300} placeholder="A short summary shown on cards" {...register('shortDescription')} />
+            <RichTextEditor
+              value={watch('shortDescription') || ''}
+              onChange={(html) => setValue('shortDescription', html, { shouldValidate: true, shouldDirty: true })}
+              placeholder="A short summary shown on cards"
+              error={!!errors.shortDescription}
+            />
           </Field>
           <Field label="Description" error={errors.description?.message}>
-            <Textarea rows={5} placeholder="Full description of the trip" {...register('description')} />
+            <RichTextEditor
+              value={watch('description') || ''}
+              onChange={(html) => setValue('description', html, { shouldValidate: true, shouldDirty: true })}
+              placeholder="Full description of the trip"
+              error={!!errors.description}
+            />
           </Field>
         </div>
       </FormSection>
@@ -154,7 +165,7 @@ export function TripForm({ initialValues, destinations, tripCode, isSubmitting, 
       </FormSection>
 
       <FormSection title="Itinerary">
-        <TripItineraryBuilder control={control} register={register} errors={errors} />
+        <TripItineraryBuilder control={control} register={register} watch={watch} setValue={setValue} errors={errors} />
       </FormSection>
 
       <FormSection title="Inclusions">
@@ -167,7 +178,12 @@ export function TripForm({ initialValues, destinations, tripCode, isSubmitting, 
 
       <FormSection title="Important information">
         <Field label="Travel information" error={errors.importantInformation?.message} hint="Visa, passport, cancellation, fitness, luggage, weather…">
-          <Textarea rows={4} placeholder="Important details travellers should know" {...register('importantInformation')} />
+          <RichTextEditor
+            value={watch('importantInformation') || ''}
+            onChange={(html) => setValue('importantInformation', html, { shouldValidate: true, shouldDirty: true })}
+            placeholder="Important details travellers should know"
+            error={!!errors.importantInformation}
+          />
         </Field>
       </FormSection>
 

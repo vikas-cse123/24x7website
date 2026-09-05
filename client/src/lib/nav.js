@@ -22,11 +22,11 @@ export const NAV_ITEMS = [
     label: 'Travel Styles',
     icon: '🗺️',
     children: [
-      { label: 'Bike Trips', icon: '🚴', href: '/trips' },
-      { label: 'Spiritual Trips', icon: '🙏', href: '/trips' },
+      { label: 'Bike Trips', icon: '🏍️', href: '/trips' },
+      { label: 'Spiritual Trips', icon: '🛕', href: '/trips' },
       { label: 'The Match Maker', icon: '💌', href: '/trips' },
-      { label: 'Wellness Retreats', icon: '🧘', href: '/trips' },
-      { label: 'Treks', icon: '🏔️', href: '/trips' },
+      { label: 'Wellness Retreats', icon: '🧘🏻', href: '/trips' },
+      { label: 'Treks', icon: '⛰️', href: '/trips' },
     ],
   },
   { label: 'Upcoming Group Trips', icon: '🧳', href: '/category/upcoming-trips' },
@@ -34,13 +34,17 @@ export const NAV_ITEMS = [
   {
     label: 'Customised Trips',
     icon: '🌍',
-    children: [{ label: 'Customised Trips', icon: '🌍', href: '/customised-trips' }],
+    children: [
+      { label: 'International Trips', icon: '✈️', href: '/customised-trips?category=international' },
+      { label: 'Domestic Trips', icon: '🇮🇳', href: '/customised-trips?category=domestic' },
+      { label: 'Corporate Trips', icon: '🏫', href: '/customised-trips?category=corporate' },
+    ],
   },
   {
     label: 'More about us',
-    icon: '🟢',
+    icon: '🏢',
     children: [
-      { label: 'About CAT', icon: '🟢', href: '/about' },
+      { label: 'About 24x7Chhutti', icon: '🏢', href: '/about' },
       { label: 'News and Press', icon: '📰', href: '/blogs' },
       { label: 'Reviews', icon: '⭐', href: '/' },
     ],

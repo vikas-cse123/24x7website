@@ -55,8 +55,9 @@ export function Header() {
         <HeaderSearch />
       </div>
 
-      {/* Desktop navigation row */}
-      <div className="hidden border-t border-border lg:block">
+      {/* Desktop navigation row — no separator line above it (seamless with
+          the top header row, like the reference site). */}
+      <div className="hidden lg:block">
         <Container>
           <SiteNav className="justify-center" />
         </Container>

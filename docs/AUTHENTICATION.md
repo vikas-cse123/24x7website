@@ -93,6 +93,21 @@ OTPs are stored in an in-memory TTL map inside `server/src/services/otp.service.
   (`createOtp`, `verifyOtp`, `clearOtp`) is designed to be replaced without
   touching the rest of the auth flow.
 
+## Demo admin login
+
+For easy testing of the admin panel without manual DB seeding, the mobile
+number `9876543210` (country code `+91`) is promoted to the `admin` role on OTP
+login:
+
+1. Enter `9876543210` in the Login modal (or `POST /api/auth/send-otp`).
+2. Use the demo OTP `123456` (the fixed development mock value).
+3. On verification the find-or-create user is assigned `role: 'admin'`, so the
+   account can access `/admin`.
+
+This is **development-only** behavior in `server/src/services/auth.service.js`
+(`DEMO_ADMIN_MOBILE`). Never rely on it in production — remove the promotion
+logic and assign roles through a controlled admin flow instead.
+
 ## JWT
 
 - Signed with `JWT_SECRET` (see `.env.example`).

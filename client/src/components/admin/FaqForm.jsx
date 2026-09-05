@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 
 const faqFormSchema = z.object({
   question: z.string().trim().min(5, 'Question must be at least 5 characters').max(300),
@@ -78,7 +79,14 @@ export function FaqForm({ initialValues, destinations = [], trips = [], isSubmit
           </div>
           <div>
             <Label htmlFor="faq-answer">Answer *</Label>
-            <Textarea id="faq-answer" rows={4} className="mt-1.5" aria-invalid={!!errors.answer} {...register('answer')} />
+            <div className="mt-1.5">
+              <RichTextEditor
+                value={watch('answer') || ''}
+                onChange={(html) => setValue('answer', html, { shouldValidate: true, shouldDirty: true })}
+                placeholder="Answer…"
+                error={!!errors.answer}
+              />
+            </div>
             {errors.answer && <p className="mt-1 text-xs text-destructive">{errors.answer.message}</p>}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">

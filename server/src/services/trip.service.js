@@ -1,5 +1,6 @@
 import Trip, { toPublicTrip } from '../models/Trip.js'
 import TripBatch from '../models/TripBatch.js'
+import TripMedia from '../models/TripMedia.js'
 import Destination from '../models/Destination.js'
 import { slugify, ensureUniqueSlug } from '../utils/slugify.js'
 import {
@@ -7,6 +8,7 @@ import {
   publicVisibilityFilter,
 } from './tripBatch.service.js'
 import { ratingSummary } from './review.service.js'
+import * as imageStorage from './imageStorage.service.js'
 
 const PUBLIC_PROJECTION = '-createdBy -updatedBy -__v'
 const DEST_POPULATE = 'name slug country'
@@ -340,8 +342,15 @@ export async function update(id, data, userId) {
     delete updateData.slug
   }
 
+  const keysBefore = imageStorage.collectKeys(existing.toObject())
   Object.assign(existing, updateData)
   await existing.save()
+
+  // Delete S3 images that were removed/replaced by this update.
+  // Reference-aware: objects still referenced by other records are skipped.
+  const staleKeys = imageStorage.removedKeys(keysBefore, existing.toObject())
+  await imageStorage.cleanupUnreferenced(staleKeys, `Trip ${id} update`)
+
   return toPublicTrip(await existing.populate('destinationId', DEST_POPULATE))
 }
 
@@ -351,7 +360,23 @@ export async function remove(id) {
   if (doc.published) {
     throw badRequest('Unpublish this trip before deleting it')
   }
+
+  // Capture ALL S3 media owned by the trip BEFORE deleting anything:
+  // the trip's own hero/gallery plus its dependent trip-media records.
+  const mediaDocs = await TripMedia.find({ tripId: doc._id }).select('publicId url secureUrl').lean()
+  const keys = [
+    ...imageStorage.collectKeys(doc.toObject()),
+    ...mediaDocs.flatMap((m) => imageStorage.collectKeys(m)),
+  ]
+
+  // Delete dependent records, then the trip itself. DB first — S3 cleanup
+  // runs afterwards and never rolls the deletion back.
+  await TripMedia.deleteMany({ tripId: doc._id })
   await doc.deleteOne()
+
+  // Reference-aware cleanup: objects still referenced by any remaining
+  // record anywhere in the database are skipped.
+  await imageStorage.cleanupUnreferenced(keys, `Trip ${id} delete`)
   return toPublicTrip(doc.toObject())
 }
 

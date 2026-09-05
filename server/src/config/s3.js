@@ -21,6 +21,7 @@ export const s3Config = {
   region: AWS_REGION || '',
   bucket: AWS_S3_BUCKET || '',
   getUrl: (key) => (key ? s3ObjectUrl(AWS_S3_BUCKET || '', AWS_REGION || '', key) : ''),
+  getProxyUrl: (key) => (key ? `/api/media/${encodeURIComponent(key).replace(/%2F/g, '/')}` : ''),
 }
 
 export const s3Client = isS3Configured

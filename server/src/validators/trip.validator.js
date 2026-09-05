@@ -5,7 +5,11 @@ import { TRIP_TYPES } from '../utils/tripTypes.js'
 const OBJECT_ID = /^[0-9a-fA-F]{24}$/
 
 const imageSchema = z.object({
-  url: z.string().trim().url('Image URL must be a valid URL').or(z.literal('')),
+  url: z
+    .string()
+    .trim()
+    .refine((v) => v === '' || /^https?:\/\//.test(v) || v.startsWith('/api/media/'), 'Image URL must be a valid URL')
+    .or(z.literal('')),
   publicId: z.string().trim().max(200).optional().default(''),
   alt: z.string().trim().max(200).optional().default(''),
 })
@@ -36,8 +40,8 @@ const tripFields = {
     .regex(SLUG_PATTERN, 'Slug must be URL-safe (lowercase letters, numbers, hyphens)')
     .optional(),
   // tripCode is intentionally NOT accepted from clients.
-  shortDescription: z.string().trim().max(300).optional(),
-  description: z.string().trim().optional(),
+  shortDescription: z.string().trim().max(5000).optional(),
+  description: z.string().trim().max(10000).optional(),
   tripType: z.enum(TRIP_TYPES).optional(),
   durationDays: z.coerce.number().int().min(1, 'Duration days must be at least 1').optional(),
   durationNights: z.coerce.number().int().min(0).optional(),
@@ -49,7 +53,7 @@ const tripFields = {
   itinerary: z.array(itineraryDaySchema).max(60).optional(),
   inclusions: z.array(z.string().trim().max(300)).max(60).optional(),
   exclusions: z.array(z.string().trim().max(300)).max(60).optional(),
-  importantInformation: z.string().trim().optional(),
+  importantInformation: z.string().trim().max(10000).optional(),
   faqs: z.array(faqSchema).max(60).optional(),
   featured: z.boolean().optional(),
   published: z.boolean().optional(),

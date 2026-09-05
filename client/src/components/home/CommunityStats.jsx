@@ -1,21 +1,25 @@
 import { Container } from '@/components/ui/container'
-import { Award, Plane, Globe2 } from 'lucide-react'
 
-// Premium travel strip — thin outline icons, distinct jewel tones, 55-65px tall,
-// subtle tint, no emoji/circle bg, identical 20px stroke.
+// Experience is derived from the founding year — never hardcoded, so the
+// count advances automatically on January 1 (2026 → "13+", 2027 → "14+").
+const FOUNDED_YEAR = 2013
+const YEARS_OF_EXPERIENCE = new Date().getFullYear() - FOUNDED_YEAR
+
+// Premium travel strip — emoji icons in uniform centered boxes (consistent
+// size/alignment across platforms), existing layout/typography unchanged.
 const STATS = [
   {
-    Icon: Award,
-    title: '13+ Years of Experience — Since 2013',
+    icon: '🏆',
+    title: `${YEARS_OF_EXPERIENCE}+ Years of Experience — Since ${FOUNDED_YEAR}`,
     color: 'text-[#9A6B2E]', // warm brass/gold – premium, not cheap yellow
   },
   {
-    Icon: Plane,
+    icon: '✈️',
     title: '10k+ Trips Planned',
     color: 'text-[#1E6FA3]', // deep sky – premium travel blue
   },
   {
-    Icon: Globe2,
+    icon: '🌍',
     title: '50+ Destinations',
     color: 'text-[#0F766E]', // deep teal – premium, not flat green
   },
@@ -23,13 +27,20 @@ const STATS = [
 
 export function CommunityStats() {
   return (
-    <section className="border-y border-emerald-100/60 bg-[#F1F8F5]">
-      <Container className="py-4">
-        <div className="grid grid-cols-1 divide-y divide-emerald-100/60 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-          {STATS.map(({ Icon, title, color }) => (
-            <div key={title} className="flex items-center justify-center gap-2">
-              <Icon className={`h-5 w-5 shrink-0 ${color}`} aria-hidden="true" strokeWidth={1.7} />
-              <p className="whitespace-nowrap text-[14px] font-semibold leading-none tracking-tight text-[#0F172A] sm:text-[14.5px]">
+    <section className="border-y border-emerald-100/60 bg-[#ECFFF5]">
+      <Container className="py-2.5">
+        {/* Grid capped at 1000px: halves the visual gap between the three
+            stat groups (~194px → ~97px at desktop) while keeping dividers. */}
+        <div className="grid grid-cols-1 divide-y divide-emerald-100/60 sm:mx-auto sm:max-w-[1000px] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          {STATS.map(({ icon, title }) => (
+            <div key={title} className="flex items-center justify-center gap-1">
+              <span
+                aria-hidden="true"
+                className="grid h-6 w-6 shrink-0 place-items-center text-[17px] leading-none"
+              >
+                {icon}
+              </span>
+              <p className="whitespace-nowrap text-[16px] font-semibold leading-none tracking-tight text-[#0F172A]">
                 {title}
               </p>
             </div>

@@ -34,7 +34,11 @@ function dedupeByName(destinations) {
 }
 
 function DestinationOval({ destination }) {
-  const src = destination.heroImage?.secureUrl || destination.heroImage?.url
+  const src =
+    destination.homepageImage?.secureUrl ||
+    destination.homepageImage?.url ||
+    destination.heroImage?.secureUrl ||
+    destination.heroImage?.url
   const name = destination.name
   const [imgError, setImgError] = React.useState(false)
   const showFallback = !src || imgError

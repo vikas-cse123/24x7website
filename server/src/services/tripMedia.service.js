@@ -1,5 +1,6 @@
 import TripMedia from '../models/TripMedia.js'
 import Trip from '../models/Trip.js'
+import * as imageStorage from './imageStorage.service.js'
 
 function notFound(msg='Not found'){ const e=new Error(msg); e.status=404; return e }
 
@@ -30,15 +31,21 @@ export async function create(data, userId){
 }
 
 export async function update(id, data){
+  const existing=await TripMedia.findById(id)
+  if(!existing) throw notFound('Media not found')
+  const keysBefore=imageStorage.collectKeys(existing.toObject())
   const doc=await TripMedia.findByIdAndUpdate(id, data, { new:true }).lean()
-  if(!doc) throw notFound('Media not found')
+  // Delete the replaced S3 object. Reference-aware: skipped if still used elsewhere.
+  const staleKeys=imageStorage.removedKeys(keysBefore, doc)
+  await imageStorage.cleanupUnreferenced(staleKeys, `TripMedia ${id} update`)
   return { ...doc, id: doc._id.toString() }
 }
 
 export async function remove(id){
   const doc=await TripMedia.findByIdAndDelete(id).lean()
   if(!doc) throw notFound('Media not found')
-  // Do NOT delete the stored S3 object automatically
+  // Reference-aware S3 cleanup of the stored media object.
+  await imageStorage.cleanupUnreferenced(imageStorage.collectKeys(doc), `TripMedia ${id} delete`)
   return { id: doc._id.toString() }
 }
 

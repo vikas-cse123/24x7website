@@ -159,13 +159,17 @@ export function TripPage() {
           </div>
 
           {trip.shortDescription && (
-            <p className="mt-5 text-lg text-muted-foreground">{trip.shortDescription}</p>
+            <div
+              className="prose prose-sm mt-5 max-w-none text-muted-foreground prose-p:my-2 prose-a:text-primary prose-headings:font-semibold"
+              dangerouslySetInnerHTML={{ __html: trip.shortDescription }}
+            />
           )}
 
           {trip.description && (
-            <div className="mt-5 space-y-3 whitespace-pre-line text-foreground/90">
-              <p>{trip.description}</p>
-            </div>
+            <div
+              className="prose prose-sm mt-5 max-w-none text-foreground/90 prose-p:my-3 prose-headings:font-semibold prose-a:text-primary prose-ul:list-disc prose-ol:list-decimal"
+              dangerouslySetInnerHTML={{ __html: trip.description }}
+            />
           )}
 
           {/* Upcoming departures with real batch pricing/availability */}
@@ -191,7 +195,12 @@ export function TripPage() {
                       </span>
                       <h3 className="font-semibold">{day.title || `Day ${day.dayNumber}`}</h3>
                     </div>
-                    {day.description && <p className="mt-3 text-sm text-foreground/90">{day.description}</p>}
+                    {day.description && (
+                      <div
+                        className="prose prose-sm mt-3 max-w-none text-sm text-foreground/90 prose-p:my-2"
+                        dangerouslySetInnerHTML={{ __html: day.description }}
+                      />
+                    )}
                     <div className="mt-3 grid gap-4 sm:grid-cols-2">
                       {day.activities?.length > 0 && (
                         <ul className="space-y-1 text-sm text-muted-foreground">
@@ -235,9 +244,10 @@ export function TripPage() {
           {trip.importantInformation && (
             <div className="mt-10">
               <h2 className="text-xl font-semibold">Important information</h2>
-              <p className="mt-3 whitespace-pre-line text-sm text-foreground/90">
-                {trip.importantInformation}
-              </p>
+              <div
+                className="prose prose-sm mt-3 max-w-none text-sm text-foreground/90 prose-p:my-2"
+                dangerouslySetInnerHTML={{ __html: trip.importantInformation }}
+              />
             </div>
           )}
 

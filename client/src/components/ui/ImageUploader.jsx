@@ -4,6 +4,11 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import httpClient from '@/services/http'
 
+// Tracks the uploader the user interacted with last, so paste goes to the
+// right instance when several uploaders exist on the same page/form.
+let activeUploaderEl = null
+const mountedUploaders = new Set()
+
 export function ImageUploader({
   value, // {url, secureUrl, publicId, alt} or array
   onChange,
@@ -12,6 +17,7 @@ export function ImageUploader({
   entityId,
   maxFiles = 10,
   className,
+  onUploaded, // optional: called with each successfully uploaded media object
 }) {
   const isArray = Array.isArray(value)
   const [dragOver, setDragOver] = React.useState(false)
@@ -19,6 +25,8 @@ export function ImageUploader({
   const [progress, setProgress] = React.useState(null)
   const [error, setError] = React.useState(null)
   const inputRef = React.useRef(null)
+  const containerRef = React.useRef(null)
+  const uploadRef = React.useRef(null)
 
   const upload = async (files) => {
     if (!files.length) return
@@ -33,6 +41,7 @@ export function ImageUploader({
           onUploadProgress: e => setProgress(Math.round((e.loaded*100)/(e.total||1))),
         })
         onChange(data.data)
+        onUploaded?.(data.data)
       } else {
         files.slice(0, maxFiles).forEach(f => form.append('images', f))
         const { data } = await httpClient.post(`/admin/upload/many?${params}`, form, {
@@ -41,15 +50,42 @@ export function ImageUploader({
         const arr = Array.isArray(data.data) ? data.data : [data.data]
         if (isArray) onChange([...value, ...arr].slice(0, maxFiles))
         else onChange(arr[0])
+        arr.forEach(item => onUploaded?.(item))
       }
     } catch (e) {
       setError(e.response?.data?.message || e.message || 'Upload failed')
     } finally { setUploading(false); setProgress(null) }
   }
+  uploadRef.current = upload
 
   const onDrop = (e) => {
     e.preventDefault(); setDragOver(false)
     upload(Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/')))
+  }
+
+  React.useEffect(() => {
+    const el = containerRef.current
+    mountedUploaders.add(el)
+    const onPaste = (e) => {
+      const target = (activeUploaderEl?.isConnected && activeUploaderEl) ||
+        [...mountedUploaders].find(x => x?.isConnected)
+      if (!el || !el.isConnected || target !== el) return
+      const files = Array.from(e.clipboardData?.files || []).filter(f => f.type.startsWith('image/'))
+      if (!files.length) return
+      e.preventDefault()
+      uploadRef.current(files)
+    }
+    window.addEventListener('paste', onPaste)
+    return () => {
+      window.removeEventListener('paste', onPaste)
+      mountedUploaders.delete(el)
+      if (activeUploaderEl === el) activeUploaderEl = null
+    }
+  }, [])
+
+  const markActive = () => { activeUploaderEl = containerRef.current }
+  const markInactive = () => {
+    if (activeUploaderEl === containerRef.current) activeUploaderEl = null
   }
 
   const remove = (idx) => {
@@ -69,6 +105,12 @@ export function ImageUploader({
   return (
     <div className={cn("space-y-3", className)}>
       <div
+        ref={containerRef}
+        tabIndex={0}
+        onPointerDown={markActive}
+        onPointerEnter={markActive}
+        onPointerLeave={markInactive}
+        onFocus={markActive}
         onDragOver={e=>{e.preventDefault(); setDragOver(true)}}
         onDragLeave={()=>setDragOver(false)}
         onDrop={onDrop}
@@ -80,8 +122,8 @@ export function ImageUploader({
         <input ref={inputRef} type="file" accept="image/*" multiple={multiple} className="hidden"
           onChange={e=>upload(Array.from(e.target.files||[]))} />
         {uploading ? <Loader2 className="h-8 w-8 animate-spin text-primary" /> : <Upload className="h-8 w-8 text-muted-foreground" />}
-        <p className="mt-2 text-sm font-medium">{dragOver ? "Drop images here" : "Click or drag & drop images"}</p>
-        <p className="text-xs text-muted-foreground">PNG, JPG, WEBP — max 5 MB — stored securely in S3</p>
+        <p className="mt-2 text-sm font-medium">{dragOver ? "Drop images here" : "Click, drag & drop, or paste images"}</p>
+        <p className="text-xs text-muted-foreground">PNG, JPG, WEBP — max 5 MB — or press Ctrl/Cmd+V after clicking here</p>
         {progress!=null && <p className="mt-1 text-xs text-primary">{progress}%</p>}
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -110,7 +152,7 @@ export function ImageUploader({
         </div>
       ) : hasImage && (
         <div className="relative overflow-hidden rounded-lg border border-border">
-          <img src={items[0].secureUrl||items[0].url} alt={items[0].alt||'preview'} className="h-48 w-full object-cover" />
+          <img src={items[0].secureUrl||items[0].url} alt={items[0].alt||'preview'} className="max-h-96 w-full object-contain" />
           <Button type="button" size="icon" variant="destructive" className="absolute right-2 top-2 h-7 w-7" onClick={()=>remove(0)}><X className="h-4 w-4" /></Button>
         </div>
       )}

@@ -58,8 +58,8 @@ export const tripSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be URL-safe (lowercase letters, numbers, hyphens)')
     .optional()
     .or(z.literal('')),
-  shortDescription: z.string().trim().max(300),
-  description: z.string().trim(),
+  shortDescription: z.string().trim().max(5000),
+  description: z.string().trim().max(10000),
   tripType: z.enum(TRIP_TYPES),
   durationDays: z.coerce.number().int().min(1, 'At least 1 day'),
   durationNights: z.coerce.number().int().min(0),

@@ -14,14 +14,14 @@ function NavItem({ item, onNavigate }) {
       onClick={onNavigate}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          'flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           isActive
-            ? 'bg-primary/10 text-primary'
-            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            ? 'bg-slate-900 text-white shadow-sm'
+            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
         )
       }
     >
-      <item.icon className="h-4 w-4 shrink-0" />
+      <item.icon className="h-3.5 w-3.5 shrink-0" />
       {item.label}
     </NavLink>
   )
@@ -30,10 +30,10 @@ function NavItem({ item, onNavigate }) {
 function NavGroup({ group, onNavigate }) {
   return (
     <div>
-      <p className="px-3 pt-5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <p className="px-2.5 pt-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
         {group.section}
       </p>
-      <ul className="mt-1.5 space-y-0.5">
+      <ul className="mt-1 space-y-0.5">
         {group.items.map((item) => (
           <li key={item.href}>
             <NavItem item={item} onNavigate={onNavigate} />
@@ -48,7 +48,7 @@ function NavGroup({ group, onNavigate }) {
 export function AdminSidebarNav({ onNavigate }) {
   const [dashboard, ...groups] = ADMIN_NAV
   return (
-    <nav aria-label="Admin" className="flex-1 overflow-y-auto px-3 pb-6">
+    <nav aria-label="Admin" className="flex-1 overflow-y-auto px-2.5 pb-4">
       <ul className="space-y-0.5">
         <li>
           <NavItem item={dashboard} onNavigate={onNavigate} />
@@ -63,8 +63,14 @@ export function AdminSidebarNav({ onNavigate }) {
 
 function SidebarHeader({ className }) {
   return (
-    <div className={cn('flex items-center justify-between px-4 py-4', className)}>
-      <Logo imgClassName="h-9" />
+    <div className={cn('flex items-center gap-2.5 px-3 py-3.5', className)}>
+      <div className="grid h-7 w-7 place-items-center rounded-lg bg-slate-900 text-white">
+        <span className="text-xs font-black">24</span>
+      </div>
+      <div className="leading-none">
+        <p className="text-sm font-bold tracking-tight">24x7Chhutti</p>
+        <p className="text-[11px] font-medium text-slate-500">Admin</p>
+      </div>
     </div>
   )
 }
@@ -74,12 +80,15 @@ export function AdminSidebar({ className }) {
   return (
     <aside
       className={cn(
-        'sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-card lg:flex',
+        'sticky top-0 hidden h-screen w-[220px] shrink-0 flex-col border-r border-slate-200 bg-white lg:flex',
         className
       )}
     >
-      <SidebarHeader className="border-b border-border" />
+      <SidebarHeader className="border-b border-slate-100" />
       <AdminSidebarNav />
+      <div className="border-t border-slate-100 p-3">
+        <p className="text-[11px] font-medium text-slate-400">© 2025 • v0.1.0</p>
+      </div>
     </aside>
   )
 }

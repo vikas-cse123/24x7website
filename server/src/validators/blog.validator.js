@@ -6,7 +6,11 @@ import { SLUG_PATTERN } from '../utils/slugify.js'
 const OBJECT_ID = /^[0-9a-fA-F]{24}$/
 
 const imageSchema = z.object({
-  url: z.string().trim().url('Image URL must be a valid URL').or(z.literal('')),
+  url: z
+    .string()
+    .trim()
+    .refine((v) => v === '' || /^https?:\/\//.test(v) || v.startsWith('/api/media/'), 'Image URL must be a valid URL')
+    .or(z.literal('')),
   publicId: z.string().trim().max(200).optional().default(''),
   alt: z.string().trim().max(200).optional().default(''),
 })
@@ -17,7 +21,12 @@ const contentBlockSchema = z
     level: z.coerce.number().int().min(2).max(4).optional(),
     text: z.string().trim().max(5000).optional(),
     items: z.array(z.string().trim().max(300)).max(30).optional(),
-    url: z.string().trim().url('Image URL must be a valid URL').or(z.literal('')).optional(),
+    url: z
+      .string()
+      .trim()
+      .refine((v) => v === '' || /^https?:\/\//.test(v) || v.startsWith('/api/media/'), 'Image URL must be a valid URL')
+      .or(z.literal(''))
+      .optional(),
     alt: z.string().trim().max(200).optional(),
     caption: z.string().trim().max(300).optional(),
   })

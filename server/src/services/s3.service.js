@@ -6,10 +6,12 @@ import {
   HeadObjectCommand,
 } from '@aws-sdk/client-s3'
 import { s3Client, isS3Configured, s3Config } from '../config/s3.js'
+import { LEGACY_KEY_PREFIX, KEY_PREFIXES, isAppKey } from '../utils/imageFolders.js'
 
-// Safety: the app may only ever touch objects under its own media prefix.
-// Prevents an admin/delete request from removing arbitrary S3 objects.
-const APP_PREFIX = 'travel-crm/'
+// Safety: the app may only ever touch objects under its own media prefixes.
+// Both the legacy `travel-crm/` prefix (existing records still reference it)
+// and the new clean top-level prefixes are accepted; anything else — and any
+// path-traversal segment — is rejected.
 const ALLOWED_LOGO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 function assertConfigured() {
@@ -26,19 +28,21 @@ function assertSafeKey(key) {
     err.status = 400
     throw err
   }
-  // Must be within the app prefix and must not contain path-traversal segments.
-  if (!key.startsWith(APP_PREFIX) || /(^|\/)\.\.(\/|$)/.test(key)) {
-    const err = new Error(`Forbidden: key must be within ${APP_PREFIX}`)
+  // Must be within an app-managed prefix and must not contain path-traversal segments.
+  if (!isAppKey(key) || /(^|\/)\.\.(\/|$)/.test(key)) {
+    const err = new Error(
+      `Forbidden: key must be within ${LEGACY_KEY_PREFIX} or one of: ${KEY_PREFIXES.join(', ')}`
+    )
     err.status = 403
     throw err
   }
 }
 
 // Build a unique object key under the given folder, e.g.
-// travel-crm/destinations/<id>/<timestamp>-<uuid>.jpg
+// destinations/<timestamp>-<uuid>.jpg
 // The original filename is never used directly as the key.
 function makeKey(folder, originalName = '', mimeType = '') {
-  const base = (folder || 'travel-crm/website').replace(/^\/+|\/+$/g, '').replace(/\/+$/g, '')
+  const base = (folder || 'website').replace(/^\/+|\/+$/g, '').replace(/\/+$/g, '')
   const ext = path.extname(originalName || '').toLowerCase() || mimeToExt(mimeType)
   const unique = `${Date.now()}-${crypto.randomUUID()}${ext}`
   return `${base}/${unique}`
@@ -67,10 +71,11 @@ export async function uploadBuffer(buffer, { folder, originalName, mimeType } = 
     })
   )
   const url = s3Config.getUrl(key)
+  const proxy = s3Config.getProxyUrl(key)
   return {
     publicId: key, // S3 object key (kept in the existing `publicId` field)
-    secureUrl: url,
-    url,
+    secureUrl: proxy || url,
+    url: proxy || url,
     width: null,
     height: null,
     format: path.extname(key).replace('.', '') || 'jpg',
@@ -103,6 +108,14 @@ export async function exists(key) {
 // is simply the public object URL. Kept for abstraction parity.
 export function deliveryUrl(key) {
   return key ? s3Config.getUrl(key) : ''
+}
+
+// Proxy URL that streams through the backend (`GET /api/media/<key>`).
+// Use this for clean prefixes (`destinations/`, `vibe-videos/`, etc.) that are
+// not yet public via bucket policy — the browser fetches via the API instead
+// of direct S3, so 403 disappears without changing folder mappings.
+export function proxyUrl(key) {
+  return key ? s3Config.getProxyUrl(key) : ''
 }
 
 export function srcSet(key) {

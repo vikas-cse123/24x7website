@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { TripItineraryDay } from '@/components/trips/TripItineraryDay'
 
 // Day-by-day itinerary builder. Add / remove / reorder days.
-export function TripItineraryBuilder({ control, register, errors }) {
+export function TripItineraryBuilder({ control, register, watch, setValue, errors }) {
   const { fields, append, remove, swap } = useFieldArray({ control, name: 'itinerary' })
 
   function addDay() {
@@ -38,6 +38,8 @@ export function TripItineraryBuilder({ control, register, errors }) {
               key={field.id}
               control={control}
               register={register}
+              watch={watch}
+              setValue={setValue}
               index={index}
               total={fields.length}
               errors={errors?.itinerary?.[index]}

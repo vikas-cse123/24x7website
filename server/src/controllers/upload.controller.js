@@ -1,4 +1,5 @@
 import * as imageStorage from '../services/imageStorage.service.js'
+import { isAppKey } from '../utils/imageFolders.js'
 import { folderFor } from '../utils/imageFolders.js'
 
 function pickFolder(req) {
@@ -35,8 +36,9 @@ export async function remove(req, res, next) {
   try {
     const publicId = (req.query.publicId || req.body.publicId || '').toString()
     if (!publicId) return res.status(400).json({ success: false, message: 'publicId is required' })
-    // Only allow deleting objects within this application's S3 media prefix.
-    if (!publicId.startsWith('travel-crm/')) return res.status(403).json({ success: false, message: 'Forbidden: invalid publicId' })
+    // Only allow deleting objects within this application's S3 media prefixes
+    // (legacy `travel-crm/...` keys and the new clean-prefix keys).
+    if (!isAppKey(publicId)) return res.status(403).json({ success: false, message: 'Forbidden: invalid publicId' })
     await imageStorage.remove(publicId)
     res.status(204).end()
   } catch (err) { next(err) }

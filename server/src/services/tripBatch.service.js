@@ -6,6 +6,7 @@ import Trip from '../models/Trip.js'
 import { assertBatchRules } from '../validators/tripBatch.validator.js'
 import Booking from '../models/Booking.js'
 import * as notif from './notification.service.js'
+import * as imageStorage from './imageStorage.service.js'
 
 const TRIP_POPULATE = {
   path: 'tripId',
@@ -168,7 +169,12 @@ export async function remove(id) {
   if ((Number(doc.bookedSeats) || 0) > 0) {
     throw badRequest('This batch has booked seats and cannot be deleted')
   }
+  // Batches currently own no media fields, so `keys` is empty today — but
+  // running the centralized reference-aware cleanup here means any S3-backed
+  // media added to the batch schema later is cleaned up automatically.
+  const keys = imageStorage.collectKeys(doc.toObject())
   await doc.deleteOne()
+  await imageStorage.cleanupUnreferenced(keys, `TripBatch ${id} delete`)
   return toPublicTripBatch(doc.toObject(), { includeNotes: true })
 }
 

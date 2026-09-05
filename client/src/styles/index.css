@@ -63,6 +63,19 @@
     outline-offset: 2px;
   }
 
+  /* Chrome/Safari autofill paints its own pale blue/yellow background over
+     inputs (e.g. saved phone numbers). The inset box-shadow covers it with
+     the design-token background so the input keeps a clean white surface. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px hsl(var(--background)) inset;
+    -webkit-text-fill-color: hsl(var(--foreground));
+    caret-color: hsl(var(--foreground));
+    border-radius: inherit;
+    transition: background-color 9999s ease-out;
+  }
+
   /* Prevent horizontal overflow on small screens. */
   html,
   body {
@@ -161,5 +174,168 @@
   .banner-shimmer {
     animation: none;
     display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   "Loved by Travellers Across India" — balance-scale loop (reference: cards
+   drop onto a tilting seesaw, brand badge tips it the other way, reset).
+   One shared 2.8s timeline; each element drops during its own window.
+--------------------------------------------------------------------------- */
+@keyframes lb-seesaw-tilt {
+  0%,
+  16% {
+    transform: rotate(0deg);
+  }
+  24% {
+    transform: rotate(-2.5deg);
+  }
+  38% {
+    transform: rotate(-4.5deg);
+  }
+  50% {
+    transform: rotate(-3deg);
+  }
+  62% {
+    transform: rotate(3.5deg);
+  }
+  86% {
+    transform: rotate(3.5deg);
+  }
+  94%,
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes lb-drop-1 {
+  0%,
+  3% {
+    transform: translateY(-170px) rotate(-9deg);
+    opacity: 0;
+  }
+  7% {
+    opacity: 1;
+  }
+  16% {
+    transform: translateY(4px) rotate(-9deg);
+  }
+  20% {
+    transform: translateY(-10px) rotate(-9deg);
+  }
+  24%,
+  86% {
+    transform: translateY(0) rotate(-9deg);
+    opacity: 1;
+  }
+  94%,
+  100% {
+    transform: translateY(-170px) rotate(-9deg);
+    opacity: 0;
+  }
+}
+
+@keyframes lb-drop-2 {
+  0%,
+  17% {
+    transform: translateY(-180px) rotate(7deg);
+    opacity: 0;
+  }
+  21% {
+    opacity: 1;
+  }
+  30% {
+    transform: translateY(4px) rotate(7deg);
+  }
+  34% {
+    transform: translateY(-10px) rotate(7deg);
+  }
+  38%,
+  86% {
+    transform: translateY(0) rotate(7deg);
+    opacity: 1;
+  }
+  94%,
+  100% {
+    transform: translateY(-180px) rotate(7deg);
+    opacity: 0;
+  }
+}
+
+@keyframes lb-drop-3 {
+  0%,
+  31% {
+    transform: translateY(-160px) rotate(-6deg);
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  44% {
+    transform: translateY(4px) rotate(-6deg);
+  }
+  48% {
+    transform: translateY(-10px) rotate(-6deg);
+  }
+  52%,
+  86% {
+    transform: translateY(0) rotate(-6deg);
+    opacity: 1;
+  }
+  94%,
+  100% {
+    transform: translateY(-160px) rotate(-6deg);
+    opacity: 0;
+  }
+}
+
+@keyframes lb-drop-badge {
+  0%,
+  45% {
+    transform: translateY(-150px) rotate(14deg);
+    opacity: 0;
+  }
+  49% {
+    opacity: 1;
+  }
+  58% {
+    transform: translateY(6px) rotate(14deg);
+  }
+  62% {
+    transform: translateY(-8px) rotate(14deg);
+  }
+  66%,
+  86% {
+    transform: translateY(0) rotate(14deg);
+    opacity: 1;
+  }
+  94%,
+  100% {
+    transform: translateY(-150px) rotate(14deg);
+    opacity: 0;
+  }
+}
+
+/* Final resting composition (also the reduced-motion / no-JS state). */
+.lb-plank-group {
+  transform: rotate(3.5deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lb-play .lb-plank-group {
+    animation: lb-seesaw-tilt 2.8s ease-in-out infinite;
+    transform-origin: 50% 100%;
+  }
+  .lb-play .lb-drop-1 {
+    animation: lb-drop-1 2.8s ease-in-out infinite;
+  }
+  .lb-play .lb-drop-2 {
+    animation: lb-drop-2 2.8s ease-in-out infinite;
+  }
+  .lb-play .lb-drop-3 {
+    animation: lb-drop-3 2.8s ease-in-out infinite;
+  }
+  .lb-play .lb-drop-badge {
+    animation: lb-drop-badge 2.8s ease-in-out infinite;
   }
 }

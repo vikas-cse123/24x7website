@@ -16,7 +16,11 @@ export function usePublicSettings() {
       const { data } = await publicSettingsApi.get()
       return data.data ?? null
     },
-    staleTime: 5 * 60 * 1000,
+    // Always stale: the admin panel runs in a separate tab, so cross-tab
+    // invalidation is impossible. A stale query refetches on window focus
+    // (default) and remount, making admin edits visible as soon as the
+    // visitor returns to the site tab. One small aggregate call — cheap.
+    staleTime: 0,
     retry: 1,
   })
 

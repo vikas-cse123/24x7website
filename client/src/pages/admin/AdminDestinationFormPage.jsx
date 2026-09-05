@@ -58,8 +58,8 @@ export function AdminDestinationFormPage({ mode }) {
       region: destination.region || '',
       type: destination.type || 'other',
       category: destination.category || 'other',
-      shortDescription: destination.shortDescription || '',
       description: destination.description || '',
+      homepageImage: destination.homepageImage || { url: '', alt: '' },
       heroImage: destination.heroImage || { url: '', alt: '' },
       gallery: destination.gallery || [],
       startingPrice: destination.startingPrice ?? null,
@@ -74,6 +74,16 @@ export function AdminDestinationFormPage({ mode }) {
   }, [isEdit, destination])
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending
+
+  const deleteMutation = useMutation({
+    mutationFn: () => adminDestinationApi.remove(id),
+    onSuccess: () => {
+      toast.success('Destination deleted')
+      queryClient.invalidateQueries({ queryKey: ['admin', 'destinations'] })
+      navigate('/admin/destinations')
+    },
+    onError: (err) => toast.error(err.message || 'Delete failed'),
+  })
 
   if (isEdit && loadingEdit) {
     return (
@@ -99,19 +109,94 @@ export function AdminDestinationFormPage({ mode }) {
     )
   }
 
+  const [moreOpen, setMoreOpen] = React.useState(false)
+  const moreRef = React.useRef(null)
+  React.useEffect(() => {
+    const h = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false)
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [])
+
   return (
     <div>
-      <div className="mb-6">
-        <Link
-          to="/admin/destinations"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Destinations
-        </Link>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">
-          {isEdit ? `Edit ${destination.name}` : 'New destination'}
-        </h1>
+      {/* Breadcrumb */}
+      <div className="mb-3 flex items-center gap-1.5 text-xs text-slate-500">
+        <Link to="/admin" className="hover:text-slate-700">Admin</Link>
+        <span className="text-slate-400">›</span>
+        <Link to="/admin/destinations" className="hover:text-slate-700">Destinations</Link>
+        {isEdit && destination?.name && (
+          <>
+            <span className="text-slate-400">›</span>
+            <span className="truncate font-medium text-slate-700">{destination.name}</span>
+          </>
+        )}
+      </div>
+
+      {/* Record Header */}
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-white px-3 py-3 sm:px-4">
+        <div className="flex min-w-0 gap-3">
+          <div className="hidden h-9 w-9 shrink-0 place-items-center rounded-md border border-amber-200 bg-amber-50 text-amber-700 sm:grid">
+            <span className="text-xs font-bold">D</span>
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Destination</p>
+            <h1 className="truncate text-base font-bold tracking-tight sm:text-lg">
+              {isEdit ? destination?.name || 'Edit Destination' : 'Create Destination'}
+            </h1>
+            {isEdit && destination && (
+              <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+                <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium ${destination.published ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' : 'bg-slate-100 text-slate-600 ring-1 ring-slate-200'}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${destination.published ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                  {destination.published ? 'Published' : 'Draft'}
+                </span>
+                <span>· {destination.country}{destination.region ? ` · ${destination.region}` : ''}</span>
+              </p>
+            )}
+            {!isEdit && <p className="mt-0.5 text-xs text-slate-500">Add a new destination to your website.</p>}
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {isEdit && destination?.slug && (
+            <a href={`/destination/${destination.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+              Preview
+            </a>
+          )}
+          <div className="relative" ref={moreRef}>
+            <button
+              type="button"
+              onClick={() => setMoreOpen((v) => !v)}
+              className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            >
+              More <span className="text-xs">▼</span>
+            </button>
+            {moreOpen && (
+              <div className="absolute right-0 top-8 z-20 w-44 rounded-md border border-slate-200 bg-white py-1 shadow-lg">
+                {isEdit && destination?.slug && (
+                  <a href={`/destination/${destination.slug}`} target="_blank" rel="noopener noreferrer" className="flex px-3 py-1.5 text-xs hover:bg-slate-50" onClick={() => setMoreOpen(false)}>
+                    Preview
+                  </a>
+                )}
+                <button type="button" className="flex w-full px-3 py-1.5 text-left text-xs hover:bg-slate-50" onClick={() => { navigator.clipboard.writeText(destination?.slug || ''); setMoreOpen(false)}}>
+                  Duplicate
+                </button>
+                {isEdit && (
+                  <button
+                    type="button"
+                    className="flex w-full px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50"
+                    onClick={() => {
+                      setMoreOpen(false)
+                      if (window.confirm(`Delete "${destination.name}"? This will remove the destination and its unreferenced media.`)) deleteMutation.mutate()
+                    }}
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <DestinationForm
@@ -124,6 +209,15 @@ export function AdminDestinationFormPage({ mode }) {
           if (isEdit) updateMutation.mutate(payload)
           else createMutation.mutate(payload)
         }}
+        onDelete={
+          isEdit
+            ? () => {
+                if (window.confirm(`Delete "${destination.name}"? This will remove the destination and its unreferenced media.`)) {
+                  deleteMutation.mutate()
+                }
+              }
+            : undefined
+        }
       />
     </div>
   )

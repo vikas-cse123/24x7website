@@ -12,8 +12,8 @@ export function DestinationCard({ destination }) {
     <Card className="group overflow-hidden transition-shadow hover:shadow-card-hover">
       <div className="relative aspect-[16/10]">
         <DestinationImage
-          src={destination.heroImage?.url}
-          alt={destination.heroImage?.alt || destination.name}
+          src={destination.heroImage?.url || destination.homepageImage?.url}
+          alt={destination.heroImage?.alt || destination.homepageImage?.alt || destination.name}
           className="h-full w-full"
         />
         <WishlistButton type="destination" id={destination.id || destination._id} className="absolute right-2 top-2" size={28} />
@@ -32,9 +32,10 @@ export function DestinationCard({ destination }) {
             {destination.region ? ` · ${destination.region}` : ''}
           </span>
         </p>
-        {destination.shortDescription && (
+        {destination.description && (
           <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-            {destination.shortDescription}
+            {String(destination.description).replace(/\s+/g, ' ').slice(0, 160)}
+            {String(destination.description).length > 160 ? '...' : ''}
           </p>
         )}
         <div className="mt-4 flex items-center justify-between">
