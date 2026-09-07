@@ -16,7 +16,8 @@ export const IMAGE_FOLDERS = {
   // admin-managed website branding (logo uploads)
   'brand-media': 'branding',
   'whatsapp-media': 'whatsapp',
-  // logical buckets for future masters; keep centralized so renames are one-file
+  // Trip review images (admin-curated, per-trip reviews)
+  'trip-reviews': 'trip-reviews',
   hotels: 'hotels',
   sightseeing: 'sightseeing',
   vehicles: 'vehicles',

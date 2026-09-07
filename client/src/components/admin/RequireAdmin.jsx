@@ -19,6 +19,11 @@ export function RequireAdmin({ children }) {
   }, [status, fetchMe])
 
   if (status === AUTH_STATUS.LOADING) {
+    // Keep existing admin UI visible during background revalidation.
+    // Only show full-screen loading on the very first boot when no user is present.
+    if (user) {
+      return children
+    }
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted/30">
         <p className="text-sm text-muted-foreground">Loading…</p>

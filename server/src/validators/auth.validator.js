@@ -27,6 +27,17 @@ export const otpSchema = z
   .string()
   .regex(/^\d{6}$/, 'OTP must be exactly 6 digits')
 
+export const emailSchema = z
+  .string()
+  .trim()
+  .email('Enter a valid email address')
+  .max(120)
+
+export const passwordSchema = z
+  .string()
+  .min(6, 'Password must be at least 6 characters')
+  .max(120)
+
 export const sendOtpSchema = refineIndianMobile(
   z.object({
     countryCode: countryCodeSchema,
@@ -41,3 +52,43 @@ export const verifyOtpSchema = refineIndianMobile(
     otp: otpSchema,
   })
 )
+
+export const signupSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(120),
+  email: emailSchema,
+  phone: z.string().trim().min(1, 'Phone number is required').max(20),
+  countryCode: countryCodeSchema.optional().default('+91'),
+  password: passwordSchema,
+})
+
+export const verifyEmailSchema = z.object({
+  email: emailSchema,
+  otp: otpSchema,
+})
+
+export const resendVerificationSchema = z.object({
+  email: emailSchema,
+})
+
+export const loginSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, 'Password is required'),
+})
+
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+})
+
+export const verifyResetOtpSchema = z.object({
+  email: emailSchema,
+  otp: otpSchema,
+})
+
+export const resetPasswordSchema = z.object({
+  email: emailSchema,
+  newPassword: passwordSchema,
+  confirmPassword: z.string().min(1, 'Please confirm your password'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
+})

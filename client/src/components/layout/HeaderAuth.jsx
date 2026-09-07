@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { useUIStore } from '@/stores/ui'
 import { cn } from '@/lib/utils'
+import { formatPhone } from '@/lib/phone'
 
 const MENU_LINKS = [
   { to: '/account', label: 'My Account', icon: UserCog },
@@ -55,7 +56,7 @@ function AuthenticatedMenu() {
           <div className="border-b border-border px-3 py-2 text-sm">
             <p className="font-medium">{user?.name || 'Traveller'}</p>
             <p className="text-xs text-muted-foreground">
-              +{user?.countryCode} {user?.mobile}
+              {formatPhone(user?.mobile, user?.countryCode)}
             </p>
           </div>
           {MENU_LINKS.map(({ to, label, icon: Icon }) => (

@@ -2,434 +2,473 @@ import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { Loader2, ChevronDown } from 'lucide-react'
+import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { sendOtpSchema, otpSchema, COUNTRY_CODE, INDIAN_MOBILE_PATTERN, INTERNATIONAL_MOBILE_PATTERN, OTP_PATTERN } from '@/schemas/auth'
-import { COUNTRIES } from '@/lib/countries'
+import { Label } from '@/components/ui/label'
+import { signupSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, emailOtpSchema } from '@/schemas/auth'
 import { authApi } from '@/services/auth'
 import { useAuth } from '@/hooks/useAuth'
-import { cn } from '@/lib/utils'
 
-const RESEND_DELAY_SECONDS = 30
+const RESEND_DELAY = 30
 
-function Flag({ iso, name }) {
+const OtpInput = React.forwardRef(function OtpInput({ value, onChange, autoFocus }, ref) {
+  const [focused, setFocused] = React.useState(false)
+  const innerRef = React.useRef(null)
+  React.useImperativeHandle(ref, () => ({
+    focus: () => innerRef.current?.focus(),
+  }))
+  const slots = Array.from({ length: 6 }, (_, i) => value[i] || '')
+  const active = Math.min(value.length, 5)
   return (
-    <img
-      src={`https://flagcdn.com/w40/${iso}.png`}
-      srcSet={`https://flagcdn.com/w80/${iso}.png 2x`}
-      alt={name}
-      className="h-3.5 w-5 shrink-0 rounded-[2px] object-cover"
-      loading="lazy"
-    />
-  )
-}
-
-function CountrySelect({ value, onChange }) {
-  const [open, setOpen] = React.useState(false)
-  const ref = React.useRef(null)
-
-  React.useEffect(() => {
-    if (!open) return undefined
-    function onDocClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
-    }
-    document.addEventListener('mousedown', onDocClick)
-    return () => document.removeEventListener('mousedown', onDocClick)
-  }, [open])
-
-  const current = COUNTRIES.find((c) => c.code === value) || COUNTRIES[0]
-
-  return (
-    <div className="relative shrink-0" ref={ref}>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-label="Select country code"
-        className="flex h-full items-center gap-1 rounded-l-full pl-4 pr-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none"
-      >
-        <Flag iso={current.iso} name={current.name} />
-        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-        <span>{current.code}</span>
-      </button>
-
-      {open && (
-        <ul
-          role="listbox"
-          className="absolute bottom-full left-0 z-20 mb-2 max-h-56 w-56 overflow-auto rounded-xl border border-border bg-background py-1 shadow-lg"
-        >
-          {COUNTRIES.map((c) => (
-            <li key={`${c.code}-${c.name}`}>
-              <button
-                type="button"
-                role="option"
-                aria-selected={c.code === value}
-                onClick={() => {
-                  onChange(c.code)
-                  setOpen(false)
-                }}
-                className={cn(
-                  'flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-muted',
-                  c.code === value && 'bg-muted/60 font-medium'
-                )}
-              >
-                <Flag iso={c.iso} name={c.name} />
-                <span className="flex-1 text-left">{c.name}</span>
-                <span className="text-muted-foreground">{c.code}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="relative mt-3">
+      <div aria-hidden="true" className="flex h-12 w-full items-stretch justify-center gap-1 rounded-md border border-input bg-background px-3">
+        {slots.map((ch, i) => (
+          <div key={i} className="relative flex h-full w-7 items-center justify-center">
+            {ch ? <span className="text-lg font-medium">{ch}</span> : <span className={`absolute bottom-2.5 left-1/2 h-0.5 w-5 -translate-x-1/2 rounded-full ${focused && i === active ? 'bg-foreground/70' : 'bg-muted-foreground/40'}`} />}
+          </div>
+        ))}
+      </div>
+      <input
+        ref={innerRef}
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        maxLength={6}
+        autoFocus={autoFocus}
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 6))}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        aria-label="Enter 6-digit OTP"
+        className="absolute inset-0 h-full w-full cursor-pointer rounded-md border-0 bg-transparent text-center text-lg opacity-0 focus-visible:outline-none"
+      />
     </div>
   )
-}
+})
 
 export function LoginModal({ open, onOpenChange }) {
-  const [step, setStep] = React.useState('phone') // 'phone' | 'otp'
-  const [phoneContext, setPhoneContext] = React.useState(null)
+  const [view, setView] = React.useState('login') // login, signup, verifySignup, forgot, verifyReset, resetPassword, success
+  const [verifyEmail, setVerifyEmail] = React.useState('')
+  const [resetEmail, setResetEmail] = React.useState('')
   const [resendCountdown, setResendCountdown] = React.useState(0)
-  const [sendingOtp, setSendingOtp] = React.useState(false)
-  const [verifying, setVerifying] = React.useState(false)
+  const [successMessage, setSuccessMessage] = React.useState('')
   const { setAuthenticated } = useAuth()
 
-  // mode 'onSubmit': RHF never surfaces its own errors during typing or
-  // blurs. Error visibility and button state are DERIVED from the watched
-  // value below (single source of truth: the schema patterns), so they update
-  // reactively on every keystroke without any click.
-  const phoneForm = useForm({
-    mode: 'onSubmit',
-    reValidateMode: 'onChange',
-    resolver: zodResolver(sendOtpSchema),
-    defaultValues: { countryCode: COUNTRY_CODE, mobile: '' },
-  })
+  const close = React.useCallback(() => onOpenChange(false), [onOpenChange])
 
-  const otpForm = useForm({
-    mode: 'onSubmit',
-    reValidateMode: 'onChange',
-    resolver: zodResolver(otpSchema),
-    defaultValues: { otp: '' },
-  })
-
-  // Derived phone state (never stored in separate mutable state).
-  const watchedCountryCode = phoneForm.watch('countryCode')
-  const watchedMobile = phoneForm.watch('mobile')
-  const isIndia = watchedCountryCode === '+91'
-  const mobileDigits = (watchedMobile || '').replace(/\D/g, '')
-  const isValidPhone = isIndia
-    ? INDIAN_MOBILE_PATTERN.test(mobileDigits)
-    : INTERNATIONAL_MOBILE_PATTERN.test(mobileDigits)
-  // Error only for a COMPLETE but invalid number. Empty or incomplete input
-  // stays silent — even on focus or blur.
-  const phoneInvalid = isIndia
-    ? mobileDigits.length === 10 && !isValidPhone
-    : false
-
-  // Derived OTP state: exactly 6 digits.
-  const watchedOtp = otpForm.watch('otp')
-  const isValidOtp = OTP_PATTERN.test(watchedOtp || '')
-
-  const close = React.useCallback(() => {
-    onOpenChange(false)
-    // Reset on next open is handled by mount effect below.
-  }, [onOpenChange])
-
+  // Reset on open
   React.useEffect(() => {
     if (open) {
-      setStep('phone')
-      phoneForm.reset()
-      otpForm.reset()
-      setPhoneContext(null)
+      setView('login')
+      setVerifyEmail('')
+      setResetEmail('')
+      setSuccessMessage('')
       setResendCountdown(0)
     }
-  }, [open, phoneForm, otpForm])
+  }, [open])
 
   React.useEffect(() => {
-    if (resendCountdown <= 0) return undefined
+    if (resendCountdown <= 0) return
     const id = setInterval(() => setResendCountdown((v) => v - 1), 1000)
     return () => clearInterval(id)
   }, [resendCountdown])
 
-  const startCountdown = () => setResendCountdown(RESEND_DELAY_SECONDS)
+  const startCountdown = () => setResendCountdown(RESEND_DELAY)
 
-  async function handleSendOtp(values) {
-    setSendingOtp(true)
-    try {
-      await authApi.sendOtp({ countryCode: values.countryCode, mobile: values.mobile })
-      setPhoneContext({ countryCode: values.countryCode, mobile: values.mobile })
-      otpForm.reset()
-      setStep('otp')
-      startCountdown()
-      toast.success('OTP sent to your mobile number')
-    } catch (err) {
-      toast.error(err.message || 'Failed to send OTP')
-    } finally {
-      setSendingOtp(false)
+  // Forms
+  const signupForm = useForm({ resolver: zodResolver(signupSchema), defaultValues: { name: '', email: '', phone: '', countryCode: '+91', password: '' } })
+  const loginForm = useForm({ resolver: zodResolver(loginSchema), defaultValues: { email: '', password: '' } })
+  const forgotForm = useForm({ resolver: zodResolver(forgotPasswordSchema), defaultValues: { email: '' } })
+  const resetForm = useForm({ resolver: zodResolver(resetPasswordSchema), defaultValues: { email: '', newPassword: '', confirmPassword: '' } })
+  const [signupOtp, setSignupOtp] = React.useState('')
+  const [resetOtp, setResetOtp] = React.useState('')
+  const signupOtpRef = React.useRef(null)
+  const resetOtpRef = React.useRef(null)
+  const [showSignupPassword, setShowSignupPassword] = React.useState(false)
+  const [showLoginPassword, setShowLoginPassword] = React.useState(false)
+  const [showResetPassword, setShowResetPassword] = React.useState(false)
+  const [showResetConfirm, setShowResetConfirm] = React.useState(false)
+
+  const [loading, setLoading] = React.useState(false)
+
+  // Height animation for login/signup switch — prevents jump between different form heights
+  const containerRef = React.useRef(null)
+  const loginRef = React.useRef(null)
+  const signupRef = React.useRef(null)
+  const [containerHeight, setContainerHeight] = React.useState(null)
+  React.useEffect(() => {
+    if (view !== 'login' && view !== 'signup') return
+    const update = () => {
+      const el = view === 'login' ? loginRef.current : signupRef.current
+      if (el && containerRef.current) {
+        // Use offsetHeight for accurate height including padding
+        const h = el.getBoundingClientRect().height
+        if (h > 0) setContainerHeight(h)
+      }
     }
+    // Defer to next frame so DOM has updated
+    const id = requestAnimationFrame(() => requestAnimationFrame(update))
+    update()
+    return () => cancelAnimationFrame(id)
+  }, [view])
+
+  async function handleSignup(values) {
+    setLoading(true)
+    try {
+      await authApi.signup(values)
+      setVerifyEmail(values.email.trim().toLowerCase())
+      setSignupOtp('')
+      setView('verifySignup')
+      startCountdown()
+      toast.success('Account created. Verification code sent to your email.')
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Failed to create account'
+      toast.error(msg)
+      if (msg.includes('already exists')) {
+        // keep on signup but show error
+      }
+    } finally { setLoading(false) }
   }
 
-  async function handleVerifyOtp(values) {
-    if (!phoneContext) return
-    setVerifying(true)
+  async function handleVerifySignup() {
+    if (signupOtp.length !== 6) {
+      toast.error('Enter a valid 6-digit OTP')
+      return
+    }
+    setLoading(true)
     try {
-      const { data } = await authApi.verifyOtp({
-        countryCode: phoneContext.countryCode,
-        mobile: phoneContext.mobile,
-        otp: values.otp,
-      })
+      const { data } = await authApi.verifyEmail({ email: verifyEmail, otp: signupOtp })
+      if (data?.data?.user) setAuthenticated(data.data.user)
+      toast.success('Email verified successfully.')
+      // Auto login if token was set (cookie), otherwise go to login
+      if (data?.data?.user) {
+        onOpenChange(false)
+      } else {
+        setSuccessMessage('Email verified successfully.')
+        setView('success')
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Invalid OTP')
+      // Clear OTP and focus first input for retry
+      setSignupOtp('')
+      setTimeout(() => signupOtpRef.current?.focus(), 0)
+    } finally { setLoading(false) }
+  }
+
+  async function handleResendSignup() {
+    if (resendCountdown > 0) return
+    setLoading(true)
+    try {
+      await authApi.resendVerification({ email: verifyEmail })
+      startCountdown()
+      toast.success('Verification code resent')
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to resend')
+    } finally { setLoading(false) }
+  }
+
+  async function handleLogin(values) {
+    setLoading(true)
+    try {
+      const { data } = await authApi.login(values)
       setAuthenticated(data.data.user)
       toast.success('Logged in successfully')
       onOpenChange(false)
     } catch (err) {
-      toast.error(err.message || 'Verification failed')
-      // Clear the wrong code so the user retypes it. `setValue` (unlike
-      // `resetField`) keeps the server error message visible; `isValid`
-      // re-evaluates so Verify stays disabled until 6 fresh digits.
-      otpForm.setValue('otp', '', { shouldValidate: false, shouldDirty: true })
-      otpForm.setError('otp', { message: err.message || 'Invalid OTP' })
-      otpForm.setFocus('otp')
-    } finally {
-      setVerifying(false)
-    }
+      const res = err.response?.data
+      const msg = res?.message || err.message || 'Login failed'
+      if (res?.code === 'EMAIL_NOT_VERIFIED' || msg.includes('verify your email')) {
+        toast.error('Please verify your email before logging in.')
+        setVerifyEmail(values.email.trim().toLowerCase())
+        setSignupOtp('')
+        setView('verifySignup')
+        startCountdown()
+        // Try to resend automatically? Let user resend manually
+      } else {
+        toast.error(msg)
+      }
+    } finally { setLoading(false) }
   }
 
-  async function handleResend() {
-    if (!phoneContext || resendCountdown > 0) return
-    setSendingOtp(true)
+  async function handleForgot(values) {
+    setLoading(true)
     try {
-      await authApi.sendOtp({
-        countryCode: phoneContext.countryCode,
-        mobile: phoneContext.mobile,
-      })
+      await authApi.forgotPassword({ email: values.email })
+      setResetEmail(values.email.trim().toLowerCase())
+      setResetOtp('')
+      setView('verifyReset')
       startCountdown()
-      toast.success('OTP resent')
+      toast.success("If an account exists for this email, we've sent a verification code.")
+      resetForm.setValue('email', values.email.trim().toLowerCase())
     } catch (err) {
-      toast.error(err.message || 'Failed to resend OTP')
-    } finally {
-      setSendingOtp(false)
-    }
+      toast.error(err.response?.data?.message || err.message || 'Failed to send OTP')
+    } finally { setLoading(false) }
   }
 
-  const phoneValid = isValidPhone
-  const otpValid = isValidOtp
+  async function handleVerifyReset() {
+    if (resetOtp.length !== 6) {
+      toast.error('Enter a valid 6-digit OTP')
+      return
+    }
+    setLoading(true)
+    try {
+      await authApi.verifyResetOtp({ email: resetEmail, otp: resetOtp })
+      setView('resetPassword')
+      toast.success('OTP verified. Please set a new password.')
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Invalid OTP')
+      setResetOtp('')
+      setTimeout(() => resetOtpRef.current?.focus(), 0)
+    } finally { setLoading(false) }
+  }
+
+  async function handleResendReset() {
+    if (resendCountdown > 0) return
+    setLoading(true)
+    try {
+      await authApi.resendPasswordReset({ email: resetEmail })
+      startCountdown()
+      toast.success("If an account exists for this email, we've sent a verification code.")
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to resend')
+    } finally { setLoading(false) }
+  }
+
+  async function handleResetPassword(values) {
+    // values contains email, newPassword, confirmPassword but we use resetEmail state
+    const payload = {
+      email: resetEmail,
+      newPassword: values.newPassword,
+      confirmPassword: values.confirmPassword,
+    }
+    setLoading(true)
+    try {
+      await authApi.resetPassword(payload)
+      toast.success('Password reset successfully.')
+      setSuccessMessage('Password reset successfully.')
+      setView('success')
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to reset password')
+    } finally { setLoading(false) }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent onClose={close}>
-        <div className="flex flex-col p-6 sm:p-8">
-          {step === 'phone' ? (
-            <PhoneStep
-              form={phoneForm}
-              sendingOtp={sendingOtp}
-              phoneValid={phoneValid}
-              phoneInvalid={phoneInvalid}
-              isIndia={isIndia}
-              onSendOtp={handleSendOtp}
-            />
-          ) : (
-            <OtpStep
-              form={otpForm}
-              otp={watchedOtp}
-              verifying={verifying}
-              resendCountdown={resendCountdown}
-              sendingOtp={sendingOtp}
-              otpValid={otpValid}
-              countryCode={phoneContext?.countryCode}
-              mobile={phoneContext?.mobile}
-              onChangeNumber={() => {
-                setStep('phone')
-                setPhoneContext(null)
+      <DialogContent onClose={close} className="w-full max-w-[420px] p-0 overflow-hidden">
+        <div className="max-h-[90vh] w-full overflow-y-auto p-6 sm:p-8">
+          {(view === 'login' || view === 'signup') && (
+            <div className="relative mb-6 flex h-12 w-full items-center rounded-full bg-muted p-1">
+              <div
+                aria-hidden="true"
+                className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full bg-primary shadow-sm transition-all duration-[250ms] ease-out motion-reduce:transition-none"
+                style={{ left: view === 'login' ? '4px' : '50%' }}
+              />
+              <button
+                type="button"
+                onClick={() => setView('login')}
+                className={`relative z-10 flex h-full w-1/2 items-center justify-center rounded-full text-sm font-semibold transition-colors duration-200 ${view === 'login' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                Login
+              </button>
+              <button
+                type="button"
+                onClick={() => setView('signup')}
+                className={`relative z-10 flex h-full w-1/2 items-center justify-center rounded-full text-sm font-semibold transition-colors duration-200 ${view === 'signup' ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                Sign Up
+              </button>
+            </div>
+          )}
+          {(view === 'login' || view === 'signup') && (
+            <div
+              ref={containerRef}
+              className="relative overflow-hidden motion-reduce:!transition-none"
+              style={{
+                height: containerHeight ? `${containerHeight}px` : undefined,
+                transition: 'height 250ms ease-out',
               }}
-              onVerifyOtp={handleVerifyOtp}
-              onResend={handleResend}
-            />
+            >
+              <div
+                ref={loginRef}
+                className={`transition-all duration-[250ms] ease-out motion-reduce:transition-none will-change-transform ${view === 'login' ? 'relative opacity-100 translate-y-0' : 'absolute inset-x-0 top-0 opacity-0 translate-y-2 pointer-events-none'}`}
+              >
+                <form onSubmit={loginForm.handleSubmit(handleLogin)} noValidate className="flex flex-col">
+                  <h2 className="text-center text-xl font-semibold tracking-tight">Login</h2>
+                <div className="mt-6 space-y-4">
+                  <div>
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input id="login-email" type="email" placeholder="Enter your email" autoComplete="email" className="mt-1.5 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-input focus-visible:outline-none" {...loginForm.register('email')} />
+                    {loginForm.formState.errors.email && <p className="mt-1 text-xs text-destructive">{loginForm.formState.errors.email.message}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="login-password">Password</Label>
+                    <div className="relative mt-1.5">
+                      <Input id="login-password" type={showLoginPassword ? 'text' : 'password'} placeholder="Enter your password" autoComplete="current-password" className="pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-input focus-visible:outline-none" {...loginForm.register('password')} />
+                      <button type="button" onClick={() => setShowLoginPassword((v) => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label={showLoginPassword ? 'Hide password' : 'Show password'}>
+                        {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {loginForm.formState.errors.password && <p className="mt-1 text-xs text-destructive">{loginForm.formState.errors.password.message}</p>}
+                  </div>
+                </div>
+                <Button type="submit" disabled={loading} className="mt-6 h-11 w-full">
+                  {loading ? <><Loader2 className="h-4 w-4 animate-spin" />Logging in...</> : 'Login'}
+                </Button>
+                <button type="button" onClick={() => setView('forgot')} className="mt-3 text-center text-sm text-primary hover:underline">Forgot password?</button>
+              </form>
+              </div>
+              <div
+                ref={signupRef}
+                className={`transition-all duration-[250ms] ease-out motion-reduce:transition-none will-change-transform ${view === 'signup' ? 'relative opacity-100 translate-y-0' : 'absolute inset-x-0 top-0 opacity-0 -translate-y-2 pointer-events-none'}`}
+              >
+                <form onSubmit={signupForm.handleSubmit(handleSignup)} noValidate className="flex flex-col">
+                  <h2 className="text-center text-xl font-semibold tracking-tight">Create your account</h2>
+                <div className="mt-6 space-y-4">
+                  <div>
+                    <Label htmlFor="signup-name">Name *</Label>
+                    <Input id="signup-name" placeholder="Enter your name" autoComplete="name" className="mt-1.5 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-input focus-visible:outline-none" {...signupForm.register('name')} />
+                    {signupForm.formState.errors.name && <p className="mt-1 text-xs text-destructive">{signupForm.formState.errors.name.message}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="signup-email">Email *</Label>
+                    <Input id="signup-email" type="email" placeholder="Enter your email" autoComplete="email" className="mt-1.5 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-input focus-visible:outline-none" {...signupForm.register('email')} />
+                    {signupForm.formState.errors.email && <p className="mt-1 text-xs text-destructive">{signupForm.formState.errors.email.message}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="signup-phone">Phone *</Label>
+                    <div className="mt-1.5 flex w-full items-stretch overflow-hidden rounded-md border border-input bg-background focus-within:outline-none focus-within:ring-0 focus-within:ring-offset-0 focus-within:border-input">
+                      <span className="inline-flex h-10 shrink-0 items-center border-r border-input bg-muted px-3 text-sm text-muted-foreground">+91</span>
+                      <Input
+                        id="signup-phone"
+                        inputMode="numeric"
+                        placeholder="Enter phone number"
+                        autoComplete="tel-national"
+                        className="h-10 flex-1 min-w-0 rounded-none border-0 bg-transparent px-3 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                        {...signupForm.register('phone', {
+                          onChange: (e) => {
+                            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)
+                          },
+                        })}
+                      />
+                    </div>
+                    {signupForm.formState.errors.phone && <p className="mt-1 text-xs text-destructive">{signupForm.formState.errors.phone.message}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="signup-password">Password *</Label>
+                    <div className="relative mt-1.5">
+                      <Input id="signup-password" type={showSignupPassword ? 'text' : 'password'} placeholder="Enter password" autoComplete="new-password" className="pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-input focus-visible:outline-none" {...signupForm.register('password')} />
+                      <button type="button" onClick={() => setShowSignupPassword((v) => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label={showSignupPassword ? 'Hide password' : 'Show password'}>
+                        {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {signupForm.formState.errors.password && <p className="mt-1 text-xs text-destructive">{signupForm.formState.errors.password.message}</p>}
+                  </div>
+                </div>
+                <Button type="submit" disabled={loading} className="mt-6 h-11 w-full">
+                  {loading ? <><Loader2 className="h-4 w-4 animate-spin" />Creating account...</> : 'Create Account'}
+                </Button>
+              </form>
+              </div>
+            </div>
+          )}
+
+          {view === 'verifySignup' && (
+            <div className="flex flex-col">
+              <h2 className="text-center text-xl font-semibold tracking-tight">Verify your email</h2>
+              <p className="mt-2 text-center text-sm text-muted-foreground">
+                We&apos;ve sent a verification code to:<br /><span className="font-medium text-foreground">{verifyEmail}</span>
+              </p>
+              <p className="mt-4 text-center text-sm font-medium">Enter the 6-digit OTP</p>
+              <OtpInput ref={signupOtpRef} value={signupOtp} onChange={setSignupOtp} autoFocus />
+              <Button onClick={handleVerifySignup} disabled={loading || signupOtp.length !== 6} className="mt-6 h-11 w-full">
+                {loading ? <><Loader2 className="h-4 w-4 animate-spin" />Verifying...</> : 'Verify Email'}
+              </Button>
+              <div className="mt-4 text-center">
+                <button type="button" onClick={handleResendSignup} disabled={resendCountdown > 0 || loading} className="text-sm font-medium text-primary hover:underline disabled:opacity-50">
+                  {resendCountdown > 0 ? `Resend OTP in ${resendCountdown}s` : 'Resend OTP'}
+                </button>
+              </div>
+              <button type="button" onClick={() => setView('login')} className="mt-2 text-center text-sm text-muted-foreground hover:text-foreground">Back to Login</button>
+            </div>
+          )}
+
+          {view === 'forgot' && (
+            <form onSubmit={forgotForm.handleSubmit((v) => handleForgot(v))} noValidate className="flex flex-col">
+              <h2 className="text-center text-xl font-semibold tracking-tight">Forgot password?</h2>
+              <p className="mt-2 text-center text-sm text-muted-foreground">Enter your email and we&apos;ll send you a verification code.</p>
+              <div className="mt-6">
+                <Label htmlFor="forgot-email">Email</Label>
+                <Input id="forgot-email" type="email" placeholder="Enter your email" autoComplete="email" className="mt-1.5 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-input focus-visible:outline-none" {...forgotForm.register('email')} />
+                {forgotForm.formState.errors.email && <p className="mt-1 text-xs text-destructive">{forgotForm.formState.errors.email.message}</p>}
+              </div>
+              <Button type="submit" disabled={loading} className="mt-6 h-11 w-full">
+                {loading ? <><Loader2 className="h-4 w-4 animate-spin" />Sending OTP...</> : 'Send OTP'}
+              </Button>
+              <button type="button" onClick={() => setView('login')} className="mt-4 text-center text-sm text-primary hover:underline">Back to Login</button>
+            </form>
+          )}
+
+          {view === 'verifyReset' && (
+            <div className="flex flex-col">
+              <h2 className="text-center text-xl font-semibold tracking-tight">Verify your email</h2>
+              <p className="mt-2 text-center text-sm text-muted-foreground">
+                We&apos;ve sent a verification code to:<br /><span className="font-medium text-foreground">{resetEmail}</span>
+              </p>
+              <p className="mt-4 text-center text-sm font-medium">Enter the 6-digit OTP</p>
+              <OtpInput ref={resetOtpRef} value={resetOtp} onChange={setResetOtp} autoFocus />
+              <Button onClick={handleVerifyReset} disabled={loading || resetOtp.length !== 6} className="mt-6 h-11 w-full">
+                {loading ? <><Loader2 className="h-4 w-4 animate-spin" />Verifying...</> : 'Verify OTP'}
+              </Button>
+              <div className="mt-4 text-center">
+                <button type="button" onClick={handleResendReset} disabled={resendCountdown > 0 || loading} className="text-sm font-medium text-primary hover:underline disabled:opacity-50">
+                  {resendCountdown > 0 ? `Resend OTP in ${resendCountdown}s` : 'Resend OTP'}
+                </button>
+              </div>
+              <button type="button" onClick={() => setView('forgot')} className="mt-2 text-center text-sm text-muted-foreground hover:text-foreground">Back</button>
+            </div>
+          )}
+
+          {view === 'resetPassword' && (
+            <form onSubmit={resetForm.handleSubmit((v) => handleResetPassword(v))} noValidate className="flex flex-col">
+              <h2 className="text-center text-xl font-semibold tracking-tight">Reset password</h2>
+              <div className="mt-6 space-y-4">
+                <div>
+                  <Label htmlFor="reset-new">New password</Label>
+                  <div className="relative mt-1.5">
+                    <Input id="reset-new" type={showResetPassword ? 'text' : 'password'} placeholder="Enter new password" autoComplete="new-password" className="pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-input focus-visible:outline-none" {...resetForm.register('newPassword')} />
+                    <button type="button" onClick={() => setShowResetPassword((v) => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label={showResetPassword ? 'Hide password' : 'Show password'}>
+                      {showResetPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {resetForm.formState.errors.newPassword && <p className="mt-1 text-xs text-destructive">{resetForm.formState.errors.newPassword.message}</p>}
+                </div>
+                <div>
+                  <Label htmlFor="reset-confirm">Confirm password</Label>
+                  <div className="relative mt-1.5">
+                    <Input id="reset-confirm" type={showResetConfirm ? 'text' : 'password'} placeholder="Enter password again" autoComplete="new-password" className="pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-input focus-visible:outline-none" {...resetForm.register('confirmPassword')} />
+                    <button type="button" onClick={() => setShowResetConfirm((v) => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label={showResetConfirm ? 'Hide password' : 'Show password'}>
+                      {showResetConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {resetForm.formState.errors.confirmPassword && <p className="mt-1 text-xs text-destructive">{resetForm.formState.errors.confirmPassword.message}</p>}
+                </div>
+              </div>
+              <Button type="submit" disabled={loading} className="mt-6 h-11 w-full">
+                {loading ? <><Loader2 className="h-4 w-4 animate-spin" />Resetting password...</> : 'Reset Password'}
+              </Button>
+            </form>
+          )}
+
+          {view === 'success' && (
+            <div className="flex flex-col items-center py-4 text-center">
+              <h2 className="text-xl font-semibold tracking-tight">{successMessage || 'Success!'}</h2>
+              <p className="mt-2 text-sm text-muted-foreground">You can now log in with your credentials.</p>
+              <Button onClick={() => setView('login')} className="mt-6 h-11 w-full">Login</Button>
+            </div>
           )}
         </div>
       </DialogContent>
     </Dialog>
-  )
-}
-
-function PhoneStep({ form, sendingOtp, phoneValid, phoneInvalid, isIndia, onSendOtp }) {
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-  } = form
-  const countryCode = watch('countryCode')
-
-  return (
-    <form onSubmit={handleSubmit(onSendOtp)} noValidate className="flex flex-col">
-      <h2 className="text-center text-xl font-semibold tracking-tight">Login or Sign Up</h2>
-      <p className="mt-2 text-center text-sm text-muted-foreground">Enter your mobile number</p>
-
-      <div className="mt-6">
-        {/* The pill keeps ONE constant border — no focus-state change. Inner
-            sections (flag/select, code, input) are borderless and
-            outline-free so no nested focus ring can appear. */}
-        <div
-          className={cn(
-            'flex h-12 w-full items-center rounded-full border border-input bg-background transition-colors',
-            phoneInvalid && 'border-destructive'
-          )}
-        >
-          <CountrySelect
-            value={countryCode}
-            onChange={(code) => setValue('countryCode', code, { shouldValidate: true })}
-          />
-          <Input
-            id="mobile"
-            inputMode="numeric"
-            // autoComplete off: Chrome treats tel-national as an address autofill
-            // target — its dropdown + autofill background paint a square fill
-            // that ignores the pill radius and clips the border.
-            autoComplete="off"
-            maxLength={isIndia ? 10 : 14}
-            placeholder="Enter phone number"
-            className="h-full flex-1 rounded-full border-0 bg-transparent pl-1 pr-4 text-[15px] shadow-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-            {...register('mobile', {
-              onChange: (e) => {
-                e.target.value = e.target.value.replace(/\D/g, '').slice(0, isIndia ? 10 : 14)
-              },
-            })}
-          />
-        </div>
-        {phoneInvalid && (
-          <p className="mt-1.5 text-xs text-destructive">Enter a valid mobile number</p>
-        )}
-      </div>
-
-      <Button
-        type="submit"
-        disabled={!phoneValid || sendingOtp}
-        className={cn(
-          'mt-6 h-11 w-full rounded-full text-[15px] font-medium',
-          !phoneValid && 'border border-gray-300 bg-white text-gray-500 hover:bg-white'
-        )}
-      >
-        {sendingOtp ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-        {sendingOtp ? 'Sending...' : 'Send OTP'}
-      </Button>
-    </form>
-  )
-}
-
-function OtpStep({
-  form,
-  otp,
-  verifying,
-  resendCountdown,
-  sendingOtp,
-  otpValid,
-  countryCode,
-  mobile,
-  onChangeNumber,
-  onVerifyOtp,
-  onResend,
-}) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = form
-  const [otpFocused, setOtpFocused] = React.useState(false)
-
-  // Segmented display: filled slots show their digit, empty slots show a
-  // short dash; the next-to-fill slot highlights while the input is focused.
-  const slots = Array.from({ length: 6 }, (_, i) => otp[i] || '')
-  const activeSlot = Math.min(otp.length, 5)
-
-  return (
-    <form onSubmit={handleSubmit(onVerifyOtp)} noValidate className="flex flex-col">
-      <h2 className="text-center text-xl font-semibold tracking-tight">Login or Sign Up</h2>
-      <p className="mt-2 text-center text-sm text-muted-foreground">
-        Enter the 6-digit code sent to{' '}
-        <span className="font-medium text-foreground">
-          {countryCode} {mobile}
-        </span>
-      </p>
-
-      <div className="relative mt-6">
-        {/* Visible slot strip — purely presentational (aria-hidden).
-            Dashes sit at the bottom of each cell (underline style); typed
-            digits render centered above them. */}
-        <div aria-hidden="true" className="flex h-12 w-full items-stretch justify-center gap-1 rounded-full border border-input bg-background px-4">
-          {slots.map((ch, i) => (
-            <div key={i} className="relative flex h-full w-7 items-center justify-center">
-              {ch ? (
-                <span className="text-lg font-medium">{ch}</span>
-              ) : (
-                <span
-                  className={cn(
-                    'absolute bottom-2.5 left-1/2 h-0.5 w-5 -translate-x-1/2 rounded-full transition-colors',
-                    otpFocused && i === activeSlot ? 'bg-foreground/70' : 'bg-muted-foreground/40'
-                  )}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-        {/* The real input sits invisibly on top — typing, backspace, paste and
-            focus all behave exactly as before. Digits-only sanitizer. */}
-        <Input
-          id="otp"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          maxLength={6}
-          placeholder=""
-          aria-label="Enter 6-digit OTP"
-          autoFocus
-          className="absolute inset-0 h-full w-full cursor-pointer rounded-full border-0 bg-transparent text-center text-lg opacity-0 shadow-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-          aria-invalid={!!errors.otp}
-          onFocus={() => setOtpFocused(true)}
-          onBlur={() => setOtpFocused(false)}
-          {...register('otp', {
-            onChange: (e) => {
-              e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6)
-            },
-          })}
-        />
-      </div>
-      {errors.otp && <p className="mt-1.5 text-xs text-destructive">{errors.otp.message}</p>}
-
-      <Button
-        type="submit"
-        disabled={!otpValid || verifying}
-        className={cn(
-          'mt-6 h-11 w-full rounded-full text-[15px] font-medium',
-          !otpValid && 'border border-gray-300 bg-white text-gray-500 hover:bg-white'
-        )}
-      >
-        {verifying ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-        Login
-      </Button>
-
-      <div className="mt-4 flex flex-col items-center gap-1.5">
-        <div className="flex items-center gap-1.5 text-sm">
-          <span className="text-muted-foreground">Didn't receive the code?</span>
-          <button
-            type="button"
-            onClick={onResend}
-            disabled={resendCountdown > 0 || sendingOtp}
-            className={cn(
-              'font-medium text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-50'
-            )}
-          >
-            {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : 'Resend OTP'}
-          </button>
-        </div>
-        <button
-          type="button"
-          onClick={onChangeNumber}
-          className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-        >
-          Change phone number
-        </button>
-      </div>
-    </form>
   )
 }

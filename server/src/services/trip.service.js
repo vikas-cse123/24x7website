@@ -1,4 +1,4 @@
-import Trip, { toPublicTrip } from '../models/Trip.js'
+import Trip, { toPublicTrip, toAdminTrip } from '../models/Trip.js'
 import TripBatch from '../models/TripBatch.js'
 import TripMedia from '../models/TripMedia.js'
 import Destination from '../models/Destination.js'
@@ -287,7 +287,7 @@ export async function listAdmin({ page = 1, limit = 20, search, destinationId, t
     .lean()
 
   return {
-    items: items.map(toPublicTrip),
+    items: items.map(toAdminTrip),
     page: safePage,
     limit,
     total,
@@ -297,7 +297,7 @@ export async function listAdmin({ page = 1, limit = 20, search, destinationId, t
 
 export async function getAdminById(id) {
   const doc = await Trip.findById(id).populate('destinationId', DEST_POPULATE).lean()
-  return doc ? toPublicTrip(doc) : null
+  return doc ? toAdminTrip(doc) : null
 }
 
 export async function create(data, userId) {
@@ -319,7 +319,7 @@ export async function create(data, userId) {
     updatedBy: userId,
   })
 
-  return toPublicTrip(await doc.populate('destinationId', DEST_POPULATE))
+  return toAdminTrip(await doc.populate('destinationId', DEST_POPULATE))
 }
 
 export async function update(id, data, userId) {
@@ -351,7 +351,7 @@ export async function update(id, data, userId) {
   const staleKeys = imageStorage.removedKeys(keysBefore, existing.toObject())
   await imageStorage.cleanupUnreferenced(staleKeys, `Trip ${id} update`)
 
-  return toPublicTrip(await existing.populate('destinationId', DEST_POPULATE))
+  return toAdminTrip(await existing.populate('destinationId', DEST_POPULATE))
 }
 
 export async function remove(id) {
@@ -377,7 +377,7 @@ export async function remove(id) {
   // Reference-aware cleanup: objects still referenced by any remaining
   // record anywhere in the database are skipped.
   await imageStorage.cleanupUnreferenced(keys, `Trip ${id} delete`)
-  return toPublicTrip(doc.toObject())
+  return toAdminTrip(doc.toObject())
 }
 
 export async function setPublished(id, published, userId) {
@@ -386,5 +386,5 @@ export async function setPublished(id, published, userId) {
     { published, updatedBy: userId },
     { new: true }
   )
-  return doc ? toPublicTrip(await doc.populate('destinationId', DEST_POPULATE)) : null
+  return doc ? toAdminTrip(await doc.populate('destinationId', DEST_POPULATE)) : null
 }

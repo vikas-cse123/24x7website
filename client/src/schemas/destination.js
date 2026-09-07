@@ -11,7 +11,7 @@ export const DESTINATION_TYPES = [
   'other',
 ]
 
-export const DESTINATION_CATEGORIES = ['international', 'domestic', 'weekend', 'other']
+export const DESTINATION_CATEGORIES = ['international', 'domestic', 'weekend', 'domestic & weekend', 'other']
 
 const imageSchema = z.object({
   url: z.string().trim().optional().default(''),
@@ -36,10 +36,21 @@ export const destinationSchema = z.object({
   country: z.string().trim().min(1, 'Country is required').max(80),
   region: z.string().trim().max(80),
   type: z.enum(DESTINATION_TYPES),
-  category: z.enum(DESTINATION_CATEGORIES),
-  description: z.string().trim().min(1, 'Description is required'),
+  category: z
+    .union([
+      z.enum(DESTINATION_CATEGORIES),
+      z.array(z.enum(['international', 'domestic', 'weekend', 'other'])).min(1),
+    ])
+    .transform((v) => {
+      if (v === 'domestic & weekend') return ['domestic', 'weekend']
+      if (Array.isArray(v)) return v
+      return v
+    }),
+  description: z.string().trim().max(20000).optional().default(''),
   homepageImage: imageSchema,
+  homepageName: z.string().trim().max(120).optional().default(''),
   heroImage: imageSchema,
+  heroVideo: imageSchema,
   gallery: z.array(imageSchema).max(20),
   startingPrice: z.preprocess(
     (v) => (v === '' || v === null || v === undefined ? null : v),
@@ -63,7 +74,9 @@ export const destinationFormDefault = {
   category: 'other',
   description: '',
   homepageImage: { url: '', alt: '' },
+  homepageName: '',
   heroImage: { url: '', alt: '' },
+  heroVideo: { url: '', alt: '' },
   gallery: [],
   startingPrice: null,
   currency: 'INR',

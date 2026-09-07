@@ -2,17 +2,18 @@ import * as React from 'react'
 import { Container } from '@/components/ui/container'
 
 // Homepage promotional banner carousel — one banner at a time, directly below
-// Explore Destinations. Auto-rotates with a smooth slide; swipe/drag (touch or
+// Upcoming Group Trips. Auto-rotates with a smooth slide; swipe/drag (touch or
 // mouse) moves between banners. No visible arrows/dots by design — the grab
 // cursor signals draggability. Artwork is served from the project's S3 media
-// store (travel-crm/home/promo-banners/…), never recreated in HTML/CSS.
+// store via the existing private media proxy (`/api/media/…`), never bundled
+// into the frontend source/public folder and never from `travel-crm/`.
 const BANNERS = [
   {
-    src: 'https://24x7-website.s3.ap-south-1.amazonaws.com/travel-crm/home/promo-banners/new-year-sale-2026.avif',
+    src: '/api/media/website/homepage/new-year-sale-2026-web-cropped.avif',
     alt: 'New Year Early Bird Sale — get ₹10,000 off on group trips to Almaty, Bali and Sri Lanka',
   },
   {
-    src: 'https://24x7-website.s3.ap-south-1.amazonaws.com/travel-crm/home/promo-banners/zamna-festival-bali.avif',
+    src: '/api/media/website/homepage/zamna-web-banner.avif',
     alt: 'Zamna Festival, Bali — packages starting from ₹58,999',
   },
 ]
@@ -58,7 +59,7 @@ export function PromoBannerCarousel() {
 
   return (
     <section aria-roledescription="carousel" aria-label="Promotional banners" className="bg-background">
-      <Container className="py-2">
+      <Container className="max-w-none mx-0 w-full px-5 sm:px-6 lg:px-[55px] py-2">
         <div
           className="relative cursor-grab touch-pan-y select-none overflow-hidden rounded-xl active:cursor-grabbing"
           onPointerDown={onPointerDown}

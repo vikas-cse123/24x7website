@@ -9,6 +9,7 @@ import { bookingApi } from '@/services/bookings'
 import { useAuth } from '@/hooks/useAuth'
 import { useUIStore } from '@/stores/ui'
 import { formatDateLong, nightsBetween } from '@/lib/dates'
+import { formatPhone } from '@/lib/phone'
 import { useSeo } from '@/lib/seo'
 
 const STATUS_BADGE = {
@@ -160,7 +161,7 @@ export function BookingConfirmationPage() {
           <div className="mt-4 border-t border-border pt-4">
             <p className="text-sm font-medium">Contact</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              {b.customerName} · {b.customerEmail} · {b.countryCode} {b.customerPhone}
+              {b.customerName} · {b.customerEmail} · {formatPhone(b.customerPhone, b.countryCode)}
             </p>
           </div>
         </div>

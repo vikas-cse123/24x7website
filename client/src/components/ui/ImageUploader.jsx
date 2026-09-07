@@ -123,7 +123,7 @@ export function ImageUploader({
           onChange={e=>upload(Array.from(e.target.files||[]))} />
         {uploading ? <Loader2 className="h-8 w-8 animate-spin text-primary" /> : <Upload className="h-8 w-8 text-muted-foreground" />}
         <p className="mt-2 text-sm font-medium">{dragOver ? "Drop images here" : "Click, drag & drop, or paste images"}</p>
-        <p className="text-xs text-muted-foreground">PNG, JPG, WEBP — max 5 MB — or press Ctrl/Cmd+V after clicking here</p>
+        <p className="text-xs text-muted-foreground">PNG, JPG, WEBP — max 10 MB — or press Ctrl/Cmd+V after clicking here</p>
         {progress!=null && <p className="mt-1 text-xs text-primary">{progress}%</p>}
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}

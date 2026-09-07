@@ -57,7 +57,7 @@ function DestinationLink({ label, category, slugMap }) {
   return (
     <Link
       to={to}
-      className="text-sm text-[#374151] transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="text-[13px] leading-[1.4] text-[#374151] transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {label}
     </Link>
@@ -67,12 +67,12 @@ function DestinationLink({ label, category, slugMap }) {
 function DestinationSection({ title, columns, category, first }) {
   const slugMap = useDestinationSlugMap()
   return (
-    <section className={first ? '' : 'mt-10 lg:mt-12'}>
-      <h3 className="text-lg font-semibold text-[#1b4332]">{title}</h3>
-      <div className="mt-4 border-t border-[#1b4332]/15 pt-5">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-3 lg:grid-cols-5">
+    <section className={first ? '' : 'mt-8 lg:mt-10'}>
+      <h3 className="text-[15px] font-semibold leading-none tracking-tight text-[#1b4332]">{title}</h3>
+      <div className="mt-3 border-t border-[#1b4332]/15 pt-4">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-7 sm:grid-cols-3 lg:grid-cols-5">
           {columns.map((column, index) => (
-            <ul key={index} className="space-y-2.5">
+            <ul key={index} className="space-y-2">
               {column.map((label) => (
                 <li key={label}>
                   <DestinationLink label={label} category={category} slugMap={slugMap} />

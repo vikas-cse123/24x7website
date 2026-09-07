@@ -21,16 +21,16 @@ export function Header() {
       {/* Top row: full-width, no max-width, only ~24-32px side padding.
           Search is absolutely centered on the page (like the reference site)
           instead of centering in the leftover space between logo and Login. */}
-      <div className="relative flex h-16 items-center gap-3 px-6 lg:h-20 lg:px-8">
+      <div className="relative flex h-16 items-center gap-4 px-12 sm:px-14 lg:h-20 lg:px-16 xl:px-20">
         <Logo imgClassName="h-10 w-[80px] object-contain sm:h-12 sm:w-[96px] lg:h-[55px] lg:w-[110px]" />
 
         {/* Desktop / tablet search — compact, page-centered */}
         <div className="absolute left-1/2 hidden -translate-x-1/2 md:block">
-          <HeaderSearch className="w-[220px] lg:w-[260px]" />
+          <HeaderSearch className="w-[320px] lg:w-[380px] xl:w-[420px]" />
         </div>
 
         {/* Right cluster: phone + Login + mobile menu */}
-        <div className="ml-auto flex items-center gap-2 lg:gap-4">
+        <div className="ml-auto flex items-center gap-3 lg:gap-6">
           <HeaderPhone className="hidden lg:inline-flex" />
           <div className="hidden sm:block">
             <HeaderAuth />
@@ -51,7 +51,7 @@ export function Header() {
       </div>
 
       {/* Mobile search row */}
-      <div className="border-t border-border px-6 py-2 md:hidden">
+      <div className="border-t border-border px-12 py-2 sm:px-14 md:hidden">
         <HeaderSearch />
       </div>
 

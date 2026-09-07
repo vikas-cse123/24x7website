@@ -15,8 +15,8 @@ export function AdminLayout() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <AdminHeader onMenuClick={() => setMobileOpen(true)} />
-        <main className="flex-1 bg-[#f8fafc] p-3 sm:p-4 lg:px-6 lg:py-4">
-          <div className="w-full max-w-[1600px] mx-auto xl:max-w-[1400px] 2xl:max-w-[1500px] min-h-[calc(100vh-48px-24px)]">
+        <main className="flex-1 bg-[#f8fafc] p-4 lg:px-8 lg:py-6 min-w-0 overflow-hidden">
+          <div className="w-full min-w-0 max-w-full min-h-[calc(100vh-48px-24px)]">
             <Outlet />
           </div>
         </main>

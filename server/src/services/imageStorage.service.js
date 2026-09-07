@@ -120,16 +120,16 @@ export async function removeMany(objectKeys) {
 // reference-aware safety check run before any S3 object is deleted: the same
 // upload may be reused by a destination, trip, blog, trip-media record, etc.
 //
-// Uses a generic $where scan so nested/renamed fields are covered without
-// maintaining a per-model path registry. Collections are small (admin content)
-// and this only runs for the handful of keys actually removed in a save, with
-// an early exit on the first referencing document.
+// Atlas-compatible: queries collections without $where and inspects documents
+// in Node.js via JSON.stringify(doc).includes(key), so nested/renamed fields
+// are covered without maintaining a per-model path registry. Collections are
+// small (admin content) and this only runs for the handful of keys actually
+// removed in a save, with an early exit on the first referencing document.
 // Conservative on failure: if the DB cannot be consulted, the key is treated
 // as referenced (deletion skipped) rather than risking broken media.
 export async function isKeyReferenced(key) {
   const db = mongoose.connection?.db
   if (!db) return true
-  const matchExpr = `JSON.stringify(this).indexOf(${JSON.stringify(key)}) !== -1`
   let collections
   try {
     collections = await db.collections()
@@ -138,8 +138,10 @@ export async function isKeyReferenced(key) {
   }
   for (const collection of collections) {
     try {
-      const found = await collection.find({ $where: matchExpr }).limit(1).toArray()
-      if (found.length) return true
+      const docs = await collection.find({}).toArray()
+      for (const doc of docs) {
+        if (JSON.stringify(doc).includes(key)) return true
+      }
     } catch {
       // If a collection cannot be scanned, assume it may reference the key.
       return true
@@ -148,12 +150,47 @@ export async function isKeyReferenced(key) {
   return false
 }
 
+// Batch version: check multiple keys with a single DB scan (optimisation).
+// Returns Map<key, boolean> where true = referenced/protected.
+export async function areKeysReferenced(keys) {
+  const uniq = [...new Set(keys.filter(Boolean))]
+  const result = new Map(uniq.map((k) => [k, false]))
+  if (!uniq.length) return result
+  const db = mongoose.connection?.db
+  if (!db) {
+    uniq.forEach((k) => result.set(k, true))
+    return result
+  }
+  let collections
+  try {
+    collections = await db.collections()
+  } catch {
+    uniq.forEach((k) => result.set(k, true))
+    return result
+  }
+  try {
+    const allStrings = []
+    for (const collection of collections) {
+      const docs = await collection.find({}).toArray()
+      for (const doc of docs) allStrings.push(JSON.stringify(doc))
+    }
+    const combined = allStrings.join('\n')
+    for (const k of uniq) {
+      result.set(k, combined.includes(k))
+    }
+  } catch {
+    uniq.forEach((k) => result.set(k, true))
+  }
+  return result
+}
+
 // Reference-aware cleanup of S3 objects that are no longer part of an entity.
 // For every candidate key:
 //   1. check references across the whole database
 //   2. delete the object ONLY when no document references it
 //   3. never throw — S3 state must not break the (already successful) DB state
 // `label` identifies the calling operation in server logs.
+// Optimised: checks all candidate keys in a single DB scan via areKeysReferenced.
 export async function cleanupUnreferenced(objectKeys, label = '') {
   const keys = (Array.isArray(objectKeys) ? objectKeys : [objectKeys]).filter(Boolean)
   const result = { deleted: [], skipped: [], failed: [] }
@@ -162,9 +199,20 @@ export async function cleanupUnreferenced(objectKeys, label = '') {
   console.log(
     `[Media Cleanup] ${label}: ${keys.length} removed media candidate(s)`
   )
+  let referencedMap
+  try {
+    referencedMap = await areKeysReferenced(keys)
+  } catch {
+    // If batch check fails, fail closed – treat all as referenced
+    for (const k of keys) {
+      console.log(`[Media Cleanup] Object still referenced elsewhere: skipping ${k}`)
+      result.skipped.push(k)
+    }
+    return result
+  }
   for (const key of keys) {
     try {
-      const referenced = await isKeyReferenced(key)
+      const referenced = referencedMap.get(key)
       if (referenced) {
         console.log(
           `[Media Cleanup] Object still referenced elsewhere: skipping ${key}`

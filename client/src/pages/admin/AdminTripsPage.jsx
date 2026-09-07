@@ -86,28 +86,33 @@ export function AdminTripsPage() {
   }, [list, search])
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="w-full space-y-4">
+      <div className="flex items-center gap-1.5 text-xs text-slate-500">
+        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">Admin</span>
+        <span className="text-slate-400">›</span>
+        <span className="font-medium text-slate-700">Trips</span>
+      </div>
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:px-5">
         <div>
-          <h1 className="text-lg font-bold tracking-tight">Trips</h1>
-          <p className="text-xs text-slate-500">Manage trips. Publish to make them visible.</p>
+          <h1 className="text-xl font-bold tracking-tight sm:text-[22px]">Trips</h1>
+          <p className="mt-1 text-xs text-slate-500 sm:text-[13px]">Manage trips. Publish to make them visible.</p>
         </div>
         <Link to="/admin/trips/new">
-          <Button size="sm" className="h-7 rounded-md bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-800">
-            <Plus className="h-3.5 w-3.5" /> New trip
+          <Button size="sm" className="h-9 min-w-[110px] rounded-md bg-slate-900 px-4 text-xs font-semibold text-white hover:bg-slate-800">
+            <Plus className="h-4 w-4" /> New trip
           </Button>
         </Link>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[180px] flex-1">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="relative flex-1 min-w-[240px]">
           <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.3-4.3" />
             </svg>
           </span>
-          <Input placeholder="Search trips..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-7 pl-8 text-xs" />
+          <Input placeholder="Search trips..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-9 pl-8 text-xs focus-visible:ring-1 focus-visible:ring-slate-900 focus-visible:ring-offset-0 focus-visible:border-slate-900" />
         </div>
       </div>
 
@@ -120,9 +125,9 @@ export function AdminTripsPage() {
       ) : isError ? (
         <Card className="border-red-200 bg-red-50 p-3 text-xs text-red-700">Could not load trips. {error?.message || 'Please try again.'}</Card>
       ) : list && filtered.length === 0 ? (
-        <Card className="border-slate-200 bg-white p-8 text-center">
-          <p className="text-sm font-semibold">{search ? `No results for "${search}"` : 'No trips yet'}</p>
-          <p className="mt-1 text-xs text-slate-500">Create your first trip to get started.</p>
+        <Card className="flex min-h-[170px] flex-col items-center justify-center border-slate-200 bg-white px-6 py-8 text-center">
+          <p className="text-[14px] font-semibold text-slate-900">{search ? `No results for "${search}"` : 'No trips yet'}</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-slate-500">Create your first trip to get started.</p>
         </Card>
       ) : (
         <>

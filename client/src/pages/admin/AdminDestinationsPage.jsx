@@ -131,15 +131,36 @@ export function AdminDestinationsPage() {
   const [page, setPage] = React.useState(1)
   const [deleteTarget, setDeleteTarget] = React.useState(null)
   const [search, setSearch] = React.useState('')
+  const [searchInput, setSearchInput] = React.useState('')
   const [statusFilter, setStatusFilter] = React.useState('all')
   const [categoryFilter, setCategoryFilter] = React.useState('all')
   const [selected, setSelected] = React.useState(() => new Set())
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['admin', 'destinations', { page, limit: PAGE_SIZE }],
-    queryFn: () => adminDestinationApi.list({ page, limit: PAGE_SIZE }),
+  // Debounce search input to avoid excessive API calls
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput)
+      setPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
+  React.useEffect(() => {
+    setPage(1)
+  }, [statusFilter, categoryFilter])
+
+  const { data, isLoading, isError, error, isFetching } = useQuery({
+    queryKey: ['admin', 'destinations', { page, limit: PAGE_SIZE, search: search || undefined, status: statusFilter }],
+    queryFn: () =>
+      adminDestinationApi.list({
+        page,
+        limit: PAGE_SIZE,
+        ...(search ? { search } : {}),
+        ...(statusFilter !== 'all' ? { published: statusFilter === 'published' ? 'true' : 'false' } : {}),
+      }),
     placeholderData: (prev) => prev,
   })
+  const isInitialLoading = isLoading && !data
 
   const list = data?.data?.data
 
@@ -167,16 +188,15 @@ export function AdminDestinationsPage() {
 
   const filtered = React.useMemo(() => {
     if (!list?.items) return []
+    // search and status are server-side; only category is client-side (handles array for Domestic & Weekend)
     return list.items.filter((d) => {
-      if (search && !`${d.name} ${d.slug} ${d.country}`.toLowerCase().includes(search.toLowerCase())) return false
-      if (statusFilter !== 'all') {
-        if (statusFilter === 'published' && !d.published) return false
-        if (statusFilter === 'draft' && d.published) return false
+      if (categoryFilter !== 'all') {
+        const cats = Array.isArray(d.category) ? d.category : d.category ? [d.category] : []
+        if (!cats.includes(categoryFilter)) return false
       }
-      if (categoryFilter !== 'all' && d.category !== categoryFilter) return false
       return true
     })
-  }, [list, search, statusFilter, categoryFilter])
+  }, [list, categoryFilter])
 
   const allSelected = filtered.length > 0 && filtered.every((d) => selected.has(d.id))
   const toggleAll = () => {
@@ -218,21 +238,34 @@ export function AdminDestinationsPage() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="w-full min-w-0 max-w-full space-y-4 overflow-hidden">
+      <div className="flex min-w-0 max-w-full items-center gap-1.5 overflow-hidden text-xs text-slate-500">
+        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">Admin</span>
+        <span className="text-slate-400">›</span>
+        <span className="font-medium text-slate-700">Destinations</span>
+      </div>
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-lg font-bold tracking-tight">Destinations</h1>
-          <p className="text-xs text-slate-500">Manage destinations and publish them to the website.</p>
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:px-5">
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight sm:text-[22px]">Destinations</h1>
+            <p className="mt-1 text-xs text-slate-500 sm:text-[13px]">Manage destinations and publish them to the website.</p>
+          </div>
+          {isFetching && data && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+              <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" aria-hidden="true" />
+              Refreshing
+            </span>
+          )}
         </div>
         <Link to="/admin/destinations/new">
-          <Button size="sm" className="h-7 rounded-md bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-800">
-            <Plus className="h-3.5 w-3.5" /> New Destination
+          <Button size="sm" className="h-9 min-w-[130px] rounded-md bg-slate-900 px-4 text-xs font-semibold text-white hover:bg-slate-800">
+            <Plus className="h-4 w-4" /> New Destination
           </Button>
         </Link>
       </div>
 
-      {/* Search + Filters */}
+      {/* Search + Filters — single horizontal toolbar on desktop */}
       {selected.size > 0 ? (
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-amber-50 px-3 py-2 text-xs">
           <span className="font-semibold text-slate-900">{selected.size} selected</span>
@@ -252,22 +285,30 @@ export function AdminDestinationsPage() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 min-w-[180px]">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="relative flex-1 min-w-[240px]">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search destinations..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-7 pl-8 text-xs"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="h-9 pl-8 text-xs focus-visible:ring-1 focus-visible:ring-slate-900 focus-visible:ring-offset-0 focus-visible:border-slate-900"
             />
           </div>
-          <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-7 text-xs">
+          <Select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-9 w-[150px] shrink-0 text-xs focus-visible:ring-1 focus-visible:ring-slate-900 focus-visible:ring-offset-0 focus-visible:border-slate-900"
+          >
             <option value="all">All status</option>
             <option value="published">Published</option>
             <option value="draft">Draft</option>
           </Select>
-          <Select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="h-7 text-xs">
+          <Select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="h-9 w-[170px] shrink-0 text-xs focus-visible:ring-1 focus-visible:ring-slate-900 focus-visible:ring-offset-0 focus-visible:border-slate-900"
+          >
             <option value="all">All categories</option>
             <option value="international">International</option>
             <option value="domestic">Domestic</option>
@@ -277,23 +318,28 @@ export function AdminDestinationsPage() {
         </div>
       )}
 
-      {isLoading ? (
+      {isError && data && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          Could not refresh destinations. Showing cached data.
+        </div>
+      )}
+      {isInitialLoading ? (
         <div className="space-y-1">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-11 animate-pulse rounded-md bg-slate-100" />
           ))}
         </div>
-      ) : isError ? (
+      ) : isError && !data ? (
         <Card className="border-red-200 bg-red-50 p-3 text-xs text-red-700">Could not load destinations. {error?.message || 'Please try again.'}</Card>
       ) : !list || filtered.length === 0 ? (
-        <Card className="border-slate-200 bg-white p-8 text-center">
-          <p className="text-sm font-semibold">{search || statusFilter !== 'all' || categoryFilter !== 'all' ? 'No matching destinations' : 'No destinations yet'}</p>
-          <p className="mx-auto mt-1 max-w-md text-xs text-slate-500">
+        <Card className="flex min-h-[170px] flex-col items-center justify-center border-slate-200 bg-white px-6 py-8 text-center">
+          <p className="text-[14px] font-semibold text-slate-900">{search || statusFilter !== 'all' || categoryFilter !== 'all' ? 'No matching destinations' : 'No destinations yet'}</p>
+          <p className="mx-auto mt-1.5 max-w-md text-xs leading-relaxed text-slate-500">
             {search ? `No results for "${search}"` : 'Create your first destination to start showing destinations on the website.'}
           </p>
           {!search && (
-            <Link to="/admin/destinations/new" className="mt-3 inline-flex">
-              <Button size="sm" className="h-7 text-xs">
+            <Link to="/admin/destinations/new" className="mt-4 inline-flex">
+              <Button size="sm" className="h-8 bg-emerald-600 px-4 text-xs font-semibold text-white hover:bg-emerald-700">
                 <Plus className="h-3.5 w-3.5" /> Create Destination
               </Button>
             </Link>
@@ -336,7 +382,11 @@ export function AdminDestinationsPage() {
                       </td>
                       <td className="px-2 py-2 text-slate-600">{d.country}</td>
                       <td className="px-2 py-2">
-                        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium capitalize text-slate-600">{d.category}</span>
+                        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium capitalize text-slate-600">
+                          {Array.isArray(d.category)
+                            ? d.category.map((c) => c.charAt(0).toUpperCase() + c.slice(1)).join(' · ')
+                            : String(d.category).charAt(0).toUpperCase() + String(d.category).slice(1)}
+                        </span>
                       </td>
                       <td className="px-2 py-2">
                         {d.published ? (

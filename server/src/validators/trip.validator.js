@@ -29,11 +29,28 @@ const faqSchema = z.object({
   answer: z.string().trim().max(2000),
 })
 
+const costingRowSchema = z.object({
+  mode: z.string().trim().max(80).default(''),
+  price: z.coerce.number().min(0).nullable().default(null),
+  originalPrice: z.coerce.number().min(0).nullable().default(null),
+})
+
+const tripReviewSchema = z.object({
+  name: z.string().trim().min(1, 'Reviewer name is required').max(120),
+  review: z.string().trim().min(1, 'Review text is required').max(5000),
+  rating: z.coerce.number().int().min(1).max(5).default(5),
+  image: imageSchema.optional().default({}),
+  published: z.boolean().optional().default(false),
+  displayOrder: z.coerce.number().int().optional().default(0),
+})
+
 // Field definitions WITHOUT defaults so the partial update schema never
 // overwrites omitted fields with default values.
 const tripFields = {
   destinationId: z.string().regex(OBJECT_ID, 'Invalid destination'),
   name: z.string().trim().min(1, 'Name is required').max(160),
+  cardName: z.string().trim().max(160).optional(),
+  pageHeading: z.string().trim().max(160).optional(),
   slug: z
     .string()
     .trim()
@@ -47,14 +64,20 @@ const tripFields = {
   durationNights: z.coerce.number().int().min(0).optional(),
   maxGroupSize: z.coerce.number().int().min(1).optional(),
   startingPrice: z.coerce.number().min(0).nullable().optional(),
+  originalPrice: z.coerce.number().min(0).nullable().optional(),
+  datesOnRequest: z.boolean().optional(),
+  departures: z.array(z.coerce.date()).max(30).optional(),
   currency: z.string().trim().toUpperCase().max(10).optional(),
   heroImage: imageSchema.optional(),
-  gallery: z.array(imageSchema).max(30).optional(),
+  cardImage: imageSchema.optional(),
+  heroVideo: imageSchema.optional(),
   itinerary: z.array(itineraryDaySchema).max(60).optional(),
   inclusions: z.array(z.string().trim().max(300)).max(60).optional(),
   exclusions: z.array(z.string().trim().max(300)).max(60).optional(),
   importantInformation: z.string().trim().max(10000).optional(),
   faqs: z.array(faqSchema).max(60).optional(),
+  costing: z.array(costingRowSchema).max(30).optional(),
+  reviews: z.array(tripReviewSchema).max(50).optional(),
   featured: z.boolean().optional(),
   published: z.boolean().optional(),
   displayOrder: z.coerce.number().int().optional(),
@@ -67,6 +90,8 @@ const tripFields = {
 export const createTripSchema = z.object({
   destinationId: tripFields.destinationId,
   name: tripFields.name,
+  cardName: tripFields.cardName.default(''),
+  pageHeading: tripFields.pageHeading.default(''),
   slug: tripFields.slug,
   shortDescription: tripFields.shortDescription.default(''),
   description: tripFields.description.default(''),
@@ -75,14 +100,20 @@ export const createTripSchema = z.object({
   durationNights: tripFields.durationNights.default(0),
   maxGroupSize: tripFields.maxGroupSize.default(10),
   startingPrice: tripFields.startingPrice.default(null),
+  originalPrice: tripFields.originalPrice.default(null),
+  datesOnRequest: tripFields.datesOnRequest.default(false),
+  departures: tripFields.departures.default([]),
   currency: tripFields.currency.default('INR'),
   heroImage: tripFields.heroImage.default({}),
-  gallery: tripFields.gallery.default([]),
+  cardImage: tripFields.cardImage.default({}),
+  heroVideo: tripFields.heroVideo.default({}),
   itinerary: tripFields.itinerary.default([]),
   inclusions: tripFields.inclusions.default([]),
   exclusions: tripFields.exclusions.default([]),
   importantInformation: tripFields.importantInformation.default(''),
   faqs: tripFields.faqs.default([]),
+  costing: tripFields.costing.default([]),
+  reviews: tripFields.reviews.default([]),
   featured: tripFields.featured.default(false),
   published: tripFields.published.default(false),
   displayOrder: tripFields.displayOrder.default(0),

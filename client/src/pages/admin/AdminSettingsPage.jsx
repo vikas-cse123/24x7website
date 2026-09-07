@@ -35,7 +35,7 @@ function getApiError(err) {
   return first?.message || err.response?.data?.message || err.message
 }
 
-const MAX_LOGO_SIZE_MB = 5
+const MAX_LOGO_SIZE_MB = 10
 const SUPPORTED_FORMATS = 'JPG, JPEG, PNG, WebP'
 
 function ToggleField({ label, description, checked, onCheckedChange, disabled }) {

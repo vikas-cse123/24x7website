@@ -40,6 +40,22 @@ const config = {
     ttlSeconds: parseInt(process.env.OTP_TTL_SECONDS, 10) || 300,
     // In development, the OTP sent back in the API response for easy testing.
     devEchoOtp: !isProduction,
+    // Email OTP settings
+    emailTtlSeconds: parseInt(process.env.EMAIL_OTP_TTL_SECONDS, 10) || 600,
+    maxAttempts: parseInt(process.env.OTP_MAX_ATTEMPTS, 10) || 5,
+    resendCooldownSeconds: parseInt(process.env.OTP_RESEND_COOLDOWN_SECONDS, 10) || 30,
+  },
+
+  email: {
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT, 10) || 465,
+    secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : true,
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+    from: process.env.MAIL_FROM || process.env.SMTP_USER || 'noreply@24x7chhutti.com',
+    get isConfigured() {
+      return Boolean(this.host && this.user && this.pass)
+    },
   },
 }
 

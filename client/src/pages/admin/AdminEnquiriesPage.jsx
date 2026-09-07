@@ -11,6 +11,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { adminEnquiryApi } from '@/services/enquiries'
 import { formatDateLong } from '@/lib/dates'
 import { cn } from '@/lib/utils'
+import { formatPhone } from '@/lib/phone'
 
 const PAGE_SIZE = 12
 
@@ -143,7 +144,7 @@ export function AdminEnquiriesPage() {
                           Destination: <span className="font-medium text-foreground">{e.destinationName}</span>
                         </span>
                       )}
-                      <span>+{e.countryCode} {e.phone}</span>
+                      <span>{formatPhone(e.phone, e.countryCode)}</span>
                       <span>{e.email}</span>
                       <span>· {formatDateLong(e.createdAt)}</span>
                     </p>

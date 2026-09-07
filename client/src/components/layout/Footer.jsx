@@ -11,7 +11,7 @@ export function Footer() {
   return (
     <footer className="bg-[#FFFDE5] text-[#1f2937]">
       <FooterPromo />
-      <Container className="pb-12 lg:pb-16">
+      <Container className="max-w-none mx-0 w-full px-5 sm:px-6 lg:px-[90px] pb-12 lg:pb-16">
         <FooterDestinations />
         <div className="mt-10 border-t border-[#1b4332]/15 lg:mt-12" />
       </Container>

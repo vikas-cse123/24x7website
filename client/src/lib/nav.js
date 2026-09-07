@@ -2,7 +2,9 @@
 // Each top-level item maps to a route registered in `client/src/routes/`.
 // Items with `children` render as a dropdown (desktop) / expandable group
 // (mobile). Add or reorder items here; the Header, MobileNav and Footer all
-// consume this config. `icon` is the emoji shown next to each label.
+// consume this config. `icon` is the emoji shown next to each label, except
+// the special marker 'indian-flag' which renders the bundled IndianFlag.svg
+// asset (see IndianFlagIcon) at the same visual size as the emoji icons.
 
 export const NAV_ITEMS = [
   {
@@ -10,7 +12,7 @@ export const NAV_ITEMS = [
     icon: '👥',
     children: [
       { label: 'International Trips', icon: '✈️', href: '/trips?category=international' },
-      { label: 'Domestic Trips', icon: '🇮🇳', href: '/trips?category=domestic' },
+      { label: 'Domestic Trips', icon: 'indian-flag', href: '/trips?category=domestic' },
     ],
   },
   {
@@ -36,7 +38,7 @@ export const NAV_ITEMS = [
     icon: '🌍',
     children: [
       { label: 'International Trips', icon: '✈️', href: '/customised-trips?category=international' },
-      { label: 'Domestic Trips', icon: '🇮🇳', href: '/customised-trips?category=domestic' },
+      { label: 'Domestic Trips', icon: 'indian-flag', href: '/customised-trips?category=domestic' },
       { label: 'Corporate Trips', icon: '🏫', href: '/customised-trips?category=corporate' },
     ],
   },

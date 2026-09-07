@@ -120,7 +120,7 @@ export function FaqForm({ initialValues, destinations = [], trips = [], isSubmit
               <Select id="faq-dest" className="mt-1.5" {...register('destinationId')}>
                 <option value="">Select a destination</option>
                 {destinations.map((d) => (
-                  <option key={d.id} value={d.id}>{d.name} — {d.country}</option>
+                  <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </Select>
               {errors.destinationId && <p className="mt-1 text-xs text-destructive">{errors.destinationId.message}</p>}

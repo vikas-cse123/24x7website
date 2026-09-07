@@ -38,6 +38,15 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    passwordHash: {
+      type: String,
+      default: null,
+      select: false,
+    },
     lastLoginAt: {
       type: Date,
       default: null,
@@ -73,6 +82,7 @@ export function toPublicUser(user) {
     email: user.email,
     role: user.role,
     mobileVerified: user.mobileVerified,
+    emailVerified: user.emailVerified,
     lastLoginAt: user.lastLoginAt,
     createdAt: user.createdAt,
   }

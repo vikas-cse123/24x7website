@@ -52,10 +52,22 @@ const destinationSchema = new mongoose.Schema(
       default: 'other',
     },
     // Market segment used by homepage destination category tabs.
+    // Supports single or multiple categories (e.g., Domestic & Weekend = ['domestic','weekend'])
+    // Backward compatible: existing string values are normalized to array via setter/getter.
     category: {
-      type: String,
+      type: [String],
       enum: ['international', 'domestic', 'weekend', 'other'],
-      default: 'other',
+      default: ['other'],
+      set: (v) => {
+        if (Array.isArray(v)) return v
+        if (typeof v === 'string') {
+          // Handle combined string from legacy or UI (e.g., "domestic,weekend")
+          if (v.includes(',')) return v.split(',').map((s) => s.trim()).filter(Boolean)
+          if (v === 'domestic & weekend' || v === 'domestic_weekend') return ['domestic', 'weekend']
+          return v ? [v] : []
+        }
+        return v
+      },
     },
     // Legacy: kept for DB compatibility, not exposed in Admin UI
     shortDescription: {
@@ -74,7 +86,22 @@ const destinationSchema = new mongoose.Schema(
       type: imageSchema,
       default: () => ({}),
     },
+    // Homepage Explore Destinations card name — entered separately by the
+    // admin; never auto-filled from `name`.
+    homepageName: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+      default: '',
+    },
     heroImage: {
+      type: imageSchema,
+      default: () => ({}),
+    },
+    // Optional hero video for the destination page. When set, the page shows
+    // the video as the hero instead of the hero image. Same media shape as
+    // images (publicId tracked for S3 cleanup/reference checks).
+    heroVideo: {
       type: imageSchema,
       default: () => ({}),
     },
@@ -140,6 +167,9 @@ function proxifyImage(img) {
   return img
 }
 export function toPublicDestination(doc) {
+  // Normalize category to array for consistent API (handles legacy string values)
+  const rawCat = doc.category
+  const normCat = Array.isArray(rawCat) ? rawCat : rawCat ? [rawCat] : ['other']
   return {
     id: doc.id || doc._id?.toString(),
     name: doc.name,
@@ -147,11 +177,13 @@ export function toPublicDestination(doc) {
     country: doc.country,
     region: doc.region,
     type: doc.type,
-    category: doc.category || 'other',
+    category: normCat,
     shortDescription: doc.shortDescription,
     description: doc.description,
     homepageImage: proxifyImage(doc.homepageImage) || {},
+    homepageName: doc.homepageName || '',
     heroImage: proxifyImage(doc.heroImage) || {},
+    heroVideo: proxifyImage(doc.heroVideo) || {},
     gallery: Array.isArray(doc.gallery) ? doc.gallery.map(proxifyImage) : [],
     startingPrice: doc.startingPrice ?? null,
     currency: doc.currency,

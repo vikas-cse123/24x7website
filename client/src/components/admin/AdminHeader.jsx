@@ -4,6 +4,7 @@ import { Menu, LogOut, User as UserIcon, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import { ADMIN_NAV } from '@/lib/adminNav'
+import { formatPhone } from '@/lib/phone'
 
 function findPageLabel(pathname) {
   const flat = []
@@ -50,7 +51,7 @@ export function AdminHeader({ onMenuClick }) {
       <div className="ml-auto flex items-center gap-2">
         <div className="hidden items-center gap-2 sm:flex">
           <div className="text-right leading-none">
-            <p className="text-xs font-semibold">+{user?.countryCode} {user?.mobile}</p>
+            <p className="text-xs font-semibold">{formatPhone(user?.mobile, user?.countryCode)}</p>
             <p className="text-[11px] capitalize text-slate-500">{user?.role}</p>
           </div>
           <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-white">

@@ -1,10 +1,9 @@
 import { Link } from 'react-router-dom'
-import { MapPin, IndianRupee, CalendarDays, Clock3 } from 'lucide-react'
+import { IndianRupee, CalendarDays, Hourglass } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
 import { WishlistButton } from '@/components/wishlist/WishlistButton'
 import { StarRating } from '@/components/reviews/StarRating'
-import { TRIP_TYPE_LABELS } from '@/schemas/trip'
 import { formatDateShort } from '@/lib/dates'
 
 // Resolve display pricing from real data only.
@@ -61,63 +60,66 @@ function getCardPricing(trip) {
 export function TripCard({ trip }) {
   const pricing = getCardPricing(trip)
   const hasStartingPrice = trip.startingPrice !== null && trip.startingPrice !== undefined
+  // Independent card fields with legacy fallback to the canonical trip values.
+  const cardName = trip.cardName || trip.name
+  const cardImage =
+    trip.cardImage?.url || trip.cardImage?.secureUrl ? trip.cardImage : trip.heroImage
+  // Trip-level discount, derived only when an original price above the selling
+  // price is actually stored. Never fabricated.
+  const tripDiscount =
+    trip.originalPrice != null &&
+    trip.startingPrice != null &&
+    Number(trip.originalPrice) > Number(trip.startingPrice)
+      ? Number(trip.originalPrice) - Number(trip.startingPrice)
+      : null
+  // Trip-level departure dates (admin-managed). Batches/summaries take display
+  // precedence via `pricing.dates` when present.
+  const tripDepartureDates = (Array.isArray(trip.departures) ? trip.departures : [])
+    .map((d) => formatDateShort(d))
+    .filter(Boolean)
 
   return (
-    <Card className="group h-full overflow-hidden transition-shadow hover:shadow-card-hover focus-within:ring-2 focus-within:ring-ring">
+    <Card className="group h-full w-full overflow-hidden transition-shadow hover:shadow-card-hover focus-within:ring-2 focus-within:ring-ring lg:max-w-[300px]">
       <Link
         to={`/trip/${trip.slug}`}
-        aria-label={`${trip.name} — view trip details`}
+        aria-label={`${cardName} — view trip details`}
         className="block focus-visible:outline-none"
       >
-        <div className="relative aspect-[3/4]">
+        <div className="relative aspect-[1.377/1] lg:aspect-[3/2]">
           <DestinationImage
-            src={trip.heroImage?.url}
-            alt={trip.heroImage?.alt || trip.name}
+            src={cardImage?.url}
+            alt={cardImage?.alt || cardName}
             className="h-full w-full"
           />
+          {/* Curved white transition: the card body flows into the image with a
+              smooth asymmetric curve (higher on the left, behind the duration
+              row). Pure overlay — adds no layout height; badges render above it. */}
+          <svg
+            aria-hidden="true"
+            focusable="false"
+            preserveAspectRatio="none"
+            viewBox="0 0 400 32"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-8 w-full"
+          >
+            <path d="M0 32 L0 14 C 150 14 250 26 400 24 L400 32 Z" fill="white" />
+          </svg>
           <WishlistButton type="trip" id={trip.id || trip._id} className="absolute right-2.5 bottom-2.5" />
-          {(pricing?.discountAmount != null || trip.featured) && (
+          {pricing?.discountAmount != null && (
             <span className="absolute left-2.5 top-2.5 rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground">
-              {pricing?.discountAmount != null
-                ? `${pricing.currency === 'INR' ? '₹' : ''}${pricing.discountAmount.toLocaleString('en-IN')} Off`
-                : 'Featured'}
-            </span>
-          )}
-          {trip.tripType && (
-            <span className="absolute right-2.5 top-2.5 rounded-full bg-background/90 px-2.5 py-0.5 text-xs font-medium capitalize text-foreground">
-              {TRIP_TYPE_LABELS[trip.tripType] || trip.tripType}
-            </span>
-          )}
-          {pricing?.availability && (
-            <span
-              className={`absolute bottom-2.5 left-2.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                pricing.availability === 'Sold out'
-                  ? 'bg-destructive text-destructive-foreground'
-                  : 'bg-amber-100 text-amber-700'
-              }`}
-            >
-              {pricing.availability}
+              {`${pricing.currency === 'INR' ? '₹' : ''}${pricing.discountAmount.toLocaleString('en-IN')} Off`}
             </span>
           )}
         </div>
 
         <div className="p-4">
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock3 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            {trip.durationDays} days / {trip.durationNights} nights
+            <Hourglass className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            {trip.durationNights} nights / {trip.durationDays} days
           </p>
 
           <h3 className="mt-1.5 line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-foreground group-hover:text-primary">
-            {trip.name}
+            {cardName}
           </h3>
-
-          {trip.destination?.name && (
-            <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              {trip.destination.name}
-              {trip.destination.country ? `, ${trip.destination.country}` : ''}
-            </p>
-          )}
 
           {trip.ratingSummary?.total > 0 && (
             <p className="mt-1.5 flex items-center gap-1.5">
@@ -144,19 +146,28 @@ export function TripCard({ trip }) {
                   )}
                 </p>
                 {pricing.discountAmount != null && (
-                  <p className="mt-0.5 text-xs font-medium text-primary">
+                  <p className="mt-0.5 text-xs font-medium text-red-600">
                     ₹{pricing.discountAmount.toLocaleString('en-IN')} Off · per person
                   </p>
                 )}
               </>
             ) : hasStartingPrice ? (
-              <p className="text-sm font-semibold">
-                <span className="text-muted-foreground">from </span>
-                <span className="inline-flex items-center">
+              <>
+                <p className="flex items-center text-base font-bold leading-none">
                   <IndianRupee className="h-4 w-4" aria-hidden="true" />
                   {trip.startingPrice.toLocaleString('en-IN')}
-                </span>
-              </p>
+                  {trip.originalPrice != null && tripDiscount != null && (
+                    <span className="ml-1.5 text-xs font-normal text-muted-foreground line-through">
+                      ₹{Number(trip.originalPrice).toLocaleString('en-IN')}
+                    </span>
+                  )}
+                </p>
+                {tripDiscount != null && (
+                  <p className="mt-0.5 text-xs font-medium text-red-600">
+                    ₹{tripDiscount.toLocaleString('en-IN')} Off
+                  </p>
+                )}
+              </>
             ) : (
               <p className="text-sm text-muted-foreground">Price on request</p>
             )}
@@ -164,10 +175,17 @@ export function TripCard({ trip }) {
 
           <p className="mt-2 border-t border-border pt-2 text-xs leading-relaxed text-muted-foreground/80">
             <CalendarDays className="mr-1 inline h-3.5 w-3.5 align-[-3px]" aria-hidden="true" />
-            {pricing && pricing.dates.length > 0 ? (
+            {trip.datesOnRequest ? (
+              'Dates on Request'
+            ) : pricing && pricing.dates.length > 0 ? (
               <>
                 {pricing.dates.slice(0, 4).join(', ')}
                 {pricing.dates.length > 4 && ` +${pricing.extraDates} more`}
+              </>
+            ) : tripDepartureDates.length > 0 ? (
+              <>
+                {tripDepartureDates.slice(0, 4).join(', ')}
+                {tripDepartureDates.length > 4 && ` +${tripDepartureDates.length - 4} more`}
               </>
             ) : (
               'Departure dates coming soon'

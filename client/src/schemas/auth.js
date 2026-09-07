@@ -38,3 +38,36 @@ export const otpSchema = z.object({
     .string()
     .regex(OTP_PATTERN, 'OTP must be exactly 6 digits'),
 })
+
+export const signupSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(120),
+  email: z.string().trim().email('Enter a valid email address').max(120),
+  phone: z.string().trim().min(1, 'Phone number is required').max(20),
+  countryCode: z.string().regex(/^\+\d{1,4}$/, 'Invalid country code').default(COUNTRY_CODE),
+  password: z.string().min(6, 'Password must be at least 6 characters').max(120),
+})
+
+export const loginSchema = z.object({
+  email: z.string().trim().email('Enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+})
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().email('Enter a valid email address'),
+})
+
+export const resetPasswordSchema = z
+  .object({
+    email: z.string().trim().email('Enter a valid email address'),
+    newPassword: z.string().min(6, 'Password must be at least 6 characters').max(120),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
+
+export const emailOtpSchema = z.object({
+  email: z.string().trim().email('Enter a valid email address'),
+  otp: z.string().regex(OTP_PATTERN, 'OTP must be exactly 6 digits'),
+})

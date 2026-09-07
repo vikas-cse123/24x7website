@@ -41,6 +41,30 @@ const faqSchema = new mongoose.Schema(
   { _id: false }
 )
 
+// Admin-curated review belonging to exactly one trip (independent from the
+// user-generated verified-booking Review collection).
+const tripReviewSchema = new mongoose.Schema(
+  {
+    name: { type: String, trim: true, maxlength: 120, default: '' },
+    review: { type: String, trim: true, maxlength: 5000, default: '' },
+    rating: { type: Number, min: 1, max: 5, default: 5 },
+    image: { type: imageSchema, default: () => ({}) },
+    published: { type: Boolean, default: false },
+    displayOrder: { type: Number, default: 0 },
+  },
+  { _id: false }
+)
+
+// One room-sharing costing row, embedded in the Trip document.
+const costingRowSchema = new mongoose.Schema(
+  {
+    mode: { type: String, trim: true, maxlength: 80, default: '' },
+    price: { type: Number, min: 0, default: null },
+    originalPrice: { type: Number, min: 0, default: null },
+  },
+  { _id: false }
+)
+
 const tripSchema = new mongoose.Schema(
   {
     destinationId: {
@@ -50,6 +74,10 @@ const tripSchema = new mongoose.Schema(
       index: true,
     },
     name: { type: String, required: true, trim: true, maxlength: 160 },
+    // Independent display names: card vs. detail-page heading. Never
+    // auto-copied; legacy trips fall back to `name` at render time.
+    cardName: { type: String, trim: true, maxlength: 160, default: '' },
+    pageHeading: { type: String, trim: true, maxlength: 160, default: '' },
     slug: {
       type: String,
       required: true,
@@ -69,14 +97,30 @@ const tripSchema = new mongoose.Schema(
     durationNights: { type: Number, min: 0, default: 0 },
     maxGroupSize: { type: Number, min: 1, default: 10 },
     startingPrice: { type: Number, min: 0, default: null },
+    // Original/MRP price. When present and above the selling price, the card
+    // shows it struck through with a derived discount (never fabricated).
+    originalPrice: { type: Number, min: 0, default: null },
+    // Explicit "Dates on Request" mode — the card shows exactly that instead
+    // of any dates, without requiring specific departure dates.
+    datesOnRequest: { type: Boolean, default: false },
+    // Trip-level departure dates (in addition to dated TripBatch inventory).
+    departures: { type: [Date], default: [] },
     currency: { type: String, uppercase: true, trim: true, default: 'INR' },
     heroImage: { type: imageSchema, default: () => ({}) },
-    gallery: { type: [imageSchema], default: [] },
+    // Independent media: card image (cards only) vs. hero image/video
+    // (detail page only). Same media shape so S3 tracking is unchanged.
+    cardImage: { type: imageSchema, default: () => ({}) },
+    heroVideo: { type: imageSchema, default: () => ({}) },
+    // NOTE: legacy documents may still store a `gallery` array in MongoDB.
+    // The path is intentionally absent from the schema so new records never
+    // create it; historical data is left untouched (never migrated/deleted).
     itinerary: { type: [itineraryDaySchema], default: [] },
     inclusions: { type: [String], default: [] },
     exclusions: { type: [String], default: [] },
     importantInformation: { type: String, trim: true, default: '' },
     faqs: { type: [faqSchema], default: [] },
+    costing: { type: [costingRowSchema], default: [] },
+    reviews: { type: [tripReviewSchema], default: [] },
     featured: { type: Boolean, default: false },
     published: { type: Boolean, default: false },
     displayOrder: { type: Number, default: 0 },
@@ -114,6 +158,22 @@ function toPublicDestination(destination) {
   }
 }
 
+// Review ordering: explicit displayOrder first, then insertion order.
+function sortTripReviews(reviews) {
+  return [...reviews].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
+}
+
+function toPublicReview(review) {
+  return {
+    name: review.name || '',
+    review: review.review || '',
+    rating: review.rating ?? 5,
+    image: proxifyImage(review.image) || {},
+    published: !!review.published,
+    displayOrder: review.displayOrder ?? 0,
+  }
+}
+
 // Public-facing shape. Never exposes createdBy/updatedBy. `destination` is
 // populated by the service where available.
 // Rewrites S3 direct URLs to backend proxy (`/api/media/<key>`) for clean
@@ -138,6 +198,8 @@ export function toPublicTrip(doc) {
     destinationId,
     destination: toPublicDestination(rawDest),
     name: doc.name,
+    cardName: doc.cardName || '',
+    pageHeading: doc.pageHeading || '',
     slug: doc.slug,
     tripCode: doc.tripCode,
     shortDescription: doc.shortDescription,
@@ -147,14 +209,24 @@ export function toPublicTrip(doc) {
     durationNights: doc.durationNights,
     maxGroupSize: doc.maxGroupSize,
     startingPrice: doc.startingPrice ?? null,
+    originalPrice: doc.originalPrice ?? null,
+    datesOnRequest: !!doc.datesOnRequest,
+    departures: Array.isArray(doc.departures) ? doc.departures : [],
     currency: doc.currency,
     heroImage: proxifyImage(doc.heroImage) || {},
-    gallery: Array.isArray(doc.gallery) ? doc.gallery.map(proxifyImage) : [],
+    cardImage: proxifyImage(doc.cardImage) || {},
+    heroVideo: proxifyImage(doc.heroVideo) || {},
     itinerary: doc.itinerary || [],
     inclusions: doc.inclusions || [],
     exclusions: doc.exclusions || [],
     importantInformation: doc.importantInformation,
     faqs: doc.faqs || [],
+    costing: Array.isArray(doc.costing) ? doc.costing : [],
+    // Public shape exposes published reviews only — unpublished drafts stay
+    // private. Admin paths use toAdminTrip below.
+    reviews: Array.isArray(doc.reviews)
+      ? sortTripReviews(doc.reviews.filter((r) => r && r.published).map(toPublicReview))
+      : [],
     featured: doc.featured,
     published: doc.published,
     displayOrder: doc.displayOrder,
@@ -169,3 +241,12 @@ export function toPublicTrip(doc) {
 const Trip = mongoose.model('Trip', tripSchema)
 
 export default Trip
+
+// Admin shape: everything in toPublicTrip, but with ALL trip reviews
+// (published and drafts) so the admin form can manage them.
+export function toAdminTrip(doc) {
+  const trip = toPublicTrip(doc)
+  const raw = doc.reviews || doc._doc?.reviews || []
+  trip.reviews = Array.isArray(raw) ? sortTripReviews(raw.map(toPublicReview)) : []
+  return trip
+}

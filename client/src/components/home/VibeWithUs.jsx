@@ -136,7 +136,7 @@ export function VibeWithUs() {
 
   return (
     <section aria-label="Vibe with Us — traveller videos" className="bg-background py-10 lg:py-12">
-      <Container>
+      <Container className="max-w-none mx-0 w-full px-5 sm:px-6 lg:px-[90px]">
         <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
           Vibe with Us
         </h2>
@@ -151,21 +151,22 @@ export function VibeWithUs() {
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         className={cn(
-          'mt-8 flex select-none gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+          'mt-8 flex select-none gap-4 overflow-x-auto px-5 pb-2 [scrollbar-width:none] sm:px-6 lg:px-[90px] [&::-webkit-scrollbar]:hidden',
           dragging ? 'cursor-grabbing' : 'cursor-grab'
         )}
       >
         {VIDEOS.map((src, i) => (
           <div
             key={src}
-            className="relative w-[200px] shrink-0 overflow-hidden rounded-xl sm:w-[230px]"
+            className="relative h-[540px] w-[300px] shrink-0 overflow-hidden rounded-xl"
+            style={{ width: '300px', height: '540px', flex: '0 0 300px' }}
           >
             <button
               type="button"
               onClick={() => openLightbox(i)}
               onPointerDown={(e) => e.stopPropagation()}
               aria-label={`Play traveller video ${i + 1} in fullscreen`}
-              className="block w-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="block h-full w-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <video
                 ref={(el) => (videoRefs.current[i] = el)}
@@ -178,7 +179,8 @@ export function VibeWithUs() {
                 draggable={false}
                 tabIndex={-1}
                 aria-hidden="true"
-                className="pointer-events-none block aspect-[9/16] w-full object-cover"
+                className="pointer-events-none block h-full w-full object-cover"
+                style={{ width: '300px', height: '540px', objectFit: 'cover' }}
               />
             </button>
             <button

@@ -10,6 +10,11 @@ import { destinationApi } from '@/services/destinations'
 function preparePayload(values) {
   const payload = { ...values }
   if (!payload.slug) delete payload.slug
+  // No Trip Name input exists in the UI: the canonical name is derived from
+  // Trip Card Name (fallback: page heading, then a placeholder). Existing
+  // stored names are never deleted by this mapping.
+  const derived = (payload.cardName || '').trim() || (payload.pageHeading || '').trim()
+  payload.name = derived || 'Untitled Trip'
   return payload
 }
 
@@ -72,7 +77,8 @@ export function AdminTripFormPage({ mode }) {
     if (!isEdit || !trip) return undefined
     return {
       destinationId: trip.destinationId || '',
-      name: trip.name,
+      cardName: trip.cardName || '',
+      pageHeading: trip.pageHeading || '',
       slug: trip.slug,
       shortDescription: trip.shortDescription || '',
       description: trip.description || '',
@@ -81,14 +87,37 @@ export function AdminTripFormPage({ mode }) {
       durationNights: trip.durationNights || 0,
       maxGroupSize: trip.maxGroupSize || 10,
       startingPrice: trip.startingPrice ?? null,
+      originalPrice: trip.originalPrice ?? null,
+      datesOnRequest: !!trip.datesOnRequest,
+      departures: Array.isArray(trip.departures)
+        ? trip.departures.map((d) => String(d).slice(0, 10)).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+        : [],
       currency: trip.currency || 'INR',
       heroImage: { url: trip.heroImage?.url || '', alt: trip.heroImage?.alt || '' },
-      gallery: trip.gallery || [],
+      cardImage: { url: trip.cardImage?.url || '', alt: trip.cardImage?.alt || '' },
+      heroVideo: { url: trip.heroVideo?.url || '', alt: trip.heroVideo?.alt || '' },
       itinerary: trip.itinerary || [],
       inclusions: trip.inclusions || [],
+      costing: Array.isArray(trip.costing)
+        ? trip.costing.map((r) => ({
+            mode: r.mode || '',
+            price: r.price ?? null,
+            originalPrice: r.originalPrice ?? null,
+          }))
+        : [],
       exclusions: trip.exclusions || [],
       importantInformation: trip.importantInformation || '',
       faqs: trip.faqs || [],
+      reviews: Array.isArray(trip.reviews)
+        ? trip.reviews.map((r) => ({
+            name: r.name || '',
+            review: r.review || '',
+            rating: r.rating ?? 5,
+            image: r.image || { url: '', alt: '' },
+            published: !!r.published,
+            displayOrder: r.displayOrder ?? 0,
+          }))
+        : [],
       featured: !!trip.featured,
       published: !!trip.published,
       displayOrder: trip.displayOrder || 0,
@@ -121,26 +150,62 @@ export function AdminTripFormPage({ mode }) {
     )
   }
 
+  const deleteMutation = useMutation({
+    mutationFn: () => adminTripApi.remove(id),
+    onSuccess: () => {
+      toast.success('Trip deleted')
+      queryClient.invalidateQueries({ queryKey: ['admin', 'trips'] })
+      navigate('/admin/trips')
+    },
+    onError: (err) => toast.error(err.message || 'Delete failed'),
+  })
+  const [moreOpen, setMoreOpen] = React.useState(false)
+  const moreRef = React.useRef(null)
+  React.useEffect(() => {
+    const h = (e) => { if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false) }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [])
   return (
     <div>
-      <div className="mb-6">
-        <Link
-          to="/admin/trips"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Trips
-        </Link>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">
-          {isEdit ? `Edit ${trip.name}` : 'New trip'}
-        </h1>
+      <div className="mb-3 flex items-center gap-1.5 text-xs text-slate-500">
+        <Link to="/admin" className="hover:text-slate-700">Admin</Link>
+        <span className="text-slate-400">›</span>
+        <Link to="/admin/trips" className="hover:text-slate-700">Trips</Link>
+        {isEdit && trip?.name && (<><span className="text-slate-400">›</span><span className="truncate font-medium text-slate-700">{trip.name}</span></>)}
       </div>
-
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-white px-3 py-3 sm:px-4">
+        <div className="flex min-w-0 gap-3">
+          <div className="hidden h-9 w-9 shrink-0 place-items-center rounded-md border border-amber-200 bg-amber-50 text-amber-700 sm:grid">
+            <span className="text-xs font-bold">T</span>
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Trip</p>
+            <h1 className="truncate text-base font-bold tracking-tight sm:text-lg">{isEdit ? trip?.name || 'Edit Trip' : 'Create Trip'}</h1>
+            {isEdit && trip && (<p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500"><span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium ${trip.published ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' : 'bg-slate-100 text-slate-600 ring-1 ring-slate-200'}`}><span className={`h-1.5 w-1.5 rounded-full ${trip.published ? 'bg-emerald-500' : 'bg-slate-400'}`} />{trip.published ? 'Published' : 'Draft'}</span>{trip.tripCode && <span className="font-mono text-xs text-slate-500">{trip.tripCode}</span>}</p>)}
+            {!isEdit && <p className="mt-0.5 text-xs text-slate-500">Add a new trip to your website.</p>}
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {isEdit && trip?.slug && (<a href={`/trip/${trip.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50">Preview</a>)}
+          <div className="relative" ref={moreRef}>
+            <button type="button" onClick={() => setMoreOpen((v) => !v)} className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50">More <span className="text-xs">▼</span></button>
+            {moreOpen && (
+              <div className="absolute right-0 top-8 z-20 w-44 rounded-md border border-slate-200 bg-white py-1 shadow-lg">
+                {isEdit && trip?.slug && (<a href={`/trip/${trip.slug}`} target="_blank" rel="noopener noreferrer" className="flex px-3 py-1.5 text-xs hover:bg-slate-50" onClick={() => setMoreOpen(false)}>Preview</a>)}
+                <button type="button" className="flex w-full px-3 py-1.5 text-left text-xs hover:bg-slate-50" onClick={() => { navigator.clipboard.writeText(trip?.slug || ''); setMoreOpen(false)}}>Duplicate</button>
+                {isEdit && (<button type="button" className="flex w-full px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50" onClick={() => { setMoreOpen(false); if (window.confirm(`Delete "${trip.name}"?`)) deleteMutation.mutate() }}>Delete</button>)}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
       <TripForm
         key={isEdit ? trip.id : 'create'}
         initialValues={initialValues}
         destinations={destinationsWithCurrent}
         tripCode={isEdit ? trip.tripCode : undefined}
+        tripId={isEdit ? id : undefined}
         isSubmitting={isSubmitting}
         submitLabel={isEdit ? 'Save changes' : 'Create trip'}
         onSubmit={(values) => {

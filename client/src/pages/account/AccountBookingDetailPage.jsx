@@ -10,6 +10,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { accountApi } from '@/services/account'
 import { bookingApi } from '@/services/bookings'
 import { formatDateLong, nightsBetween } from '@/lib/dates'
+import { formatPhone } from '@/lib/phone'
 
 const STATUS_BADGE = {
   pending: 'warning',
@@ -219,7 +220,7 @@ export function AccountBookingDetailPage() {
             <p className="font-medium">{b.customerName}</p>
             <p className="text-muted-foreground">{b.customerEmail}</p>
             <p className="text-muted-foreground">
-              {b.countryCode} {b.customerPhone}
+              {formatPhone(b.customerPhone, b.countryCode)}
             </p>
           </CardContent>
         </Card>

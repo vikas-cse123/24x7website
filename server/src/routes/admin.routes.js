@@ -10,6 +10,7 @@ import adminFaqRouter from './adminFaq.routes.js'
 import adminEnquiryRouter from './adminEnquiry.routes.js'
 import uploadRouter from './upload.routes.js'
 import adminSettingsRouter from './adminSettings.routes.js'
+import adminUserRouter from './adminUser.routes.js'
 import { requireAuth, requireRole } from '../middleware/auth.js'
 import { ADMIN_ROLES } from '../utils/roles.js'
 
@@ -30,5 +31,6 @@ router.use('/faqs', adminFaqRouter)
 router.use('/enquiries', adminEnquiryRouter)
 router.use('/upload', uploadRouter)
 router.use('/settings', adminSettingsRouter)
+router.use('/users', adminUserRouter)
 
 export default router

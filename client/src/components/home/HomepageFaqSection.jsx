@@ -9,7 +9,7 @@ import { HOMEPAGE_FAQS } from '@/lib/homeContent'
 export function HomepageFaqSection() {
   return (
     <section aria-label="Frequently asked questions" className="bg-background py-12 lg:py-16">
-      <Container>
+      <Container className="max-w-none mx-0 w-full px-5 sm:px-6 lg:px-[90px]">
         <div className="rounded-2xl bg-[#F5F5F5] p-6 sm:p-10">
           <h2 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
             Frequently Asked Questions

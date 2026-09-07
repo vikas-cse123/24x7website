@@ -79,19 +79,22 @@ export function AdminBlogFormPage({ mode }) {
   }
 
   return (
-    <div>
+    <div className="w-full min-w-0 max-w-full space-y-4 overflow-hidden">
+      <div className="flex min-w-0 max-w-full items-center gap-1.5 overflow-hidden text-xs text-slate-500">
+        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">Admin</span>
+        <span className="text-slate-400">›</span>
+        <Link to="/admin/blogs" className="font-medium text-slate-700 hover:text-slate-900">Blogs</Link>
+        <span className="text-slate-400">›</span>
+        <span className="truncate font-medium text-slate-900">{isEdit ? 'Edit' : 'New'}</span>
+      </div>
       <Link
         to="/admin/blogs"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+        className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900"
       >
-        <ArrowLeft className="h-4 w-4" />
-        Blogs
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Back to blogs
       </Link>
-      <h1 className="mt-1 text-2xl font-bold tracking-tight">
-        {isEdit ? `Edit blog` : 'New travel blog'}
-      </h1>
-
-      <div className="mt-6 max-w-3xl">
+      <div className="w-full min-w-0 max-w-full">
         <BlogForm
           key={isEdit ? blog.id : 'create'}
           initialValues={isEdit ? blog : undefined}
@@ -99,7 +102,7 @@ export function AdminBlogFormPage({ mode }) {
           isSubmitting={isSubmitting}
           submitLabel={isEdit ? 'Save changes' : 'Create blog'}
           onSubmit={(payload) =>
-            isEdit ? updateMutation.mutate({ id: blog.id, payload }) : createMutation.mutate(payload)
+            isEdit ? updateMutation.mutate({ id: blog.id, payload: preparePayload(payload) }) : createMutation.mutate(preparePayload(payload))
           }
         />
       </div>

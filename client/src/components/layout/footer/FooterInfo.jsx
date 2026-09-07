@@ -67,14 +67,14 @@ const SOCIAL_ICONS = {
 }
 
 function Heading({ children }) {
-  return <h3 className="text-base font-semibold text-[#1b4332]">{children}</h3>
+  return <h3 className="text-[15px] font-semibold leading-none tracking-tight text-[#1b4332]">{children}</h3>
 }
 
 function AddressBlock({ company, address, children }) {
   return (
     <div className="mt-5 first:mt-4">
-      <p className="text-sm font-medium text-[#1f2937]">{company}</p>
-      <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-[#4b5563]">
+      <p className="text-[13px] font-medium leading-tight text-[#1f2937]">{company}</p>
+      <p className="mt-1.5 max-w-xs text-[13px] leading-[1.5] text-[#4b5563]">
         {address}
       </p>
       {children}
@@ -85,7 +85,7 @@ function AddressBlock({ company, address, children }) {
 export function FooterInfo() {
   const { delhi, gurgaon, support } = FOOTER_CONTACT
   return (
-    <Container>
+    <Container className="max-w-none mx-0 w-full px-5 sm:px-6 lg:px-[90px]">
       <div className="grid gap-10 py-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1.2fr] lg:gap-12">
         {/* Address */}
         <div>
@@ -102,7 +102,7 @@ export function FooterInfo() {
               View on Map
             </a>
           </AddressBlock>
-          <p className="mt-5 text-sm text-[#4b5563]">
+          <p className="mt-5 text-[13px] leading-tight text-[#4b5563]">
             Mobile:{' '}
             <a
               href={gurgaon.mobileHref}
@@ -116,12 +116,12 @@ export function FooterInfo() {
         {/* Quick Links */}
         <div>
           <Heading>Quick Links</Heading>
-          <ul className="mt-4 space-y-2.5">
+          <ul className="mt-4 space-y-2">
             {FOOTER_QUICK_LINKS.map((link) => (
               <li key={link.label}>
                 <Link
                   to={link.href}
-                  className="text-sm text-[#374151] transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="text-[13px] leading-[1.4] text-[#374151] transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {link.label}
                 </Link>
@@ -133,7 +133,7 @@ export function FooterInfo() {
         {/* Talk To Us + socials */}
         <div>
           <Heading>Talk To Us</Heading>
-          <ul className="mt-4 space-y-3 text-sm text-[#374151]">
+          <ul className="mt-4 space-y-2.5 text-[13px] leading-[1.4] text-[#374151]">
             <li className="flex items-center gap-2.5">
               <Phone className="h-4 w-4 shrink-0 text-primary" />
               <a href={support.phone.href} className="transition-colors hover:text-primary">

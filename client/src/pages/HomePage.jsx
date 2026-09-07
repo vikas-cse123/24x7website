@@ -3,11 +3,11 @@ import { CommunityStats } from '@/components/home/CommunityStats'
 import { DestinationExplorer } from '@/components/home/DestinationExplorer'
 import { PromoBannerCarousel } from '@/components/home/PromoBannerCarousel'
 import { UpcomingTripsSection } from '@/components/home/UpcomingTripsSection'
-import { PlanTripCta } from '@/components/home/PlanTripCta'
 import { BookWithConfidence } from '@/components/home/BookWithConfidence'
 import { VibeWithUs } from '@/components/home/VibeWithUs'
 import { WhyChooseUs } from '@/components/home/WhyChooseUs'
 import { TrendingDestinations } from '@/components/home/TrendingDestinations'
+import { SoloCoupleFriendsBanner } from '@/components/home/SoloCoupleFriendsBanner'
 import { ReviewsFromTravellers } from '@/components/home/ReviewsFromTravellers'
 import { ReviewsSection } from '@/components/home/ReviewsSection'
 import { HomepageFaqSection } from '@/components/home/HomepageFaqSection'
@@ -23,9 +23,9 @@ const SECTIONS = {
   hero: <HeroSection />,
   communityStats: <CommunityStats />,
   destinationExplorer: <DestinationExplorer />,
+  soloBanner: <SoloCoupleFriendsBanner />,
   promoBannerCarousel: <PromoBannerCarousel />,
   upcomingTrips: <UpcomingTripsSection />,
-  planTripCta: <PlanTripCta />,
   bookWithConfidence: <BookWithConfidence />,
   vibeWithUs: <VibeWithUs />,
   whyChooseUs: <WhyChooseUs />,

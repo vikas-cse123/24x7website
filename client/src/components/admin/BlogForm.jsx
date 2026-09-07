@@ -2,18 +2,16 @@ import * as React from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Loader2, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react'
+import { Loader2, Plus, Trash2, ArrowUp, ArrowDown, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { DestinationImage } from '@/components/destinations/DestinationImage'
 import { BLOG_CATEGORIES, BLOG_CATEGORY_LABELS, CONTENT_BLOCK_TYPES } from '@/schemas/blog'
-import { ImageUploader } from '@/components/ui/ImageUploader'
 import { RichTextEditor } from '@/components/ui/rich-text-editor'
+import httpClient from '@/services/http'
 
 // ---- schema (mirrors server; author/slug/publishedAt server-controlled) ----
 const blockSchema = z.object({
@@ -98,27 +96,97 @@ function IconBtn({ label, onClick, disabled, danger, children }) {
 
 const BLOCK_LABELS = { heading: 'Heading', paragraph: 'Paragraph', list: 'List', image: 'Image', quote: 'Quote' }
 
-// Editable items for one list block.
-function ListItems({ control, index }) {
+function ListItems({ control, index, register }) {
   const { fields, append, remove } = useFieldArray({ control, name: `content.${index}.items` })
   return (
     <div>
-      <Label>List items *</Label>
+      <Label className="text-xs font-semibold text-slate-700">List items *</Label>
       <div className="mt-1.5 space-y-2">
         {fields.map((f, j) => (
           <div key={f.id} className="flex items-center gap-2">
             <span className="w-5 shrink-0 text-xs text-muted-foreground">{j + 1}.</span>
-            <Input aria-label={`List item ${j + 1}`} {...register(`content.${index}.items.${j}`)} />
+            <Input aria-label={`List item ${j + 1}`} {...register(`content.${index}.items.${j}`)} className="h-8 w-full min-w-0 max-w-full text-sm" />
             <IconBtn label={`Remove list item ${j + 1}`} danger onClick={() => remove(j)}>
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
             </IconBtn>
           </div>
         ))}
-        <Button type="button" variant="ghost" size="sm" onClick={() => append('')}>
-          <Plus className="h-4 w-4" aria-hidden="true" />
+        <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={() => append('')}>
+          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
           Add item
         </Button>
       </div>
+    </div>
+  )
+}
+
+function CoverImageField({ value, onChange, onUploaded }) {
+  const has = !!(value?.secureUrl || value?.url)
+  const inputRef = React.useRef(null)
+  const [dragOver, setDragOver] = React.useState(false)
+  const [uploading, setUploading] = React.useState(false)
+  const [progress, setProgress] = React.useState(null)
+  const [error, setError] = React.useState(null)
+
+  async function uploadFile(file) {
+    if (!file) return
+    if (!['image/png','image/jpeg','image/jpg','image/webp'].includes(file.type)) { setError('Only PNG, JPG, WEBP allowed'); return }
+    if (file.size > 10 * 1024 * 1024) { setError('Image must be under 10 MB'); return }
+    setError(null); setUploading(true); setProgress(0)
+    try {
+      const form = new FormData()
+      form.append('image', file)
+      const { data } = await httpClient.post('/admin/upload/single?folder=blog-media', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: e => setProgress(Math.round(((e.loaded||0)*100)/(e.total||1))),
+      })
+      onChange({ ...(value||{}), ...data.data, alt: data.data.alt || value?.alt || '' })
+      onUploaded?.(data.data)
+    } catch(e) {
+      setError(e.response?.data?.message || e.message || 'Upload failed')
+    } finally { setUploading(false); setProgress(null) }
+  }
+
+  if (has) {
+    const src = value.secureUrl || value.url
+    const filename = value.publicId ? value.publicId.split('/').pop() : (value.url || '').split('/').pop() || 'cover image'
+    return (
+      <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+        <div className="p-2">
+          <img src={src} alt={value.alt || ''} className="max-h-64 w-full rounded-md border border-slate-100 object-contain bg-slate-50" />
+          <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+            <div className="min-w-0">
+              <p className="truncate font-medium text-slate-700">{filename}</p>
+              <p className="truncate text-slate-500">{value.width && value.height ? `${value.width} × ${value.height}` : ''}{value.width && value.bytes ? ' • ' : ''}{value.bytes ? `${(value.bytes/1024).toFixed(1)} KB` : ''}</p>
+            </div>
+            <Button type="button" variant="ghost" size="sm" className="h-7 shrink-0 text-xs text-red-600 hover:bg-red-50" onClick={()=>onChange({ url:'', secureUrl:'', publicId:'', alt:'', altText:'' })}>Remove</Button>
+          </div>
+          <input ref={inputRef} type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" className="hidden" onChange={e=>{ uploadFile(e.target.files?.[0]); e.target.value='' }} />
+          <div className="mt-2 flex gap-1.5">
+            <Button type="button" variant="outline" size="sm" className="h-7 flex-1 text-xs" disabled={uploading} onClick={()=>inputRef.current?.click()}>{uploading ? (progress!=null ? `Uploading… ${progress}%` : 'Uploading…') : 'Replace'}</Button>
+          </div>
+          {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      onDragOver={e=>{e.preventDefault(); setDragOver(true)}}
+      onDragLeave={()=>setDragOver(false)}
+      onDrop={e=>{e.preventDefault(); setDragOver(false); uploadFile(e.dataTransfer.files?.[0])}}
+      onClick={()=>inputRef.current?.click()}
+      className={`flex h-[200px] w-full min-w-0 max-w-full cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed bg-slate-50 p-6 text-center transition-colors ${dragOver ? 'border-primary bg-primary/5' : 'border-slate-300 hover:border-slate-400'} ${uploading ? 'pointer-events-none opacity-60' : ''}`}
+    >
+      <input ref={inputRef} type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" className="hidden" onChange={e=>{ uploadFile(e.target.files?.[0]); e.target.value='' }} />
+      {uploading ? <Loader2 className="h-6 w-6 animate-spin text-primary" /> : <Upload className="h-6 w-6 text-slate-400" />}
+      <p className="mt-2 text-sm font-medium text-slate-700">{dragOver ? 'Drop image here' : 'Drag & drop image here'}</p>
+      <p className="text-xs text-slate-500">or click to browse</p>
+      <Button type="button" variant="outline" size="sm" className="mt-3 h-7 text-xs" onClick={e=>{e.stopPropagation(); inputRef.current?.click()}}>Choose Image</Button>
+      <p className="mt-2 text-xs text-slate-500">PNG, JPG, WEBP • Max 10 MB</p>
+      {progress!=null && <p className="mt-1 text-xs text-primary">{progress}%</p>}
+      {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
     </div>
   )
 }
@@ -133,7 +201,7 @@ export function BlogForm({ initialValues, destinations = [], isSubmitting, submi
       content: base.content?.length
         ? base.content.map((b) => ({ ...b, items: b.items?.length ? b.items : [''], level: b.level || 2 }))
         : [{ type: 'paragraph', text: '' }],
-      coverImage: base.coverImage || { url: '', alt: '' },
+      coverImage: base.coverImage || { url: '', alt: '', secureUrl: '', publicId: '' },
       category: base.category || 'travel-guide',
       tagsInput: (base.tags || []).join(', '),
       destinationId: base.destinationId || base.destination?.id || '',
@@ -150,129 +218,183 @@ export function BlogForm({ initialValues, destinations = [], isSubmitting, submi
     control,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm({
     mode: 'onChange',
     resolver: zodResolver(blogFormSchema),
     defaultValues: defaults,
   })
 
-  const coverUrl = watch('coverImage.url')
+  const published = watch('published')
+  const featured = watch('featured')
 
   function submit(values) {
     onSubmit(toBlogPayload(values))
   }
 
-  const eMsg = (obj) =>
-    typeof obj === 'string' || obj?.message ? obj?.message || obj : null
+  const handleSaveDraft = () => {
+    setValue('published', false, { shouldDirty: true, shouldValidate: true })
+    setTimeout(()=> handleSubmit(submit)(), 0)
+  }
+  const handlePublish = () => {
+    setValue('published', true, { shouldDirty: true, shouldValidate: true })
+    setTimeout(()=> handleSubmit(submit)(), 0)
+  }
+
+  const isEdit = !!initialValues?.id
 
   return (
-    <form onSubmit={handleSubmit(submit)} noValidate className="space-y-6">
-      <Card>
-        <CardHeader><CardTitle className="text-base">Article</CardTitle></CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <Label htmlFor="b-title">Title *</Label>
-            <Input id="b-title" className="mt-1.5" aria-invalid={!!errors.title} {...register('title')} />
-            {errors.title && <p className="mt-1 text-xs text-destructive">{errors.title.message}</p>}
-          </div>
-          <div className="sm:col-span-2">
-            <Label htmlFor="b-slug">Slug</Label>
-            <Input id="b-slug" className="mt-1.5" placeholder="auto-generated from the title if blank" {...register('slug')} />
-            {errors.slug && <p className="mt-1 text-xs text-destructive">{errors.slug.message}</p>}
-          </div>
-          <div className="sm:col-span-2">
-            <Label htmlFor="b-excerpt">Excerpt *</Label>
-            <div className="mt-1.5">
-              <RichTextEditor
-                value={watch('excerpt') || ''}
-                onChange={(html) => setValue('excerpt', html, { shouldValidate: true, shouldDirty: true })}
-                placeholder="Excerpt…"
-                error={!!errors.excerpt}
-              />
+    <form onSubmit={handleSubmit(submit)} noValidate className="w-full min-w-0 max-w-full">
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-white px-4 py-4 sm:px-5">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight sm:text-[22px]">{isEdit ? 'Edit travel blog' : 'New travel blog'}</h1>
+          <p className="mt-1 text-xs text-slate-500">Write and publish a travel story.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="outline" size="sm" className="h-8 text-xs" disabled={isSubmitting} onClick={handleSaveDraft}>
+            {isSubmitting && !published ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+            Save Draft
+          </Button>
+          <Button type="button" size="sm" className="h-8 bg-slate-900 text-white hover:bg-slate-800 text-xs" disabled={isSubmitting} onClick={handlePublish}>
+            {isSubmitting && published ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+            Publish
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-0 divide-y divide-slate-200 border-x border-b border-slate-200 bg-white">
+        {/* Article */}
+        <div className="p-4 sm:p-5">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-700">Article</h3>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <Label htmlFor="b-title" className="text-xs font-semibold text-slate-700">Title *</Label>
+              <Input id="b-title" {...register('title')} className="mt-1 h-9 w-full min-w-0 max-w-full text-sm" placeholder="Leh Ladakh: Complete Travel Guide" aria-invalid={!!errors.title} />
+              {errors.title && <p className="mt-1 text-xs text-destructive">{errors.title.message}</p>}
             </div>
-            {errors.excerpt && <p className="mt-1 text-xs text-destructive">{errors.excerpt.message}</p>}
-          </div>
-          <div>
-            <Label htmlFor="b-category">Category *</Label>
-            <Select id="b-category" className="mt-1.5" {...register('category')}>
-              {BLOG_CATEGORIES.map((c) => (
-                <option key={c} value={c}>{BLOG_CATEGORY_LABELS[c]}</option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="b-dest">Destination</Label>
-            <Select id="b-dest" className="mt-1.5" {...register('destinationId')}>
-              <option value="">No destination</option>
-              {destinations.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}{d.country ? ` — ${d.country}` : ''}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div className="sm:col-span-2">
-            <Label htmlFor="b-tags">Tags</Label>
-            <Input id="b-tags" className="mt-1.5" placeholder="comma, separated, tags" {...register('tagsInput')} />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader><CardTitle className="text-base">Cover image</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label>Cover image</Label>
-            <div className="mt-1.5">
-              <ImageUploader value={watch('coverImage')} onChange={(v)=> setValue('coverImage', {...(watch('coverImage')||{}), ...v, alt: v.alt || watch('coverImage.alt')}, {shouldValidate:true, shouldDirty:true})} folder="blog-media" />
+            <div className="sm:col-span-2">
+              <Label htmlFor="b-slug" className="text-xs font-semibold text-slate-700">Slug</Label>
+              <Input id="b-slug" {...register('slug')} className="mt-1 h-9 w-full min-w-0 max-w-full text-sm" placeholder="auto-generated from title if blank" />
+              <p className="mt-1 text-xs text-slate-500">Auto-generated from title if blank. URL: /blog/{watch('slug') || 'your-slug'}</p>
+              {errors.slug && <p className="mt-1 text-xs text-destructive">{errors.slug.message}</p>}
             </div>
-            <div className="mt-2"><Input placeholder="Alt text" {...register('coverImage.alt')} /></div>
+            <div className="min-w-0">
+              <Label htmlFor="b-category" className="text-xs font-semibold text-slate-700">Category *</Label>
+              <Select id="b-category" {...register('category')} className="mt-1 h-9 w-full min-w-0 max-w-full text-sm">
+                {BLOG_CATEGORIES.map(c=> <option key={c} value={c}>{BLOG_CATEGORY_LABELS[c]}</option>)}
+              </Select>
+            </div>
+            <div className="min-w-0">
+              <Label htmlFor="b-dest" className="text-xs font-semibold text-slate-700">Destination</Label>
+              <Select id="b-dest" {...register('destinationId')} className="mt-1 h-9 w-full min-w-0 max-w-full text-sm">
+                <option value="">No destination</option>
+                {destinations.map(d=> <option key={d.id} value={d.id}>{d.name}</option>)}
+              </Select>
+            </div>
+            <div className="sm:col-span-2">
+              <Label htmlFor="b-tags" className="text-xs font-semibold text-slate-700">Tags</Label>
+              <Input id="b-tags" {...register('tagsInput')} className="mt-1 h-9 w-full min-w-0 max-w-full text-sm" placeholder="mountains, adventure, guide" />
+              <p className="mt-1 text-xs text-slate-500">Comma separated.</p>
+            </div>
           </div>
-          {coverUrl && (
-            <DestinationImage image={watch('coverImage')} alt="Cover preview" className="aspect-[16/8] w-full rounded-xl" />
-          )}
-        </CardContent>
-      </Card>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Content</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ContentBlocks control={control} register={register} watch={watch} setValue={setValue} errors={errors} />
-        </CardContent>
-      </Card>
+        {/* Content */}
+        <div className="p-4 sm:p-5">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-700">Content</h3>
+          <p className="mt-1 text-xs text-slate-500">The rich-text editor is the primary writing area. Excerpt is a short summary for cards.</p>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">SEO &amp; publishing</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="b-seotitle">SEO title</Label>
-            <Input id="b-seotitle" className="mt-1.5" maxLength={120} {...register('seoTitle')} />
+          <div className="mt-4">
+            <Label htmlFor="b-excerpt" className="text-xs font-semibold text-slate-700">Excerpt *</Label>
+            <p className="text-xs text-slate-500">Short summary shown on blog cards and previews. 10–400 characters.</p>
+            <div className="mt-2">
+              <Textarea id="b-excerpt" rows={3} {...register('excerpt')} className="w-full min-w-0 max-w-full text-sm" placeholder="A quick 2-3 line summary of the story…" maxLength={400} />
+            </div>
+            <div className="mt-1 flex justify-between text-xs">
+              <span className="text-slate-500">{(watch('excerpt')||'').length} / 400</span>
+              {errors.excerpt && <span className="text-destructive">{errors.excerpt.message}</span>}
+            </div>
           </div>
-          <div>
-            <Label htmlFor="b-seodesc">SEO description</Label>
-            <Textarea id="b-seodesc" rows={2} maxLength={300} {...register('seoDescription')} />
-          </div>
-          <div className="flex flex-wrap gap-6 pt-1">
-            <label className="flex items-center gap-2.5 text-sm">
-              <Checkbox checked={watch('featured')} onCheckedChange={(v) => setValue('featured', v, { shouldValidate: true })} />
-              Featured
-            </label>
-            <label className="flex items-center gap-2.5 text-sm">
-              <Checkbox checked={watch('published')} onCheckedChange={(v) => setValue('published', v, { shouldValidate: true })} />
-              Published
-            </label>
-          </div>
-        </CardContent>
-      </Card>
 
-      <div className="flex justify-end gap-3">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-          {isSubmitting ? 'Saving…' : submitLabel}
-        </Button>
+          <div className="mt-5">
+            <Label className="text-xs font-semibold text-slate-700">Content *</Label>
+            <p className="text-xs text-slate-500">Full blog content. Use headings, lists, quotes and images.</p>
+            <div className="mt-2">
+              <ContentBlocks control={control} register={register} watch={watch} setValue={setValue} errors={errors} />
+            </div>
+          </div>
+        </div>
+
+        {/* Cover Image */}
+        <div className="p-4 sm:p-5">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-700">Cover image</h3>
+          <p className="mt-1 text-xs text-slate-500">Used as the main image for the blog.</p>
+          <div className="mt-3">
+            <CoverImageField value={watch('coverImage')} onChange={(v)=> setValue('coverImage', v, {shouldValidate:true, shouldDirty:true})} />
+            <div className="mt-3">
+              <Label htmlFor="b-cover-alt" className="text-xs font-semibold text-slate-700">Alt text</Label>
+              <Input id="b-cover-alt" {...register('coverImage.alt')} className="mt-1 h-8 w-full min-w-0 max-w-full text-sm" placeholder="Describe the cover image for accessibility" />
+            </div>
+          </div>
+        </div>
+
+        {/* Publishing */}
+        <div className="p-4 sm:p-5">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-700">Publishing</h3>
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            <div className="min-w-0">
+              <Label htmlFor="b-status" className="text-xs font-semibold text-slate-700">Status</Label>
+              <Select id="b-status" value={published ? 'published' : 'draft'} onChange={e=> setValue('published', e.target.value==='published', {shouldDirty:true, shouldValidate:true})} className="mt-1 h-9 w-full min-w-0 max-w-full text-sm">
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+              </Select>
+            </div>
+            <div className="flex items-end gap-6 pb-1">
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox checked={featured} onCheckedChange={v=> setValue('featured', !!v, {shouldDirty:true})} />
+                Featured
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox checked={published} onCheckedChange={v=> setValue('published', !!v, {shouldDirty:true})} />
+                Published
+              </label>
+            </div>
+            {initialValues?.publishedAt && (
+              <div className="sm:col-span-2">
+                <p className="text-xs text-slate-500">Published at: {new Date(initialValues.publishedAt).toLocaleString()}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* SEO */}
+        <div className="p-4 sm:p-5">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-700">SEO</h3>
+          <div className="mt-3 grid gap-4">
+            <div className="min-w-0">
+              <Label htmlFor="b-seotitle" className="text-xs font-semibold text-slate-700">SEO title</Label>
+              <Input id="b-seotitle" {...register('seoTitle')} className="mt-1 h-9 w-full min-w-0 max-w-full text-sm" placeholder="Leave blank to use article title" maxLength={120} />
+              <p className="mt-1 text-right text-xs text-slate-500">{(watch('seoTitle')||'').length} / 120</p>
+            </div>
+            <div className="min-w-0">
+              <Label htmlFor="b-seodesc" className="text-xs font-semibold text-slate-700">Meta description</Label>
+              <Textarea id="b-seodesc" rows={2} {...register('seoDescription')} className="w-full min-w-0 max-w-full text-sm" placeholder="Short description for search engines" maxLength={300} />
+              <p className="mt-1 text-right text-xs text-slate-500">{(watch('seoDescription')||'').length} / 300</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className={`sticky bottom-0 z-10 mt-4 flex items-center justify-between gap-3 border bg-white px-3 py-2 shadow-sm ${isDirty ? 'border-slate-200' : 'border-transparent bg-transparent shadow-none'}`}>
+        <span className={`text-xs font-medium ${isDirty ? 'text-slate-700' : 'text-transparent'}`}>{isDirty ? 'Unsaved changes' : ''}</span>
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="ghost" size="sm" className="h-8 text-xs" onClick={handleSaveDraft} disabled={isSubmitting}>Save Draft</Button>
+          <Button type="button" size="sm" className="h-8 bg-slate-900 text-white hover:bg-slate-800 text-xs" onClick={handlePublish} disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+            {isSubmitting ? 'Saving…' : (submitLabel || (isEdit ? 'Update' : 'Publish'))}
+          </Button>
+        </div>
       </div>
     </form>
   )
@@ -295,11 +417,11 @@ function ContentBlocks({ control, register, watch, setValue, errors }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Add a content block">
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Add a content block">
         {[['heading', 'Heading'], ['paragraph', 'Paragraph'], ['list', 'List'], ['image', 'Image (URL)'], ['quote', 'Quote']].map(
           ([type, label]) => (
-            <Button key={type} type="button" variant="outline" size="sm" onClick={() => addBlock(type)}>
-              <Plus className="h-4 w-4" aria-hidden="true" />
+            <Button key={type} type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => addBlock(type)}>
+              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
               {label}
             </Button>
           )
@@ -307,7 +429,7 @@ function ContentBlocks({ control, register, watch, setValue, errors }) {
       </div>
 
       {!fields.length && (
-        <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-md border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
           No content blocks yet — add a heading or paragraph to start writing.
         </p>
       )}
@@ -317,38 +439,38 @@ function ContentBlocks({ control, register, watch, setValue, errors }) {
       )}
 
       {fields.map((field, index) => (
-        <div key={field.id} className="rounded-xl border border-border p-4">
+        <div key={field.id} className="rounded-md border border-slate-200 bg-slate-50/50 p-3">
           <input type="hidden" {...register(`content.${index}.type`)} />
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">
+            <span className="inline-flex items-center rounded bg-white px-2 py-0.5 text-xs font-medium ring-1 ring-slate-200">
               {index + 1}. {BLOCK_LABELS[field.type] || field.type}
             </span>
             <div className="flex items-center gap-1">
               <IconBtn label={`Move block ${index + 1} up`} disabled={index === 0} onClick={() => move(index, index - 1)}>
-                <ArrowUp className="h-4 w-4" aria-hidden="true" />
+                <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
               </IconBtn>
               <IconBtn label={`Move block ${index + 1} down`} disabled={index === fields.length - 1} onClick={() => move(index, index + 1)}>
-                <ArrowDown className="h-4 w-4" aria-hidden="true" />
+                <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
               </IconBtn>
               <IconBtn label={`Remove block ${index + 1}`} danger onClick={() => remove(index)}>
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
               </IconBtn>
             </div>
           </div>
 
           {field.type === 'heading' && (
             <div className="grid gap-3 sm:grid-cols-[110px_1fr]">
-              <div>
-                <Label htmlFor={`c-${index}-level`}>Level</Label>
-                <Select id={`c-${index}-level`} className="mt-1.5" {...register(`content.${index}.level`)}>
+              <div className="min-w-0">
+                <Label htmlFor={`c-${index}-level`} className="text-xs font-semibold text-slate-700">Level</Label>
+                <Select id={`c-${index}-level`} className="mt-1 h-8 w-full min-w-0 max-w-full text-sm" {...register(`content.${index}.level`)}>
                   <option value="2">H2</option>
                   <option value="3">H3</option>
                   <option value="4">H4</option>
                 </Select>
               </div>
-              <div>
-                <Label htmlFor={`c-${index}-text`}>Heading text *</Label>
-                <Input id={`c-${index}-text`} className="mt-1.5" {...register(`content.${index}.text`)} />
+              <div className="min-w-0">
+                <Label htmlFor={`c-${index}-text`} className="text-xs font-semibold text-slate-700">Heading text *</Label>
+                <Input id={`c-${index}-text`} className="mt-1 h-8 w-full min-w-0 max-w-full text-sm" {...register(`content.${index}.text`)} />
                 {errors.content?.[index]?.text && (
                   <p className="mt-1 text-xs text-destructive">{errors.content[index].text.message}</p>
                 )}
@@ -357,16 +479,17 @@ function ContentBlocks({ control, register, watch, setValue, errors }) {
           )}
 
           {(field.type === 'paragraph' || field.type === 'quote') && (
-            <div>
-              <Label htmlFor={`c-${index}-text`}>
+            <div className="min-w-0">
+              <Label htmlFor={`c-${index}-text`} className="text-xs font-semibold text-slate-700">
                 {field.type === 'paragraph' ? 'Paragraph *' : 'Quote *'}
               </Label>
-              <div className="mt-1.5">
+              <div className="mt-1">
                 <RichTextEditor
                   value={watch ? watch(`content.${index}.text`) || '' : ''}
                   onChange={(html) => setValue && setValue(`content.${index}.text`, html, { shouldValidate: true, shouldDirty: true })}
                   placeholder={field.type === 'paragraph' ? 'Paragraph text…' : 'Quote text…'}
                   error={!!errors.content?.[index]?.text}
+                  className="min-h-[180px]"
                 />
               </div>
               {errors.content?.[index]?.text && (
@@ -375,24 +498,24 @@ function ContentBlocks({ control, register, watch, setValue, errors }) {
             </div>
           )}
 
-          {field.type === 'list' && <ListItems control={control} index={index} />}
+          {field.type === 'list' && <ListItems control={control} index={index} register={register} />}
 
           {field.type === 'image' && (
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <Label htmlFor={`c-${index}-url`}>Image URL *</Label>
-                <Input id={`c-${index}-url`} type="url" className="mt-1.5" placeholder="https://…" {...register(`content.${index}.url`)} />
+              <div className="sm:col-span-2 min-w-0">
+                <Label htmlFor={`c-${index}-url`} className="text-xs font-semibold text-slate-700">Image URL *</Label>
+                <Input id={`c-${index}-url`} type="url" className="mt-1 h-8 w-full min-w-0 max-w-full text-sm" placeholder="https://…" {...register(`content.${index}.url`)} />
                 {errors.content?.[index]?.url && (
                   <p className="mt-1 text-xs text-destructive">{errors.content[index].url.message}</p>
                 )}
               </div>
-              <div>
-                <Label htmlFor={`c-${index}-alt`}>Alt text</Label>
-                <Input id={`c-${index}-alt`} className="mt-1.5" {...register(`content.${index}.alt`)} />
+              <div className="min-w-0">
+                <Label htmlFor={`c-${index}-alt`} className="text-xs font-semibold text-slate-700">Alt text</Label>
+                <Input id={`c-${index}-alt`} className="mt-1 h-8 w-full min-w-0 max-w-full text-sm" {...register(`content.${index}.alt`)} />
               </div>
-              <div>
-                <Label htmlFor={`c-${index}-caption`}>Caption</Label>
-                <Input id={`c-${index}-caption`} className="mt-1.5" {...register(`content.${index}.caption`)} />
+              <div className="min-w-0">
+                <Label htmlFor={`c-${index}-caption`} className="text-xs font-semibold text-slate-700">Caption</Label>
+                <Input id={`c-${index}-caption`} className="mt-1 h-8 w-full min-w-0 max-w-full text-sm" {...register(`content.${index}.caption`)} />
               </div>
             </div>
           )}

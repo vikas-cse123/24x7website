@@ -52,7 +52,7 @@ export function ReviewsFromTravellers() {
 
   return (
     <section aria-label="Reviews from our travellers" className="bg-background py-12 lg:py-16">
-      <Container>
+      <Container className="max-w-none mx-0 w-full px-5 sm:px-6 lg:px-[90px]">
         <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
           Reviews From Our Travellers
         </h2>

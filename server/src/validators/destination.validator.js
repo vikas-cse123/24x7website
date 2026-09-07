@@ -24,11 +24,24 @@ const destinationFields = {
   country: z.string().trim().min(1, 'Country is required').max(80),
   region: z.string().trim().max(80).optional(),
   type: z.enum(['beach', 'hill-station', 'city', 'wildlife', 'cultural', 'adventure', 'religious', 'other']).optional(),
-  category: z.enum(['international', 'domestic', 'weekend', 'other']).optional(),
+  category: z
+    .union([
+      z.enum(['international', 'domestic', 'weekend', 'other']),
+      z.array(z.enum(['international', 'domestic', 'weekend', 'other'])).min(1).max(4),
+    ])
+    .optional()
+    .transform((v) => {
+      if (!v) return v
+      if (Array.isArray(v)) return v
+      if (typeof v === 'string' && v.includes(',')) return v.split(',').map((s) => s.trim()).filter(Boolean)
+      return v
+    }),
   shortDescription: z.string().trim().max(300).optional(),
   description: z.string().trim().optional(),
   homepageImage: imageSchema.optional(),
+  homepageName: z.string().trim().max(120).optional(),
   heroImage: imageSchema.optional(),
+  heroVideo: imageSchema.optional(),
   gallery: z.array(imageSchema).max(20).optional(),
   startingPrice: z.coerce.number().min(0).nullable().optional(),
   currency: z.string().trim().toUpperCase().max(10).optional(),
@@ -56,7 +69,9 @@ export const createDestinationSchema = z.object({
   shortDescription: destinationFields.shortDescription.default(''),
   description: destinationFields.description.default(''),
   homepageImage: destinationFields.homepageImage.default({}),
+  homepageName: destinationFields.homepageName.default(''),
   heroImage: destinationFields.heroImage.default({}),
+  heroVideo: destinationFields.heroVideo.default({}),
   gallery: destinationFields.gallery.default([]),
   startingPrice: destinationFields.startingPrice.default(null),
   currency: destinationFields.currency.default('INR'),

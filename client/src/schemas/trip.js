@@ -49,9 +49,34 @@ const faqSchema = z.object({
   answer: z.string().trim().max(2000),
 })
 
+const tripReviewSchema = z.object({
+  name: z.string().trim().min(1, 'Reviewer name is required').max(120),
+  review: z.string().trim().min(1, 'Review text is required').max(5000),
+  rating: z.coerce.number().int().min(1).max(5).optional().default(5),
+  image: imageSchema.optional().default({}),
+  published: z.boolean().optional().default(false),
+  displayOrder: z.coerce.number().int().optional().default(0),
+})
+
+const costingRowSchema = z.object({
+  mode: z.string().trim().max(80).optional().default(''),
+  price: z.preprocess(
+    (v) => (v === '' || v === null || v === undefined ? null : v),
+    z.coerce.number().min(0, 'Price cannot be negative').nullable()
+  ),
+  originalPrice: z.preprocess(
+    (v) => (v === '' || v === null || v === undefined ? null : v),
+    z.coerce.number().min(0, 'Price cannot be negative').nullable()
+  ),
+})
+
 export const tripSchema = z.object({
   destinationId: z.string().min(1, 'Select a destination'),
-  name: z.string().trim().min(1, 'Trip name is required').max(160),
+  // Canonical name is backend-managed (derived from Trip Card Name on submit);
+  // no Trip Name input exists in the admin UI.
+  name: z.string().trim().max(160).optional().default(''),
+  cardName: z.string().trim().min(1, 'Trip Card Name is required').max(160).optional().default(''),
+  pageHeading: z.string().trim().max(160).optional().default(''),
   slug: z
     .string()
     .trim()
@@ -68,14 +93,27 @@ export const tripSchema = z.object({
     (v) => (v === '' || v === null || v === undefined ? null : v),
     z.coerce.number().min(0, 'Price cannot be negative').nullable()
   ),
+  originalPrice: z.preprocess(
+    (v) => (v === '' || v === null || v === undefined ? null : v),
+    z.coerce.number().min(0, 'Price cannot be negative').nullable()
+  ),
+  datesOnRequest: z.boolean().optional().default(false),
+  departures: z
+    .array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a valid date'))
+    .max(30)
+    .optional()
+    .default([]),
   currency: z.string().trim().toUpperCase().max(10),
   heroImage: imageSchema,
-  gallery: z.array(imageSchema).max(30),
+  cardImage: imageSchema.optional().default({}),
+  heroVideo: imageSchema.optional().default({}),
   itinerary: z.array(itineraryDaySchema).max(60),
   inclusions: z.array(z.string().trim().max(300)),
   exclusions: z.array(z.string().trim().max(300)),
   importantInformation: z.string().trim(),
   faqs: z.array(faqSchema).max(60),
+  costing: z.array(costingRowSchema).max(30).optional().default([]),
+  reviews: z.array(tripReviewSchema).max(50).optional().default([]),
   featured: z.boolean(),
   published: z.boolean(),
   displayOrder: z.coerce.number().int().min(0),
@@ -87,6 +125,8 @@ export const tripSchema = z.object({
 export const tripFormDefault = {
   destinationId: '',
   name: '',
+  cardName: '',
+  pageHeading: '',
   slug: '',
   shortDescription: '',
   description: '',
@@ -95,14 +135,20 @@ export const tripFormDefault = {
   durationNights: 0,
   maxGroupSize: 10,
   startingPrice: null,
+  originalPrice: null,
+  datesOnRequest: false,
+  departures: [],
   currency: 'INR',
   heroImage: { url: '', alt: '' },
-  gallery: [],
+  cardImage: { url: '', alt: '' },
+  heroVideo: { url: '', alt: '' },
   itinerary: [],
   inclusions: [],
   exclusions: [],
   importantInformation: '',
   faqs: [],
+  costing: [],
+  reviews: [],
   featured: false,
   published: false,
   displayOrder: 0,

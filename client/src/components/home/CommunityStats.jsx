@@ -15,7 +15,7 @@ const STATS = [
   },
   {
     icon: '✈️',
-    title: '10k+ Trips Planned',
+    title: '10K+ Travellers',
     color: 'text-[#1E6FA3]', // deep sky – premium travel blue
   },
   {

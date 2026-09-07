@@ -28,7 +28,7 @@ export function HeaderSearch({ onSearch, className, inputClassName }) {
     >
       <Search
         aria-hidden="true"
-        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+        className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-600"
       />
       <input
         type="search"
@@ -37,7 +37,7 @@ export function HeaderSearch({ onSearch, className, inputClassName }) {
         placeholder="Search your trip..."
         aria-label="Search destinations and trips"
         className={cn(
-          'h-10 w-full rounded-full border border-input bg-background pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          'h-11 w-full rounded-full border border-slate-300 bg-background pl-11 pr-5 text-sm text-foreground shadow-sm placeholder:text-slate-500 transition-colors hover:border-slate-400 focus:border-slate-500 focus:outline-none focus-visible:outline-none focus-visible:ring-0 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden [&::-webkit-search-results-button]:hidden [&::-webkit-search-results-decoration]:hidden',
           inputClassName
         )}
       />

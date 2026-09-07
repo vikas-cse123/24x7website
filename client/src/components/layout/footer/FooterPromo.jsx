@@ -2,54 +2,66 @@ import { Plane } from 'lucide-react'
 
 const PATH_COLOR = 'hsl(142 76% 36%)'
 const HEADLINE_COLOR = '#1b4332'
+const BANNER_BG = '#FFFDE5'
 
-// Minimal flat vector illustration: a smooth green travel path with one loop
-// flowing behind a right-pointing airplane. Pure SVG + the lucide Plane glyph
-// so it stays crisp at every size.
+// Centered composition: headline + large plane/string as one centered graphic
+// Plane points RIGHT like reference, sits ON string start, gap small.
+// No huge left gap — entire group centered in cream banner.
 function TravelIllustration() {
   return (
     <div
       aria-hidden="true"
-      className="w-full max-w-sm text-primary lg:max-w-md"
+      className="relative h-[150px] w-full max-w-[880px] sm:h-[180px] lg:h-[210px] xl:h-[220px] xl:max-w-[960px]"
     >
-      <div className="relative">
-        <svg viewBox="0 0 520 200" fill="none" className="h-auto w-full">
-          <path
-            d="M8 128 C 90 40 190 30 250 78 C 300 118 272 168 230 158 C 192 149 202 104 254 96 C 332 84 398 108 456 88"
-            stroke={PATH_COLOR}
-            strokeWidth="5"
-            strokeLinecap="round"
-          />
-        </svg>
-        <Plane
-          className="absolute h-10 w-10 sm:h-12 sm:w-12"
-          style={{
-            left: '88%',
-            top: '44%',
-            transform: 'translate(-50%, -50%) rotate(40deg)',
-          }}
-          fill="currentColor"
-          strokeWidth={1.5}
+      <svg
+        viewBox="0 0 900 220"
+        fill="none"
+        className="absolute inset-0 h-full w-full overflow-visible"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <path
+          d="M 0 105 C 80 82 160 72 240 96 C 310 120 360 138 420 112 C 470 88 515 42 480 14 C 445 -12 388 14 400 62 C 412 110 462 142 525 124 C 625 98 720 82 900 72"
+          stroke={PATH_COLOR}
+          strokeWidth="8.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
         />
-      </div>
+      </svg>
+      <Plane
+        className="absolute h-[95px] w-[95px] sm:h-[108px] sm:w-[108px] lg:h-[118px] lg:w-[118px] xl:h-[128px] xl:w-[128px] text-[#14281e]"
+        style={{
+          left: 0,
+          top: '50%',
+          transform: 'translate(-38%, -52%) rotate(12deg)',
+        }}
+        fill="currentColor"
+        strokeWidth={1.15}
+      />
     </div>
   )
 }
 
 export function FooterPromo() {
   return (
-    <section aria-label="Adventure awaits you">
-      <div className="grid items-center gap-10 py-14 sm:py-16 lg:grid-cols-[1.1fr_1fr] lg:gap-6 lg:py-24">
-        <h2
-          className="text-5xl font-medium italic leading-[1.08] tracking-tight sm:text-6xl lg:text-7xl"
-          style={{ color: HEADLINE_COLOR }}
-        >
-          Adventure
-          <br />
-          awaits you.
-        </h2>
-        <div className="flex justify-center lg:justify-end">
-          <TravelIllustration />
+    <section
+      aria-label="Adventure awaits you"
+      className="relative w-full overflow-hidden"
+      style={{ backgroundColor: BANNER_BG }}
+    >
+      <div className="relative flex min-h-[460px] flex-col items-center justify-center px-5 pb-10 pt-10 sm:min-h-[500px] sm:px-6 lg:min-h-[560px] lg:px-[90px] lg:pb-12 lg:pt-12">
+        <div className="flex w-full max-w-[1280px] flex-col items-center gap-6 sm:gap-8 lg:flex-row lg:items-center lg:justify-center lg:gap-10 xl:gap-12">
+          <h2
+            className="w-full shrink-0 text-center text-[44px] font-bold italic leading-[0.88] tracking-[-0.02em] sm:text-[62px] lg:w-[500px] lg:text-left lg:text-[96px] xl:w-[520px] xl:text-[106px]"
+            style={{ color: HEADLINE_COLOR }}
+          >
+            Adventure
+            <br />
+            <span className="whitespace-nowrap">awaits you.</span>
+          </h2>
+          <div className="flex w-full min-w-0 flex-1 items-center justify-center lg:max-w-[660px] xl:max-w-[760px]">
+            <TravelIllustration />
+          </div>
         </div>
       </div>
     </section>

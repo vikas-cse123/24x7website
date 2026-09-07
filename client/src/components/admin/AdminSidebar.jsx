@@ -14,15 +14,19 @@ function NavItem({ item, onNavigate }) {
       onClick={onNavigate}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium leading-none transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring relative',
           isActive
-            ? 'bg-slate-900 text-white shadow-sm'
-            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            ? 'bg-white text-slate-900 border border-slate-200 border-l-[3px] border-l-emerald-600 shadow-sm'
+            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
         )
       }
     >
-      <item.icon className="h-3.5 w-3.5 shrink-0" />
-      {item.label}
+      {({ isActive }) => (
+        <>
+          <item.icon className={cn('h-3.5 w-3.5 shrink-0', isActive ? 'text-emerald-600' : 'text-slate-400')} />
+          {item.label}
+        </>
+      )}
     </NavLink>
   )
 }

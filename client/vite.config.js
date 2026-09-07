@@ -1,8 +1,17 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
+import { dirname, resolve } from 'node:path'
+import dotenv from 'dotenv'
 
-const apiTarget = process.env.VITE_PROXY_TARGET || 'http://localhost:5000'
+// Load the project-root .env so the Vite proxy reads the actual server PORT
+// from the existing server configuration (server/src/config/index.js uses the
+// same file). Do NOT hardcode a random port — fallback matches server default.
+const __dirname = dirname(fileURLToPath(import.meta.url))
+dotenv.config({ path: resolve(__dirname, '../.env') })
+
+const serverPort = process.env.PORT || '5000'
+const apiTarget = process.env.VITE_PROXY_TARGET || `http://localhost:${serverPort}`
 
 export default defineConfig({
   plugins: [react()],

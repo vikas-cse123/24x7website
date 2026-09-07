@@ -28,12 +28,17 @@ export function AdminDestinationFormPage({ mode }) {
 
   const createMutation = useMutation({
     mutationFn: (values) => adminDestinationApi.create(values),
-    onSuccess: () => {
+    onSuccess: (res) => {
       toast.success('Destination created')
       queryClient.invalidateQueries({ queryKey: ['admin', 'destinations'] })
-      navigate('/admin/destinations')
+      const created = res?.data?.data
+      if (created?.id) {
+        navigate(`/admin/destinations/${created.id}/edit`)
+      } else {
+        navigate('/admin/destinations')
+      }
     },
-    onError: (err) => toast.error(err.message || 'Create failed'),
+    onError: (err) => toast.error(err.response?.data?.message || err.message || 'Create failed'),
   })
 
   const updateMutation = useMutation({
@@ -60,7 +65,9 @@ export function AdminDestinationFormPage({ mode }) {
       category: destination.category || 'other',
       description: destination.description || '',
       homepageImage: destination.homepageImage || { url: '', alt: '' },
+      homepageName: destination.homepageName || '',
       heroImage: destination.heroImage || { url: '', alt: '' },
+      heroVideo: { url: destination.heroVideo?.url || '', alt: destination.heroVideo?.alt || '' },
       gallery: destination.gallery || [],
       startingPrice: destination.startingPrice ?? null,
       currency: destination.currency || 'INR',
@@ -85,6 +92,16 @@ export function AdminDestinationFormPage({ mode }) {
     onError: (err) => toast.error(err.message || 'Delete failed'),
   })
 
+  const [moreOpen, setMoreOpen] = React.useState(false)
+  const moreRef = React.useRef(null)
+  React.useEffect(() => {
+    const h = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false)
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [])
+
   if (isEdit && loadingEdit) {
     return (
       <div className="space-y-4">
@@ -108,16 +125,6 @@ export function AdminDestinationFormPage({ mode }) {
       </div>
     )
   }
-
-  const [moreOpen, setMoreOpen] = React.useState(false)
-  const moreRef = React.useRef(null)
-  React.useEffect(() => {
-    const h = (e) => {
-      if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false)
-    }
-    document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
-  }, [])
 
   return (
     <div>
@@ -151,7 +158,6 @@ export function AdminDestinationFormPage({ mode }) {
                   <span className={`h-1.5 w-1.5 rounded-full ${destination.published ? 'bg-emerald-500' : 'bg-slate-400'}`} />
                   {destination.published ? 'Published' : 'Draft'}
                 </span>
-                <span>· {destination.country}{destination.region ? ` · ${destination.region}` : ''}</span>
               </p>
             )}
             {!isEdit && <p className="mt-0.5 text-xs text-slate-500">Add a new destination to your website.</p>}

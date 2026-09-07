@@ -18,7 +18,7 @@ export function RelatedBlogs() {
 
   return (
     <section className="py-12 lg:py-16">
-      <Container>
+      <Container className="max-w-none mx-0 w-full px-5 sm:px-6 lg:px-[90px]">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Travel Blogs</h2>

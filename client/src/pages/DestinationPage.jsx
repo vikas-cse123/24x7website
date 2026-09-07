@@ -1,19 +1,19 @@
 import { useQuery } from '@tanstack/react-query'
 import { useParams, Link } from 'react-router-dom'
 import * as React from 'react'
-import { MapPin, IndianRupee, ArrowLeft, HelpCircle, X } from 'lucide-react'
+import { ArrowLeft, HelpCircle, X } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
 import { DestinationCard } from '@/components/destinations/DestinationCard'
 import { TripCard } from '@/components/trips/TripCard'
 import { Accordion } from '@/components/ui/accordion'
-import { Lightbox } from '@/components/ui/lightbox'
-import { PlanTripTrigger } from '@/components/enquiry/PlanTripTrigger'
 import { destinationApi } from '@/services/destinations'
 import { tripApi } from '@/services/trips'
+import { TRIP_TYPE_LABELS } from '@/schemas/trip'
 import { faqApi } from '@/services/faqs'
 import { useSeo, destinationSeoTitle } from '@/lib/seo'
 import { createPortal } from 'react-dom'
+import { sanitizeHtml, markdownToHtml } from '@/lib/sanitize'
 
 function stripHtml(html) {
   if (!html) return ''
@@ -27,7 +27,7 @@ function stripHtml(html) {
   }
 }
 
-function getPreviewText(description, maxChars = 180) {
+function getPreviewText(description, maxChars = 400) {
   if (!description) return ''
   const text = /<[a-z][\s\S]*>/i.test(description) ? stripHtml(description) : String(description).replace(/\s+/g, ' ').trim()
   if (text.length <= maxChars) return text
@@ -35,6 +35,14 @@ function getPreviewText(description, maxChars = 180) {
   const lastSpace = sliced.lastIndexOf(' ')
   const truncated = lastSpace > 100 ? sliced.slice(0, lastSpace) : sliced
   return truncated + '...'
+}
+
+function getDisplayHtml(description) {
+  if (!description) return ''
+  const str = String(description)
+  if (/<[a-z][\s\S]*>/i.test(str)) return sanitizeHtml(str)
+  if (/^(#{1,4})\s+/m.test(str) || /\*\*/.test(str)) return markdownToHtml(str)
+  return ''
 }
 
 function DescriptionModal({ open, onClose, title, description }) {
@@ -54,7 +62,8 @@ function DescriptionModal({ open, onClose, title, description }) {
 
   if (!open) return null
 
-  const isRich = /<[a-z][\s\S]*>/i.test(String(description || ''))
+  const displayHtml = getDisplayHtml(description)
+  const isRich = !!displayHtml
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -80,7 +89,7 @@ function DescriptionModal({ open, onClose, title, description }) {
           {isRich ? (
             <div
               className="prose prose-sm max-w-none break-words prose-headings:font-semibold prose-h2:text-base prose-h3:text-sm prose-p:my-3 prose-a:text-primary prose-a:underline prose-strong:font-semibold prose-ul:list-disc prose-ol:list-decimal prose-li:my-1 prose-blockquote:border-l-2 prose-blockquote:border-primary prose-blockquote:pl-3 prose-blockquote:italic"
-              dangerouslySetInnerHTML={{ __html: String(description) }}
+              dangerouslySetInnerHTML={{ __html: displayHtml }}
             />
           ) : (
             <div className="space-y-4 text-sm leading-relaxed text-gray-700">
@@ -105,8 +114,13 @@ function DescriptionModal({ open, onClose, title, description }) {
 
 export function DestinationPage() {
   const { slug } = useParams()
-  const [galleryIndex, setGalleryIndex] = React.useState(null)
   const [showDescriptionModal, setShowDescriptionModal] = React.useState(false)
+  const [styleFilter, setStyleFilter] = React.useState(null)
+
+  // Reset the style filter when navigating between destinations.
+  React.useEffect(() => {
+    setStyleFilter(null)
+  }, [slug])
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['destinations', 'slug', slug],
@@ -123,6 +137,12 @@ export function DestinationPage() {
   })
 
   const trips = tripsQuery.data?.data?.data?.items || []
+
+  // Travel styles present in this destination's trips — a pill renders ONLY
+  // for styles with at least one trip (derived from the canonical trip-type
+  // taxonomy, same labels as the trip cards and trip filters).
+  const availableStyles = [...new Set(trips.map((t) => t.tripType).filter(Boolean))]
+  const visibleTrips = styleFilter ? trips.filter((t) => t.tripType === styleFilter) : trips
 
   useSeo({
     title: destination ? destinationSeoTitle(destination.name) : undefined,
@@ -158,8 +178,6 @@ export function DestinationPage() {
     )
   }
 
-  const hasPrice = destination.startingPrice !== null && destination.startingPrice !== undefined
-
   // Media fallback: heroImage -> homepageImage -> gallery[0]
   const heroMedia = destination.heroImage?.url || destination.heroImage?.secureUrl
     ? destination.heroImage
@@ -167,64 +185,96 @@ export function DestinationPage() {
       ? destination.homepageImage
       : destination.gallery?.[0] || null
 
+  // Hero video takes precedence over the hero image when configured.
+  const heroVideoSrc = destination.heroVideo?.secureUrl || destination.heroVideo?.url || ''
+
   const description = destination.description || ''
-  const preview = getPreviewText(description)
-  const needsReadMore = description && description.replace(/\s+/g, ' ').trim().length > 180
+  let preview = getPreviewText(description)
+  // Stored descriptions sometimes begin with the destination name itself (a
+  // pasted heading), which tag-stripping concatenates into the preview text.
+  // Strip that leading name so the preview is description-only.
+  if (destination.name && preview.toLowerCase().startsWith(destination.name.toLowerCase())) {
+    preview = preview
+      .slice(destination.name.length)
+      .replace(/^[:\-–—|]\s*/, '')
+      .trimStart()
+  }
+  const needsReadMore = description && description.replace(/\s+/g, ' ').trim().length > 300
 
   return (
-    <Container className="py-8 lg:py-12">
-      <Link
-        to="/destinations"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        All destinations
-      </Link>
-
-      {/* Large Destination Media */}
-      <div className="mt-4 overflow-hidden rounded-2xl">
-        {heroMedia ? (
+    <div>
+      {/* Full-bleed landing hero — spans the viewport, no card, no rounding */}
+      <div className="relative w-full overflow-hidden">
+        {heroVideoSrc ? (
+          <video
+            key={heroVideoSrc}
+            ref={(el) => {
+              if (el) el.muted = true
+            }}
+            src={heroVideoSrc}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            className="aspect-[0.7/1] w-full object-cover md:aspect-[3.17/1]"
+          />
+        ) : heroMedia ? (
           <DestinationImage
             image={heroMedia}
             alt={heroMedia.alt || destination.name}
-            className="aspect-[16/7] w-full"
+            className="aspect-[0.7/1] w-full md:aspect-[3.17/1]"
           />
         ) : (
-          <div className="flex aspect-[16/7] w-full items-center justify-center bg-muted text-muted-foreground">
+          <div className="flex aspect-[0.7/1] w-full items-center justify-center bg-muted text-muted-foreground md:aspect-[3.17/1]">
             No media yet
+          </div>
+        )}
+        {(heroVideoSrc || heroMedia) && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent px-4 pb-6 pt-16 text-center sm:pb-8">
+            <p className="text-2xl font-bold tracking-tight text-white drop-shadow-md sm:text-3xl lg:text-4xl">
+              {destination.name}
+            </p>
           </div>
         )}
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
+      {/* Full-width content — 60px gap below the hero, 84px desktop gutters */}
+      <div className="w-full px-5 pb-8 pt-[60px] sm:px-8 lg:px-[84px] lg:pb-10">
+      <div>
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              {destination.name} Tour Packages
-            </h1>
+            {/* Reference heading: semantic H2, Norsy, 30px, #1E3133, 16px bottom
+                margin. Norsy is not bundled with the project yet — the family
+                is declared first with system fallbacks so it applies exactly
+                once the font files are added. */}
+            <h2
+              style={{
+                fontFamily:
+                  "'Norsy', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+              }}
+              className="mb-4 text-[30px] font-bold leading-[1.2] tracking-tight text-[#1E3133]"
+            >
+              {destination.name}
+            </h2>
             {destination.featured && (
-              <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground">
+              <span className="mb-4 rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground">
                 Featured
               </span>
             )}
           </div>
-          <p className="mt-2 flex items-center gap-1.5 text-muted-foreground">
-            <MapPin className="h-4 w-4" />
-            {destination.country}
-            {destination.region ? ` · ${destination.region}` : ''}
-          </p>
 
           {/* Description preview */}
           {description ? (
             <div className="mt-4">
-              <p className="line-clamp-2 text-sm leading-relaxed text-foreground/80 sm:text-base">
+              <p className="line-clamp-1 w-full text-sm leading-relaxed text-foreground/80 sm:text-base">
                 {preview}
               </p>
               {needsReadMore && (
                 <button
                   type="button"
                   onClick={() => setShowDescriptionModal(true)}
-                  className="mt-2 text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                  className="mt-2 text-sm font-normal text-blue-600 underline underline-offset-2 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                 >
                   Read More
                 </button>
@@ -232,37 +282,6 @@ export function DestinationPage() {
             </div>
           ) : null}
         </div>
-
-        {/* Price card */}
-        <aside className="h-fit rounded-xl border border-border bg-card p-6 shadow-card">
-          {hasPrice ? (
-            <>
-              <p className="text-sm text-muted-foreground">Starting at</p>
-              <p className="mt-1 flex items-center text-3xl font-bold">
-                <IndianRupee className="h-6 w-6" />
-                {destination.startingPrice.toLocaleString('en-IN')}
-              </p>
-              <p className="text-xs text-muted-foreground">{destination.currency}</p>
-            </>
-          ) : (
-            <p className="text-muted-foreground">Price on request</p>
-          )}
-
-          <Link
-            to="/trips"
-            className="mt-6 flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            Browse trips
-          </Link>
-
-          <PlanTripTrigger
-            destinationId={destination.id}
-            variant="outline"
-            className="mt-3 w-full"
-          >
-            Plan Your Dream Trip
-          </PlanTripTrigger>
-        </aside>
       </div>
 
       {/* Description Modal */}
@@ -273,32 +292,59 @@ export function DestinationPage() {
         description={description}
       />
 
-      {/* Trips for this destination */}
+      {/* Trips for this destination — style pills replace the former heading */}
       <div className="mt-12">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Trips in {destination.name}</h2>
-          {trips.length > 0 && (
-            <Link to="/trips" className="text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
-              View all trips
-            </Link>
-          )}
-        </div>
+        {availableStyles.length > 0 && (
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Filter trips by travel style">
+              {availableStyles.length > 1 && (
+                <button
+                  key="all"
+                  type="button"
+                  onClick={() => setStyleFilter(null)}
+                  aria-pressed={styleFilter === null}
+                  className={`inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    styleFilter === null
+                      ? 'border border-emerald-500 bg-emerald-50 text-emerald-700'
+                      : 'border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 hover:border-gray-300'
+                  }`}
+                >
+                  All
+                </button>
+              )}
+              {availableStyles.map((t) => {
+                const active = styleFilter === t
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setStyleFilter(active ? null : t)}
+                    aria-pressed={active}
+                    className={`inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                      active
+                        ? 'border border-emerald-500 bg-emerald-50 text-emerald-700'
+                        : 'border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 hover:border-gray-300'
+                    }`}
+                  >
+                    {TRIP_TYPE_LABELS[t] || t}
+                  </button>
+                )
+              })}
+          </div>
+        )}
 
         {tripsQuery.isLoading ? (
-          <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, i) => (
+          <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-72 animate-pulse rounded-xl bg-muted" />
             ))}
           </div>
         ) : trips.length === 0 ? (
-          <div className="mt-4 rounded-xl border border-dashed border-border bg-muted/30 p-10 text-center">
-            <p className="text-sm text-muted-foreground">
-              No trips available for this destination yet.
-            </p>
-          </div>
+          <p className="mt-4 text-sm text-muted-foreground">
+            No trips available for this destination yet.
+          </p>
         ) : (
-          <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {trips.map((trip) => (
+          <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {visibleTrips.map((trip) => (
               <TripCard key={trip.id} trip={trip} />
             ))}
           </div>
@@ -310,40 +356,8 @@ export function DestinationPage() {
 
       {/* Related destinations — same market category, real data only */}
       <RelatedDestinations category={destination.category} currentSlug={destination.slug} />
-
-      {/* Gallery */}
-      {destination.gallery && destination.gallery.length > 0 && (
-        <div className="mt-10">
-          <h2 className="mb-4 text-xl font-semibold">Gallery</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {destination.gallery.map((img, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setGalleryIndex(i)}
-                aria-label={`View image ${i + 1} of ${destination.gallery.length}`}
-                className="overflow-hidden rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <DestinationImage
-                  image={img}
-                  alt={img.alt || `${destination.name} ${i + 1}`}
-                  className="aspect-square w-full transition-transform duration-300 hover:scale-[1.03]"
-                />
-              </button>
-            ))}
-          </div>
-          {galleryIndex !== null && (
-            <Lightbox
-              images={destination.gallery}
-              index={galleryIndex}
-              onClose={() => setGalleryIndex(null)}
-              onPrev={() => setGalleryIndex((i) => (i - 1 + destination.gallery.length) % destination.gallery.length)}
-              onNext={() => setGalleryIndex((i) => (i + 1) % destination.gallery.length)}
-            />
-          )}
-        </div>
-      )}
-    </Container>
+      </div>
+    </div>
   )
 }
 

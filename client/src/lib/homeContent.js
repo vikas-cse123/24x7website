@@ -151,12 +151,12 @@ export const HOMEPAGE_SECTIONS = {
     'hero',
     'communityStats',
     'destinationExplorer',
+    'soloBanner',
     'upcomingTrips',
     'promoBannerCarousel',
     'bookWithConfidence',
     'vibeWithUs',
     'whyChooseUs',
-    'planTripCta',
     'trendingDestinations',
     'reviewsFromTravellers',
     'faq',
@@ -169,14 +169,13 @@ export const HOMEPAGE_SECTIONS = {
   ],
   visibility: {
     hero: true,
-    // Hidden: the same three statistics are now presented by the animated
-    // "Loved by Travellers Across India" section below the FAQ — showing
-    // both would duplicate the numbers on the homepage.
-    communityStats: false,
+    // Stats/reputation strip rendered immediately below the Home Video
+    // (hero) section and above Explore Destinations.
+    communityStats: true,
     destinationExplorer: true,
+    soloBanner: true,
     promoBannerCarousel: true,
     upcomingTrips: true,
-    planTripCta: true,
     bookWithConfidence: true,
     vibeWithUs: true,
     whyChooseUs: true,

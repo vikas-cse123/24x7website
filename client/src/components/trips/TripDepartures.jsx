@@ -101,6 +101,9 @@ export function TripDepartures({ trip, batches, isLoading: isLoadingProp, isErro
 
   if (isLoading) return <DepartureSkeleton />
 
+  // No departures: render nothing (never an empty-state box).
+  if (!isError && list.length === 0) return null
+
   return (
     <div>
       <div className="flex items-baseline justify-between gap-3">
@@ -115,10 +118,6 @@ export function TripDepartures({ trip, batches, isLoading: isLoadingProp, isErro
       {isError ? (
         <p className="mt-4 rounded-xl border border-destructive/40 p-6 text-center text-sm text-destructive">
           Could not load departures.
-        </p>
-      ) : list.length === 0 ? (
-        <p className="mt-4 rounded-xl border border-dashed border-border bg-muted/30 p-8 text-center text-sm text-muted-foreground">
-          No upcoming departures scheduled yet. Check back soon.
         </p>
       ) : (
         <div className="mt-4 space-y-3">

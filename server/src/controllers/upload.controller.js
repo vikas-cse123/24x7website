@@ -32,6 +32,18 @@ export async function uploadBatch(req, res, next) {
   } catch (err) { next(err) }
 }
 
+export async function uploadOneVideo(req, res, next) {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No video file provided' })
+    const meta = await imageStorage.upload(req.file.buffer, {
+      folder: pickFolder(req),
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+    })
+    res.status(201).json({ success: true, data: { ...meta, resourceType: 'video' } })
+  } catch (err) { next(err) }
+}
+
 export async function remove(req, res, next) {
   try {
     const publicId = (req.query.publicId || req.body.publicId || '').toString()

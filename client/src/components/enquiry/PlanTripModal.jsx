@@ -251,20 +251,29 @@ export function PlanTripModal() {
 
   return createPortal(
     <div
-      className={cn('fixed inset-0 z-[60]', open ? 'animate-fade-in' : 'pointer-events-none invisible')}
+      className={cn(
+        'fixed inset-0 z-[60] flex items-center justify-center p-4',
+        open ? 'animate-fade-in' : 'pointer-events-none invisible'
+      )}
+      style={{ width: '100vw', height: '100vh' }}
       aria-hidden={!open}
     >
       {open && (
         <>
-          {/* Overlay — dark translucent, ~70% opacity, covers everything. */}
-          <div className="absolute inset-0 bg-black/70" onClick={handleClose} aria-hidden="true" />
+          {/* Overlay — viewport-level, dark translucent, covers entire viewport */}
+          <div
+            className="fixed inset-0 bg-black/70"
+            style={{ width: '100vw', height: '100vh' }}
+            onClick={handleClose}
+            aria-hidden="true"
+          />
 
-          {/* Modal — compact centered card. */}
+          {/* Modal — compact centered card, viewport-centered via flex parent */}
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="plan-trip-title"
-            className="absolute inset-x-0 top-1/2 mx-auto w-[calc(100vw-2rem)] max-w-[380px] -translate-y-1/2 overflow-y-auto rounded-xl bg-white text-slate-900 shadow-2xl animate-scale-in"
+            className="relative w-full max-w-[380px] max-h-[90vh] overflow-y-auto rounded-xl bg-white text-slate-900 shadow-2xl animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             <button

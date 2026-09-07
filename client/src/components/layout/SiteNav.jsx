@@ -2,7 +2,16 @@ import * as React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { NAV_ITEMS } from '@/lib/nav'
+import { IndianFlagIcon } from '@/components/icons/IndianFlagIcon'
 import { cn } from '@/lib/utils'
+
+// Nav icons are emoji strings, except the 'indian-flag' marker which renders
+// the bundled SVG asset at the same visual size (~15px).
+function NavIcon({ icon }) {
+  if (!icon) return null
+  if (icon === 'indian-flag') return <IndianFlagIcon className="h-4 w-4" />
+  return icon
+}
 
 function Dropdown({ item }) {
   const [open, setOpen] = React.useState(false)
@@ -38,7 +47,7 @@ function Dropdown({ item }) {
       >
         {item.icon && (
           <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center text-[15px] leading-none">
-            {item.icon}
+            <NavIcon icon={item.icon} />
           </span>
         )}
         {item.label}
@@ -55,7 +64,7 @@ function Dropdown({ item }) {
             >
               {child.icon && (
                 <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center text-[15px] leading-none">
-                  {child.icon}
+                  <NavIcon icon={child.icon} />
                 </span>
               )}
               <span>{child.label}</span>
@@ -89,7 +98,7 @@ export function SiteNav({ className }) {
           >
             {item.icon && (
               <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center text-[15px] leading-none">
-                {item.icon}
+                <NavIcon icon={item.icon} />
               </span>
             )}
             {item.label}
