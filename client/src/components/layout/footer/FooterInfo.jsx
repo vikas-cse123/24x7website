@@ -72,7 +72,7 @@ function Heading({ children }) {
 
 function AddressBlock({ company, address, children }) {
   return (
-    <div className="mt-5 first:mt-4">
+    <div className="mt-4">
       <p className="text-[13px] font-medium leading-tight text-[#1f2937]">{company}</p>
       <p className="mt-1.5 max-w-xs text-[13px] leading-[1.5] text-[#4b5563]">
         {address}
@@ -85,12 +85,12 @@ function AddressBlock({ company, address, children }) {
 function FooterAccordion({ title, children, defaultOpen = false }) {
   const [open, setOpen] = React.useState(defaultOpen)
   return (
-    <div className="border-t border-[#1b4332]/15 py-3 first:border-t-0 sm:border-t-0 sm:py-0">
+    <div className="border-t border-[#1b4332]/15 first:border-t-0 sm:border-t-0 sm:py-0">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between py-2 text-left sm:hidden"
+        className="flex w-full items-center justify-between py-4 text-left sm:hidden"
       >
         <span className="text-[15px] font-semibold tracking-tight text-[#1b4332]">{title}</span>
         <svg
@@ -108,7 +108,7 @@ function FooterAccordion({ title, children, defaultOpen = false }) {
         <Heading>{title}</Heading>
         <div className="mt-4">{children}</div>
       </div>
-      {open && <div className="pb-3 pt-1 sm:hidden">{children}</div>}
+      {open && <div className="pb-4 pt-2 sm:hidden">{children}</div>}
     </div>
   )
 }
@@ -162,9 +162,9 @@ export function FooterInfo() {
             </li>
           </ul>
         </FooterAccordion>
-        <div className="border-t border-[#1b4332]/15 py-3">
+        <div className="border-t border-[#1b4332]/15 py-4">
           <h3 className="text-[15px] font-semibold tracking-tight text-[#1b4332]">Follow us on</h3>
-          <div className="mt-3 flex items-center gap-5">
+          <div className="mt-4 flex items-center gap-5">
             {FOOTER_SOCIALS.map(({ label, href }) => {
               const Icon = SOCIAL_ICONS[label]
               return (

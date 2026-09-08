@@ -6,9 +6,13 @@ import { Volume2, VolumeX } from 'lucide-react'
 // on top of the video. The video always starts muted; audio is only enabled
 // after the user explicitly clicks the sound button. The audio state is never
 // persisted — every page load/reload begins muted again.
-// Video is uploaded to S3 (24x7-website/home/video_web/home-video.mp4) and
-// served via CloudFront for fast delivery.
-const HERO_VIDEO_URL = 'https://d1zvcmhypeawxj.cloudfront.net/home/video_web/home-video.mp4'
+// Video is stored in S3 (24x7-website) and served via the app's
+// existing S3 media proxy (/api/media/...) which correctly handles
+// Range requests and Content-Type. The CloudFront URL for the same key
+// (https://d1zvcmhypeawxj.cloudfront.net/home/video_web/home-video.mp4)
+// currently returns NoSuchKey from the origin, so the proxy is used
+// to keep the current S3/CloudFront architecture without re-uploading.
+const HERO_VIDEO_URL = '/api/media/website/home/video_web/home-video.mp4'
 
 export function HeroSection() {
   const videoRef = React.useRef(null)

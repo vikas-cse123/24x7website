@@ -8,7 +8,14 @@ import { NAV_ITEMS } from '@/lib/nav'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { useAuth } from '@/hooks/useAuth'
 import { useUIStore } from '@/stores/ui'
+import { IndianFlagIcon } from '@/components/icons/IndianFlagIcon'
 import { cn } from '@/lib/utils'
+
+function NavIcon({ icon }) {
+  if (!icon) return null
+  if (icon === 'indian-flag') return <IndianFlagIcon className="h-4 w-4" />
+  return <span aria-hidden="true" className="text-[15px] leading-none">{icon}</span>
+}
 
 function MobileNavItem({ item, onNavigate }) {
   const [expanded, setExpanded] = React.useState(false)
@@ -22,7 +29,14 @@ function MobileNavItem({ item, onNavigate }) {
           onClick={() => setExpanded((v) => !v)}
           className="flex w-full items-center justify-between rounded-md px-3 py-2.5 text-base font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          {item.label}
+          <span className="flex items-center gap-2.5">
+            {item.icon && (
+              <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center text-[15px] leading-none">
+                <NavIcon icon={item.icon} />
+              </span>
+            )}
+            {item.label}
+          </span>
           <ChevronDown className={cn('h-4 w-4 transition-transform', expanded && 'rotate-180')} />
         </button>
         {expanded && (
@@ -32,8 +46,13 @@ function MobileNavItem({ item, onNavigate }) {
                 key={child.href}
                 to={child.href}
                 onClick={onNavigate}
-                className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
+                {child.icon && (
+                  <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center text-[15px] leading-none">
+                    <NavIcon icon={child.icon} />
+                  </span>
+                )}
                 {child.label}
               </Link>
             ))}
@@ -47,8 +66,13 @@ function MobileNavItem({ item, onNavigate }) {
     <Link
       to={item.href}
       onClick={onNavigate}
-      className="block rounded-md px-3 py-2.5 text-base font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex items-center gap-2.5 rounded-md px-3 py-2.5 text-base font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
+      {item.icon && (
+        <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center text-[15px] leading-none">
+          <NavIcon icon={item.icon} />
+        </span>
+      )}
       {item.label}
     </Link>
   )
@@ -66,7 +90,7 @@ export function MobileNav({ open, onOpenChange }) {
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange} side="right">
+    <Sheet open={open} onOpenChange={onOpenChange} side="left">
       <SheetContent onClose={close}>
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <Logo imgClassName="h-8" />

@@ -92,7 +92,7 @@ function DestinationSection({ title, columns, category, first }) {
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="flex w-full items-center justify-between border-t border-[#1b4332]/15 py-3 text-left"
+          className="flex w-full items-center justify-between border-t border-[#1b4332]/15 py-4 text-left"
         >
           <span className="text-[15px] font-semibold tracking-tight text-[#1b4332]">{title}</span>
           <svg
