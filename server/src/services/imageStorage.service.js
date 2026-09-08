@@ -8,6 +8,9 @@ import { LEGACY_KEY_PREFIX, KEY_PREFIXES, isAppKey } from '../utils/imageFolders
 export async function upload(buffer, opts) {
   return s3Service.uploadBuffer(buffer, opts)
 }
+export async function uploadFile(file, opts) {
+  return s3Service.uploadFile(file, opts)
+}
 
 export async function remove(objectKey) {
   return s3Service.destroy(objectKey)
@@ -115,72 +118,150 @@ export async function removeMany(objectKeys) {
   }
 }
 
-// Check whether ANY document across ALL MongoDB collections references the
-// given S3 key (directly as `publicId` or inside a URL string). This is the
-// reference-aware safety check run before any S3 object is deleted: the same
-// upload may be reused by a destination, trip, blog, trip-media record, etc.
-//
-// Atlas-compatible: queries collections without $where and inspects documents
-// in Node.js via JSON.stringify(doc).includes(key), so nested/renamed fields
-// are covered without maintaining a per-model path registry. Collections are
-// small (admin content) and this only runs for the handful of keys actually
-// removed in a save, with an early exit on the first referencing document.
-// Conservative on failure: if the DB cannot be consulted, the key is treated
-// as referenced (deletion skipped) rather than risking broken media.
-export async function isKeyReferenced(key) {
-  const db = mongoose.connection?.db
-  if (!db) return true
-  let collections
-  try {
-    collections = await db.collections()
-  } catch {
-    return true
-  }
-  for (const collection of collections) {
-    try {
-      const docs = await collection.find({}).toArray()
-      for (const doc of docs) {
-        if (JSON.stringify(doc).includes(key)) return true
-      }
-    } catch {
-      // If a collection cannot be scanned, assume it may reference the key.
-      return true
-    }
-  }
-  return false
+// Targeted reference checks — replace full collection scans.
+// Only models that actually store media are queried, via indexed field paths.
+// Fail-closed: any DB error treats key as referenced.
+function escapeRegex(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-// Batch version: check multiple keys with a single DB scan (optimisation).
-// Returns Map<key, boolean> where true = referenced/protected.
+async function checkModelsForKeys(keys) {
+  const uniq = [...new Set(keys.filter(Boolean))]
+  if (!uniq.length) return new Map()
+  const result = new Map(uniq.map((k) => [k, false]))
+  const combinedPattern = uniq.map(escapeRegex).join('|')
+  const urlRegex = combinedPattern ? new RegExp(combinedPattern) : null
+  // Lazy import models to avoid circular init issues
+  let Trip, Destination, Blog, TripMedia, AppSetting
+  try {
+    Trip = mongoose.model('Trip')
+    Destination = mongoose.model('Destination')
+    Blog = mongoose.model('Blog')
+    TripMedia = mongoose.model('TripMedia')
+    AppSetting = mongoose.model('AppSetting')
+  } catch {
+    // If models not registered yet, fail closed
+    uniq.forEach((k) => result.set(k, true))
+    return result
+  }
+
+  const checks = []
+
+  // Trip: heroImage/cardImage/heroVideo + reviews[].image + url variants
+  checks.push(
+    (async () => {
+      try {
+        const or = [
+          { 'heroImage.publicId': { $in: uniq } },
+          { 'cardImage.publicId': { $in: uniq } },
+          { 'heroVideo.publicId': { $in: uniq } },
+          { 'reviews.image.publicId': { $in: uniq } },
+        ]
+        if (urlRegex) {
+          or.push({ 'heroImage.url': { $regex: urlRegex } })
+          or.push({ 'heroImage.secureUrl': { $regex: urlRegex } })
+          or.push({ 'cardImage.url': { $regex: urlRegex } })
+          or.push({ 'cardImage.secureUrl': { $regex: urlRegex } })
+          or.push({ 'heroVideo.url': { $regex: urlRegex } })
+          or.push({ 'heroVideo.secureUrl': { $regex: urlRegex } })
+        }
+        const docs = await Trip.find({ $or: or }).lean()
+        for (const d of docs) for (const k of collectKeys(d)) if (result.has(k)) result.set(k, true)
+      } catch { uniq.forEach((k) => result.set(k, true)) }
+    })()
+  )
+
+  // Destination: homepageImage/heroImage/heroVideo/gallery
+  checks.push(
+    (async () => {
+      try {
+        const or = [
+          { 'homepageImage.publicId': { $in: uniq } },
+          { 'heroImage.publicId': { $in: uniq } },
+          { 'heroVideo.publicId': { $in: uniq } },
+          { 'gallery.publicId': { $in: uniq } },
+        ]
+        if (urlRegex) {
+          or.push({ 'homepageImage.url': { $regex: urlRegex } })
+          or.push({ 'homepageImage.secureUrl': { $regex: urlRegex } })
+          or.push({ 'heroImage.url': { $regex: urlRegex } })
+          or.push({ 'heroImage.secureUrl': { $regex: urlRegex } })
+          or.push({ 'heroVideo.url': { $regex: urlRegex } })
+          or.push({ 'heroVideo.secureUrl': { $regex: urlRegex } })
+        }
+        const docs = await Destination.find({ $or: or }).lean()
+        for (const d of docs) for (const k of collectKeys(d)) if (result.has(k)) result.set(k, true)
+      } catch { uniq.forEach((k) => result.set(k, true)) }
+    })()
+  )
+
+  // Blog: coverImage + content image blocks (url)
+  checks.push(
+    (async () => {
+      try {
+        const or = [
+          { 'coverImage.publicId': { $in: uniq } },
+          { 'content.url': { $in: uniq } },
+        ]
+        if (urlRegex) {
+          or.push({ 'coverImage.url': { $regex: urlRegex } })
+          or.push({ 'coverImage.secureUrl': { $regex: urlRegex } })
+          or.push({ 'content.url': { $regex: urlRegex } })
+          or.push({ 'content.caption': { $regex: urlRegex } })
+        }
+        const docs = await Blog.find({ $or: or }).lean()
+        for (const d of docs) for (const k of collectKeys(d)) if (result.has(k)) result.set(k, true)
+      } catch { uniq.forEach((k) => result.set(k, true)) }
+    })()
+  )
+
+  // TripMedia: publicId + url
+  checks.push(
+    (async () => {
+      try {
+        const or = [{ publicId: { $in: uniq } }]
+        if (urlRegex) {
+          or.push({ url: { $regex: urlRegex } })
+          or.push({ secureUrl: { $regex: urlRegex } })
+        }
+        const docs = await TripMedia.find({ $or: or }).lean()
+        for (const d of docs) for (const k of collectKeys(d)) if (result.has(k)) result.set(k, true)
+      } catch { uniq.forEach((k) => result.set(k, true)) }
+    })()
+  )
+
+  // AppSetting (Mixed data) — small collection, fetch all and check via collectKeys
+  checks.push(
+    (async () => {
+      try {
+        const docs = await AppSetting.find({}).lean()
+        for (const d of docs) for (const k of collectKeys(d.data)) if (result.has(k)) result.set(k, true)
+        // also check if data directly contains key via regex pattern in case of nested
+        if (urlRegex) {
+          for (const d of docs) {
+            const str = JSON.stringify(d.data || {})
+            for (const k of uniq) if (!result.get(k) && str.includes(k)) result.set(k, true)
+          }
+        }
+      } catch { uniq.forEach((k) => result.set(k, true)) }
+    })()
+  )
+
+  await Promise.all(checks)
+  return result
+}
+
+export async function isKeyReferenced(key) {
+  const m = await checkModelsForKeys([key])
+  return m.get(key) ?? true
+}
+
 export async function areKeysReferenced(keys) {
   const uniq = [...new Set(keys.filter(Boolean))]
   const result = new Map(uniq.map((k) => [k, false]))
   if (!uniq.length) return result
-  const db = mongoose.connection?.db
-  if (!db) {
-    uniq.forEach((k) => result.set(k, true))
-    return result
-  }
-  let collections
-  try {
-    collections = await db.collections()
-  } catch {
-    uniq.forEach((k) => result.set(k, true))
-    return result
-  }
-  try {
-    const allStrings = []
-    for (const collection of collections) {
-      const docs = await collection.find({}).toArray()
-      for (const doc of docs) allStrings.push(JSON.stringify(doc))
-    }
-    const combined = allStrings.join('\n')
-    for (const k of uniq) {
-      result.set(k, combined.includes(k))
-    }
-  } catch {
-    uniq.forEach((k) => result.set(k, true))
-  }
+  const map = await checkModelsForKeys(uniq)
+  for (const k of uniq) result.set(k, map.get(k) ?? true)
   return result
 }
 
@@ -210,26 +291,32 @@ export async function cleanupUnreferenced(objectKeys, label = '') {
     }
     return result
   }
-  for (const key of keys) {
-    try {
-      const referenced = referencedMap.get(key)
-      if (referenced) {
-        console.log(
-          `[Media Cleanup] Object still referenced elsewhere: skipping ${key}`
-        )
-        result.skipped.push(key)
-        continue
+  const toDelete = keys.filter((k) => !referencedMap.get(k))
+  const skippedKeys = keys.filter((k) => referencedMap.get(k))
+  for (const k of skippedKeys) {
+    console.log(`[Media Cleanup] Object still referenced elsewhere: skipping ${k}`)
+    result.skipped.push(k)
+  }
+  // Bounded concurrency deletes (~5 at a time)
+  const CONCURRENCY = 5
+  for (let i = 0; i < toDelete.length; i += CONCURRENCY) {
+    const chunk = toDelete.slice(i, i + CONCURRENCY)
+    const results = await Promise.allSettled(
+      chunk.map(async (key) => {
+        await s3Service.destroy(key)
+        return key
+      })
+    )
+    results.forEach((r, idx) => {
+      const key = chunk[idx]
+      if (r.status === 'fulfilled') {
+        console.log(`[Media Cleanup] Deleted unused S3 object: ${key}`)
+        result.deleted.push(key)
+      } else {
+        console.error(`[Media Cleanup] Failed to delete S3 object: ${key} — ${r.reason?.message || r.reason}`)
+        result.failed.push(key)
       }
-      await s3Service.destroy(key)
-      console.log(`[Media Cleanup] Deleted unused S3 object: ${key}`)
-      result.deleted.push(key)
-    } catch (err) {
-      // Missing object / network error / permissions — log and move on; the
-      // DB update stays valid. (S3 DeleteObject is idempotent, so a key that
-      // was already gone resolves here as a normal deletion.)
-      console.error(`[Media Cleanup] Failed to delete S3 object: ${key} — ${err?.message || err}`)
-      result.failed.push(key)
-    }
+    })
   }
   return result
 }

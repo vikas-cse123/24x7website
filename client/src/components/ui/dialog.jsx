@@ -23,7 +23,7 @@ export function Dialog({ open, onOpenChange, children }) {
   if (!open) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={() => onOpenChange?.(false)}
@@ -32,7 +32,7 @@ export function Dialog({ open, onOpenChange, children }) {
       <div
         role="dialog"
         aria-modal="true"
-        className="relative z-10 w-full max-w-md rounded-t-2xl bg-card text-card-foreground shadow-xl outline-none sm:rounded-2xl"
+        className="relative z-10 w-full max-w-[460px] rounded-2xl bg-white text-card-foreground shadow-xl outline-none"
       >
         {children}
       </div>

@@ -2,14 +2,14 @@ import httpClient from './http.js'
 
 // Public travel blogs.
 export const blogApi = {
-  list(params) {
-    return httpClient.get('/blogs', { params })
+  list(params, { signal } = {}) {
+    return httpClient.get('/blogs', { params, signal })
   },
-  listByDestination(destinationSlug, params) {
-    return httpClient.get(`/blogs/destination/${destinationSlug}`, { params })
+  listByDestination(destinationSlug, params, { signal } = {}) {
+    return httpClient.get(`/blogs/destination/${destinationSlug}`, { params, signal })
   },
-  getBySlug(slug) {
-    return httpClient.get(`/blogs/${slug}`)
+  getBySlug(slug, { signal } = {}) {
+    return httpClient.get(`/blogs/${slug}`, { signal })
   },
 }
 

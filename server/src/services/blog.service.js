@@ -35,6 +35,11 @@ function proxifyImage(img) {
   }
   return img
 }
+
+function sortFaqs(faqs) {
+  if (!Array.isArray(faqs)) return []
+  return [...faqs].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
+}
 export function toPublicBlog(doc, options = {}) {
   if (!doc) return null
   const dest = doc.destinationId && typeof doc.destinationId === 'object' ? doc.destinationId : null
@@ -50,6 +55,7 @@ export function toPublicBlog(doc, options = {}) {
     destination: dest
       ? { id: dest._id?.toString() || dest.id, name: dest.name, slug: dest.slug, country: dest.country }
       : null,
+    faqs: sortFaqs(doc.faqs),
     author: doc.author,
     readingTime: doc.readingTime,
     featured: doc.featured,

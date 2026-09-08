@@ -9,6 +9,15 @@ export const TRIP_TYPES = [
   'weekend',
   'international',
   'domestic',
+  'bike',
+  'spiritual',
+  'match_maker',
+  'wellness',
+  'trek',
+  'northern_lights_early_bird',
+  'middle_age_trips',
+  'upcoming_group_trips',
+  'corporate',
 ]
 
 export const TRIP_TYPE_LABELS = {
@@ -20,6 +29,15 @@ export const TRIP_TYPE_LABELS = {
   weekend: 'Weekend',
   international: 'International',
   domestic: 'Domestic',
+  bike: 'Bike Trips',
+  spiritual: 'Spiritual Trips',
+  match_maker: 'The Match Maker',
+  wellness: 'Wellness Retreats',
+  trek: 'Treks',
+  northern_lights_early_bird: 'Northern Lights Early Bird',
+  middle_age_trips: 'Middle Age Trips',
+  upcoming_group_trips: 'Upcoming Group Trips',
+  corporate: 'Corporate Trips',
 }
 
 const imageSchema = z.object({
@@ -70,6 +88,11 @@ const costingRowSchema = z.object({
   ),
 })
 
+const thingsToCarryItemSchema = z.object({
+  icon: z.string().trim().max(20).optional().default(''),
+  name: z.string().trim().min(1, 'Item name is required').max(100),
+})
+
 export const tripSchema = z.object({
   destinationId: z.string().min(1, 'Select a destination'),
   // Canonical name is backend-managed (derived from Trip Card Name on submit);
@@ -85,7 +108,7 @@ export const tripSchema = z.object({
     .or(z.literal('')),
   shortDescription: z.string().trim().max(5000),
   description: z.string().trim().max(10000),
-  tripType: z.enum(TRIP_TYPES),
+  tripType: z.array(z.enum(TRIP_TYPES)).min(1, 'Select at least one trip type'),
   durationDays: z.coerce.number().int().min(1, 'At least 1 day'),
   durationNights: z.coerce.number().int().min(0),
   maxGroupSize: z.coerce.number().int().min(1),
@@ -104,13 +127,14 @@ export const tripSchema = z.object({
     .optional()
     .default([]),
   currency: z.string().trim().toUpperCase().max(10),
-  heroImage: imageSchema,
+  heroImage: imageSchema.optional(),
   cardImage: imageSchema.optional().default({}),
   heroVideo: imageSchema.optional().default({}),
   itinerary: z.array(itineraryDaySchema).max(60),
   inclusions: z.array(z.string().trim().max(300)),
   exclusions: z.array(z.string().trim().max(300)),
   importantInformation: z.string().trim(),
+  thingsToCarry: z.array(thingsToCarryItemSchema).max(30).optional().default([]),
   faqs: z.array(faqSchema).max(60),
   costing: z.array(costingRowSchema).max(30).optional().default([]),
   reviews: z.array(tripReviewSchema).max(50).optional().default([]),
@@ -130,7 +154,7 @@ export const tripFormDefault = {
   slug: '',
   shortDescription: '',
   description: '',
-  tripType: 'group',
+  tripType: ['group'],
   durationDays: 1,
   durationNights: 0,
   maxGroupSize: 10,
@@ -139,13 +163,13 @@ export const tripFormDefault = {
   datesOnRequest: false,
   departures: [],
   currency: 'INR',
-  heroImage: { url: '', alt: '' },
   cardImage: { url: '', alt: '' },
   heroVideo: { url: '', alt: '' },
   itinerary: [],
   inclusions: [],
   exclusions: [],
   importantInformation: '',
+  thingsToCarry: [],
   faqs: [],
   costing: [],
   reviews: [],

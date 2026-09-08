@@ -18,17 +18,16 @@ export const NAV_ITEMS = [
   {
     label: 'Deals',
     icon: '🏷️',
-    children: [{ label: 'Northern Lights Early Bird', icon: '🔥', href: '/trips?featured=true' }],
+    children: [{ label: 'Northern Lights Early Bird', icon: '🔥', href: '/trips?search=Northern%20Lights' }],
   },
   {
     label: 'Travel Styles',
     icon: '🗺️',
     children: [
-      { label: 'Bike Trips', icon: '🏍️', href: '/trips' },
-      { label: 'Spiritual Trips', icon: '🛕', href: '/trips' },
-      { label: 'The Match Maker', icon: '💌', href: '/trips' },
-      { label: 'Wellness Retreats', icon: '🧘🏻', href: '/trips' },
-      { label: 'Treks', icon: '⛰️', href: '/trips' },
+      { label: 'Bike Trips', icon: '🏍️', href: '/trips?tripType=bike' },
+      { label: 'Spiritual Trips', icon: '🛕', href: '/trips?tripType=spiritual' },
+      { label: 'Wellness Retreats', icon: '🧘🏻', href: '/trips?tripType=wellness' },
+      { label: 'Treks', icon: '⛰️', href: '/trips?tripType=trek' },
     ],
   },
   { label: 'Upcoming Group Trips', icon: '🧳', href: '/category/upcoming-trips' },
@@ -37,18 +36,17 @@ export const NAV_ITEMS = [
     label: 'Customised Trips',
     icon: '🌍',
     children: [
-      { label: 'International Trips', icon: '✈️', href: '/customised-trips?category=international' },
-      { label: 'Domestic Trips', icon: 'indian-flag', href: '/customised-trips?category=domestic' },
-      { label: 'Corporate Trips', icon: '🏫', href: '/customised-trips?category=corporate' },
+      { label: 'International Trips', icon: '✈️', href: '/trips?category=international' },
+      { label: 'Domestic Trips', icon: 'indian-flag', href: '/trips?category=domestic' },
+      { label: 'Corporate Trips', icon: '🏫', href: '/trips?tripType=corporate' },
     ],
   },
   {
     label: 'More about us',
     icon: '🏢',
     children: [
-      { label: 'About 24x7Chhutti', icon: '🏢', href: '/about' },
-      { label: 'News and Press', icon: '📰', href: '/blogs' },
-      { label: 'Reviews', icon: '⭐', href: '/' },
+      { label: 'Blogs', icon: '📰', href: '/blogs' },
+      { label: 'Reviews', icon: '⭐', href: '/#reviews' },
     ],
   },
 ]
@@ -65,7 +63,6 @@ export const FOOTER_NAV = {
     { label: 'Travel Blogs', href: '/blogs' },
     { label: 'FAQs', href: '/faqs' },
     { label: 'Contact Us', href: '/contact' },
-    { label: 'About Us', href: '/about' },
     { label: 'Destinations', href: '/destinations' },
   ],
   legal: [

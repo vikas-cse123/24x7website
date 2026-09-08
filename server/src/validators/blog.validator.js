@@ -48,6 +48,12 @@ const contentBlockSchema = z
     }
   })
 
+const blogFaqSchema = z.object({
+  question: z.string().trim().min(1, 'Question is required').max(300),
+  answer: z.string().trim().max(2000),
+  displayOrder: z.coerce.number().int().optional().default(0),
+})
+
 // author / readingTime / publishedAt / audit fields are server-controlled and
 // intentionally NOT accepted from clients.
 const blogFields = {
@@ -63,6 +69,7 @@ const blogFields = {
   category: z.enum(BLOG_CATEGORIES),
   tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
   destinationId: z.string().regex(OBJECT_ID, 'Invalid destination').nullable().optional(),
+  faqs: z.array(blogFaqSchema).max(30).optional(),
   featured: z.boolean().optional(),
   published: z.boolean().optional(),
   seoTitle: z.string().trim().max(120).optional(),
@@ -75,6 +82,7 @@ export const createBlogSchema = z.object({
   coverImage: blogFields.coverImage.default({}),
   tags: blogFields.tags.default([]),
   destinationId: blogFields.destinationId.default(null),
+  faqs: blogFields.faqs.default([]),
   featured: blogFields.featured.default(false),
   published: blogFields.published.default(false),
   seoTitle: blogFields.seoTitle.default(''),

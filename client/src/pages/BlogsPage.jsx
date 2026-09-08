@@ -20,9 +20,7 @@ export function BlogsListing({ destinationSlug = null, heading, intro }) {
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
 
   const [searchInput, setSearchInput] = React.useState(search)
-  const [tagInput, setTagInput] = React.useState(tag)
   React.useEffect(() => setSearchInput(search), [search])
-  React.useEffect(() => setTagInput(tag), [tag])
   React.useEffect(() => {
     const t = setTimeout(() => {
       const next = searchInput.trim()
@@ -82,6 +80,29 @@ export function BlogsListing({ destinationSlug = null, heading, intro }) {
   const result = data?.data?.data
   const items = result?.items || []
 
+  const { data: availableCategoriesData } = useQuery({
+    queryKey: ['blogs', 'available-categories', destinationSlug || 'all'],
+    queryFn: async () => {
+      const results = await Promise.all(
+        BLOG_CATEGORIES.map(async (c) => {
+          try {
+            const res = destinationSlug
+              ? await blogApi.listByDestination(destinationSlug, { category: c, limit: 1 })
+              : await blogApi.list({ category: c, limit: 1 })
+            const total = res?.data?.data?.total ?? 0
+            return { category: c, total }
+          } catch {
+            return { category: c, total: 0 }
+          }
+        })
+      )
+      return results.filter((r) => r.total > 0).map((r) => r.category)
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+  const visibleCategories = availableCategoriesData ?? []
+  const isCategoriesLoading = availableCategoriesData === undefined
+
   return (
     <Container className="py-8 lg:py-12">
       {/* Heading / hero */}
@@ -106,7 +127,7 @@ export function BlogsListing({ destinationSlug = null, heading, intro }) {
         />
       </form>
 
-      {/* Category pills */}
+      {/* Category pills - only categories that have at least one blog */}
       <div
         role="group"
         aria-label="Filter blogs by category"
@@ -124,63 +145,28 @@ export function BlogsListing({ destinationSlug = null, heading, intro }) {
         >
           All
         </button>
-        {BLOG_CATEGORIES.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => setParams({ category: category === c ? null : c })}
-            aria-pressed={category === c}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-              category === c
-                ? 'bg-primary text-primary-foreground'
-                : 'border border-input bg-background text-muted-foreground hover:bg-accent hover:text-foreground'
-            }`}
-          >
-            {BLOG_CATEGORY_LABELS[c]}
-          </button>
-        ))}
+        {isCategoriesLoading
+          ? BLOG_CATEGORIES.slice(0, 3).map((c) => (
+              <div key={c} className="h-8 w-24 shrink-0 animate-pulse rounded-full bg-muted" />
+            ))
+          : visibleCategories.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setParams({ category: category === c ? null : c })}
+                aria-pressed={category === c}
+                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  category === c
+                    ? 'bg-primary text-primary-foreground'
+                    : 'border border-input bg-background text-muted-foreground hover:bg-accent hover:text-foreground'
+                }`}
+              >
+                {BLOG_CATEGORY_LABELS[c]}
+              </button>
+            ))}
       </div>
 
-      {/* Tag filtering */}
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            const v = tagInput.trim()
-            setParams({ tag: v || null })
-          }}
-          className="flex max-w-xs items-center gap-2"
-        >
-          <label htmlFor="blog-tag" className="sr-only">Filter by tag</label>
-          <input
-            id="blog-tag"
-            type="text"
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            placeholder="Filter by tag (e.g. beaches)"
-            className="h-9 flex-1 rounded-full border border-input bg-background px-4 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-          <Button type="submit" variant="outline" size="sm" className="shrink-0 rounded-full">Apply</Button>
-          {tag && (
-            <Button type="button" variant="ghost" size="sm" onClick={() => setParams({ tag: null })} className="shrink-0">
-              Clear
-            </Button>
-          )}
-        </form>
-        {tag && (
-          <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-            Tag: {tag}
-            <button
-              type="button"
-              onClick={() => setParams({ tag: null })}
-              aria-label="Clear tag filter"
-              className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              ×
-            </button>
-          </span>
-        )}
-      </div>
+
 
       {/* Active filter chips */}
       {(category || tag || search) && (

@@ -39,18 +39,18 @@ export function RelatedBlogs() {
 
         <div className="mt-6">
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <HorizontalCarousel aria-label="Loading travel blogs" itemClassName="w-[88vw] max-w-[340px] sm:w-[360px] lg:w-[340px]">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="overflow-hidden rounded-xl border border-border">
-                  <div className="aspect-[16/10] animate-pulse bg-muted" />
+                  <div className="aspect-[16/10] skeleton" />
                   <div className="space-y-2 p-4">
-                    <div className="h-3 w-24 animate-pulse rounded bg-muted" />
-                    <div className="h-4 w-full animate-pulse rounded bg-muted" />
-                    <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
+                    <div className="h-3 w-24 rounded skeleton" />
+                    <div className="h-4 w-full rounded skeleton" />
+                    <div className="h-4 w-2/3 rounded skeleton" />
                   </div>
                 </div>
               ))}
-            </div>
+            </HorizontalCarousel>
           ) : isError ? (
             <p role="alert" className="rounded-xl border border-destructive/40 p-8 text-center text-sm text-destructive">
               Could not load blogs.
@@ -62,7 +62,7 @@ export function RelatedBlogs() {
               </p>
             </div>
           ) : (
-            <HorizontalCarousel aria-label="Travel blogs" itemClassName="w-[19rem] sm:w-[21rem] lg:w-[23rem]">
+            <HorizontalCarousel aria-label="Travel blogs" itemClassName="w-[88vw] max-w-[340px] sm:w-[360px] lg:w-[340px]">
               {blogs.map((b) => (
                 <BlogCard key={b.id} blog={b} />
               ))}

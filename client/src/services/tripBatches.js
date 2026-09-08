@@ -3,8 +3,8 @@ import httpClient from './http.js'
 // Public upcoming departures for a trip (published, open/full, future only —
 // enforced server-side).
 export const tripBatchApi = {
-  listByTrip(tripId) {
-    return httpClient.get(`/trips/${tripId}/batches`)
+  listByTrip(tripId, { signal } = {}) {
+    return httpClient.get(`/trips/${tripId}/batches`, { signal })
   },
 }
 

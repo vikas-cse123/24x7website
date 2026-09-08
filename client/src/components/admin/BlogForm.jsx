@@ -11,6 +11,7 @@ import { Select } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { BLOG_CATEGORIES, BLOG_CATEGORY_LABELS, CONTENT_BLOCK_TYPES } from '@/schemas/blog'
 import { RichTextEditor } from '@/components/ui/rich-text-editor'
+import { FaqListEditor } from '@/components/trips/FaqListEditor'
 import httpClient from '@/services/http'
 
 // ---- schema (mirrors server; author/slug/publishedAt server-controlled) ----
@@ -22,6 +23,12 @@ const blockSchema = z.object({
   url: z.string().trim().url('Image URL must be a valid URL').or(z.literal('')).optional(),
   alt: z.string().trim().max(200).optional(),
   caption: z.string().trim().max(300).optional(),
+})
+
+const faqFormSchema = z.object({
+  question: z.string().trim().min(1, 'Question is required').max(300),
+  answer: z.string().trim().max(2000),
+  displayOrder: z.coerce.number().int().optional().default(0),
 })
 
 export const blogFormSchema = z.object({
@@ -48,6 +55,7 @@ export const blogFormSchema = z.object({
   category: z.enum(BLOG_CATEGORIES),
   tagsInput: z.string().trim(), // comma-separated in UI; split on submit
   destinationId: z.string(),
+  faqs: z.array(faqFormSchema).max(30).optional().default([]),
   featured: z.boolean(),
   published: z.boolean(),
   seoTitle: z.string().trim().max(120).optional(),
@@ -70,6 +78,13 @@ export function toBlogPayload(values) {
     category: values.category,
     tags: values.tagsInput.split(',').map((t) => t.trim()).filter(Boolean),
     destinationId: values.destinationId || null,
+    faqs: (values.faqs || [])
+      .map((f, i) => ({
+        question: (f.question || '').trim(),
+        answer: (f.answer || '').trim(),
+        displayOrder: typeof f.displayOrder === 'number' ? f.displayOrder : i + 1,
+      }))
+      .filter((f) => f.question && f.answer),
     featured: values.featured,
     published: values.published,
     seoTitle: values.seoTitle || '',
@@ -205,6 +220,9 @@ export function BlogForm({ initialValues, destinations = [], isSubmitting, submi
       category: base.category || 'travel-guide',
       tagsInput: (base.tags || []).join(', '),
       destinationId: base.destinationId || base.destination?.id || '',
+      faqs: Array.isArray(base.faqs)
+        ? base.faqs.map((f) => ({ question: f.question || '', answer: f.answer || '', displayOrder: f.displayOrder ?? 0 }))
+        : [],
       featured: !!base.featured,
       published: !!base.published,
       seoTitle: base.seoTitle || '',
@@ -324,6 +342,16 @@ export function BlogForm({ initialValues, destinations = [], isSubmitting, submi
               <ContentBlocks control={control} register={register} watch={watch} setValue={setValue} errors={errors} />
             </div>
           </div>
+        </div>
+
+        {/* FAQs */}
+        <div className="p-4 sm:p-5">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-700">FAQs</h3>
+          <p className="mt-1 text-xs text-slate-500">Answer common questions travellers may have about this destination or topic.</p>
+          <div className="mt-3">
+            <FaqListEditor control={control} />
+          </div>
+          {errors.faqs && <p className="mt-2 text-xs text-destructive">{errors.faqs.message}</p>}
         </div>
 
         {/* Cover Image */}

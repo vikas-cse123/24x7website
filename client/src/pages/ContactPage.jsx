@@ -104,8 +104,6 @@ export function ContactPage() {
             </ul>
             <div className="mt-6 flex flex-wrap gap-2">
               <Link to="/faqs" className="text-sm font-medium text-primary hover:underline">Visit FAQs</Link>
-              <span className="text-muted-foreground">·</span>
-              <Link to="/about" className="text-sm font-medium text-primary hover:underline">About us</Link>
             </div>
           </div>
 

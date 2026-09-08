@@ -27,12 +27,22 @@ export function PromoBannerCarousel() {
   const [paused, setPaused] = React.useState(false)
   const pointerStart = React.useRef(null)
 
-  // Auto-rotate whenever idle (paused on hover or while dragging).
+  const [hidden, setHidden] = React.useState(() =>
+    typeof document !== 'undefined' ? document.hidden : false
+  )
+
   React.useEffect(() => {
-    if (paused || dragX !== null) return undefined
+    const onVis = () => setHidden(document.hidden)
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+  }, [])
+
+  // Auto-rotate whenever idle (paused on hover, while dragging, or when tab hidden).
+  React.useEffect(() => {
+    if (paused || dragX !== null || hidden) return undefined
     const id = setInterval(() => setIndex((v) => (v + 1) % count), ROTATE_MS)
     return () => clearInterval(id)
-  }, [paused, dragX, count])
+  }, [paused, dragX, count, hidden])
 
   function onPointerDown(e) {
     pointerStart.current = e.clientX

@@ -10,6 +10,11 @@ import { destinationApi } from '@/services/destinations'
 function preparePayload(values) {
   const payload = { ...values }
   if (!payload.slug) delete payload.slug
+  // Trip hero media is now derived from destination — never stored on trip
+  if ('heroImage' in payload) delete payload.heroImage
+  if ('heroVideo' in payload) delete payload.heroVideo
+  // Reviews are no longer managed via Trip form — preserve legacy data
+  if ('reviews' in payload) delete payload.reviews
   // No Trip Name input exists in the UI: the canonical name is derived from
   // Trip Card Name (fallback: page heading, then a placeholder). Existing
   // stored names are never deleted by this mapping.
@@ -82,7 +87,7 @@ export function AdminTripFormPage({ mode }) {
       slug: trip.slug,
       shortDescription: trip.shortDescription || '',
       description: trip.description || '',
-      tripType: trip.tripType || 'group',
+      tripType: Array.isArray(trip.tripType) ? trip.tripType : trip.tripType ? [trip.tripType] : ['group'],
       durationDays: trip.durationDays || 1,
       durationNights: trip.durationNights || 0,
       maxGroupSize: trip.maxGroupSize || 10,
@@ -93,9 +98,7 @@ export function AdminTripFormPage({ mode }) {
         ? trip.departures.map((d) => String(d).slice(0, 10)).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
         : [],
       currency: trip.currency || 'INR',
-      heroImage: { url: trip.heroImage?.url || '', alt: trip.heroImage?.alt || '' },
       cardImage: { url: trip.cardImage?.url || '', alt: trip.cardImage?.alt || '' },
-      heroVideo: { url: trip.heroVideo?.url || '', alt: trip.heroVideo?.alt || '' },
       itinerary: trip.itinerary || [],
       inclusions: trip.inclusions || [],
       costing: Array.isArray(trip.costing)
@@ -107,17 +110,13 @@ export function AdminTripFormPage({ mode }) {
         : [],
       exclusions: trip.exclusions || [],
       importantInformation: trip.importantInformation || '',
-      faqs: trip.faqs || [],
-      reviews: Array.isArray(trip.reviews)
-        ? trip.reviews.map((r) => ({
-            name: r.name || '',
-            review: r.review || '',
-            rating: r.rating ?? 5,
-            image: r.image || { url: '', alt: '' },
-            published: !!r.published,
-            displayOrder: r.displayOrder ?? 0,
+      thingsToCarry: Array.isArray(trip.thingsToCarry)
+        ? trip.thingsToCarry.map((t) => ({
+            icon: t.icon || '',
+            name: t.name || '',
           }))
         : [],
+      faqs: trip.faqs || [],
       featured: !!trip.featured,
       published: !!trip.published,
       displayOrder: trip.displayOrder || 0,
@@ -128,6 +127,23 @@ export function AdminTripFormPage({ mode }) {
   }, [isEdit, trip])
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending
+
+  const deleteMutation = useMutation({
+    mutationFn: () => adminTripApi.remove(id),
+    onSuccess: () => {
+      toast.success('Trip deleted')
+      queryClient.invalidateQueries({ queryKey: ['admin', 'trips'] })
+      navigate('/admin/trips')
+    },
+    onError: (err) => toast.error(err.message || 'Delete failed'),
+  })
+  const [moreOpen, setMoreOpen] = React.useState(false)
+  const moreRef = React.useRef(null)
+  React.useEffect(() => {
+    const h = (e) => { if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false) }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [])
 
   if (isEdit && loadingEdit) {
     return (
@@ -149,23 +165,6 @@ export function AdminTripFormPage({ mode }) {
       </div>
     )
   }
-
-  const deleteMutation = useMutation({
-    mutationFn: () => adminTripApi.remove(id),
-    onSuccess: () => {
-      toast.success('Trip deleted')
-      queryClient.invalidateQueries({ queryKey: ['admin', 'trips'] })
-      navigate('/admin/trips')
-    },
-    onError: (err) => toast.error(err.message || 'Delete failed'),
-  })
-  const [moreOpen, setMoreOpen] = React.useState(false)
-  const moreRef = React.useRef(null)
-  React.useEffect(() => {
-    const h = (e) => { if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false) }
-    document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
-  }, [])
   return (
     <div>
       <div className="mb-3 flex items-center gap-1.5 text-xs text-slate-500">

@@ -1,0 +1,70 @@
+{
+  "timestamp": "2026-09-08T04:12:43.981Z",
+  "dryRun": true,
+  "force": true,
+  "concurrency": 5,
+  "tripsFound": 3,
+  "imagesUploaded": 0,
+  "tripsUpdated": 0,
+  "tripsSkipped": 0,
+  "tripsFailed": 0,
+  "entries": [
+    {
+      "tripId": "6a9f48822887f10cfab64688",
+      "tripCode": "TRP-000004",
+      "tripName": "Vietnam Grand Explorer",
+      "destination": {
+        "id": "6a9ec132b3d32c1685c1f330",
+        "name": "Vietnam Tour Packages",
+        "slug": "vietnam-tour-packages",
+        "country": "Vietnam"
+      },
+      "pixabayImageId": 1014712,
+      "pixabayQuery": "Vietnam travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/sunrise-boat-rowing-boat-nobody-1014712/",
+      "selectedImageUrl": "https://pixabay.com/get/ga56a047e5e91c0b9d89a3e3f60aa7543f436ccb1567434c8440126517e25c7b61d98a6e36a5f0a9d48ccba8cfc01ef576185f5a82e075d3012d26ade96973ad4_1280.jpg",
+      "s3Key": "trips/TRP-000004/card/trp-000004-1014712.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48812887f10cfab64686",
+      "tripCode": "TRP-000003",
+      "tripName": "Sri Lanka Family Escape",
+      "destination": {
+        "id": "6a9ebc0d19275a8182ffc2b9",
+        "name": "Sri Lanka Tour Packages",
+        "slug": "sri-lanka-tour-packages",
+        "country": "Sri Lanka"
+      },
+      "pixabayImageId": 3758193,
+      "pixabayQuery": "Sri Lanka travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/travels-ocean-sri-lanka-island-sea-3758193/",
+      "selectedImageUrl": "https://pixabay.com/get/g888dac8b5d75e07fcab38ef344b977cbacff4c8db36fa7ac86cb207efb5678c8fb71c98c9b0f222914a5e793af1851cd0de92175e4d6ce972e75d71009a86cd8_1280.jpg",
+      "s3Key": "trips/TRP-000003/card/trp-000003-3758193.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48812887f10cfab64683",
+      "tripCode": "TRP-000002",
+      "tripName": "Sri Lanka Island Highlights",
+      "destination": {
+        "id": "6a9ebc0d19275a8182ffc2b9",
+        "name": "Sri Lanka Tour Packages",
+        "slug": "sri-lanka-tour-packages",
+        "country": "Sri Lanka"
+      },
+      "pixabayImageId": 4818532,
+      "pixabayQuery": "Sri Lanka travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/galle-galle-fort-southern-sri-lanka-4818532/",
+      "selectedImageUrl": "https://pixabay.com/get/g7c7a2ddb7e8e7b31f26135c1a3949321faa8402dafcee8441bd1bd08155c264473d84737f37d9bdd0c0cd5856af81b8fedfa4ed839af5579b408b3aee3180a63_1280.jpg",
+      "s3Key": "trips/TRP-000002/card/trp-000002-4818532.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    }
+  ]
+}

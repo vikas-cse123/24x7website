@@ -66,23 +66,59 @@ function DestinationLink({ label, category, slugMap }) {
 
 function DestinationSection({ title, columns, category, first }) {
   const slugMap = useDestinationSlugMap()
+  const [open, setOpen] = React.useState(false)
   return (
-    <section className={first ? '' : 'mt-8 lg:mt-10'}>
-      <h3 className="text-[15px] font-semibold leading-none tracking-tight text-[#1b4332]">{title}</h3>
-      <div className="mt-3 border-t border-[#1b4332]/15 pt-4">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-7 sm:grid-cols-3 lg:grid-cols-5">
-          {columns.map((column, index) => (
-            <ul key={index} className="space-y-2">
-              {column.map((label) => (
-                <li key={label}>
-                  <DestinationLink label={label} category={category} slugMap={slugMap} />
-                </li>
-              ))}
-            </ul>
-          ))}
+    <>
+      {/* Desktop: grid */}
+      <section className={`hidden sm:block ${first ? '' : 'mt-8 lg:mt-10'}`}>
+        <h3 className="text-[15px] font-semibold leading-none tracking-tight text-[#1b4332]">{title}</h3>
+        <div className="mt-3 border-t border-[#1b4332]/15 pt-4">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-7 sm:grid-cols-3 lg:grid-cols-5">
+            {columns.map((column, index) => (
+              <ul key={index} className="space-y-2">
+                {column.map((label) => (
+                  <li key={label}>
+                    <DestinationLink label={label} category={category} slugMap={slugMap} />
+                  </li>
+                ))}
+              </ul>
+            ))}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+      {/* Mobile: accordion */}
+      <section className={`sm:hidden ${first ? '' : 'mt-2'}`}>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="flex w-full items-center justify-between border-t border-[#1b4332]/15 py-3 text-left"
+        >
+          <span className="text-[15px] font-semibold tracking-tight text-[#1b4332]">{title}</span>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className={`h-4 w-4 shrink-0 text-[#1b4332] transition-transform ${open ? 'rotate-180' : ''}`}
+            aria-hidden="true"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        {open && (
+          <div className="pb-4">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4 pt-2">
+              {columns.flat().map((label) => (
+                <div key={label}>
+                  <DestinationLink label={label} category={category} slugMap={slugMap} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+    </>
   )
 }
 

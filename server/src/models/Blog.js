@@ -39,6 +39,15 @@ const contentBlockSchema = new mongoose.Schema(
   { _id: false }
 )
 
+const blogFaqSchema = new mongoose.Schema(
+  {
+    question: { type: String, trim: true, maxlength: 300, default: '' },
+    answer: { type: String, trim: true, maxlength: 2000, default: '' },
+    displayOrder: { type: Number, default: 0 },
+  },
+  { _id: false }
+)
+
 const blogSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true, maxlength: 160 },
@@ -53,6 +62,7 @@ const blogSchema = new mongoose.Schema(
     content: { type: [contentBlockSchema], required: true, default: [] },
 
     coverImage: { type: imageSchema, default: () => ({}) },
+    faqs: { type: [blogFaqSchema], default: [] },
     category: {
       type: String,
       enum: BLOG_CATEGORIES,
@@ -102,6 +112,7 @@ blogSchema.index({ published: 1, featured: 1, publishedAt: -1 })
 blogSchema.index({ title: 'text', excerpt: 'text', tags: 'text' })
 
 // Estimate reading time from the words in all text-ish blocks (~200 wpm).
+// Requirement: every blog must show >10 min, randomized 12 / 15 etc.
 export function computeReadingTime(content) {
   let words = 0
   for (const block of content || []) {
@@ -112,7 +123,12 @@ export function computeReadingTime(content) {
     ]
     for (const t of texts) words += String(t).split(/\s+/).filter(Boolean).length
   }
-  return Math.max(1, Math.round(words / 200))
+  let base = Math.round(words / 200)
+  if (base <= 10) {
+    const opts = [12, 15, 18]
+    return opts[Math.floor(Math.random() * opts.length)]
+  }
+  return base
 }
 
 const Blog = mongoose.model('Blog', blogSchema)

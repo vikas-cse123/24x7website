@@ -28,19 +28,17 @@ const STATS = [
 export function CommunityStats() {
   return (
     <section className="border-y border-emerald-100/60 bg-[#ECFFF5]">
-      <Container className="py-2.5">
-        {/* Grid capped at 1000px: halves the visual gap between the three
-            stat groups (~194px → ~97px at desktop) while keeping dividers. */}
-        <div className="grid grid-cols-1 divide-y divide-emerald-100/60 sm:mx-auto sm:max-w-[1000px] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      <Container className="px-3 py-2 sm:px-6 sm:py-2.5">
+        <div className="grid grid-cols-3 divide-x divide-emerald-100/60">
           {STATS.map(({ icon, title }) => (
-            <div key={title} className="flex items-center justify-center gap-1">
+            <div key={title} className="flex flex-col items-center justify-center gap-0.5 px-1 py-1 text-center sm:flex-row sm:gap-1.5 sm:py-1">
               <span
                 aria-hidden="true"
-                className="grid h-6 w-6 shrink-0 place-items-center text-[17px] leading-none"
+                className="grid h-5 w-5 shrink-0 place-items-center text-[14px] leading-none sm:h-6 sm:w-6 sm:text-[17px]"
               >
                 {icon}
               </span>
-              <p className="whitespace-nowrap text-[16px] font-semibold leading-none tracking-tight text-[#0F172A]">
+              <p className="line-clamp-2 text-center text-[11px] font-semibold leading-tight tracking-tight text-[#0F172A] sm:whitespace-nowrap sm:text-[13px]">
                 {title}
               </p>
             </div>

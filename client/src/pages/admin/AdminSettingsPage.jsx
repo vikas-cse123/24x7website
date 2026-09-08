@@ -541,9 +541,9 @@ export function AdminSettingsPage() {
                   id="whatsapp-phone"
                   value={whatsappForm.phoneNumber}
                   onChange={(e) => setWhatsappForm((f) => ({ ...f, phoneNumber: e.target.value }))}
-                  placeholder="919310660016"
+                  placeholder="919958723666"
                 />
-                <p className="text-xs text-muted-foreground">Digits only, e.g. 919310660016 — +91, spaces or dashes are stripped automatically.</p>
+                <p className="text-xs text-muted-foreground">Digits only, e.g. 919958723666 — +91, spaces or dashes are stripped automatically.</p>
               </div>
 
               <div className="grid gap-2">

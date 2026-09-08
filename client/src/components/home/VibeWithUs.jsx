@@ -10,8 +10,7 @@ import { cn } from '@/lib/utils'
 // (hold + move horizontally); touch devices scroll natively. Each video has
 // its own mute/unmute toggle. Clicking a video opens the story-style
 // lightbox player (mute, share, tour-package CTA) like the reference design.
-const VIDEO_BASE = '/api/media/vibe-videos'
-const VIDEOS = Array.from({ length: 8 }, (_, i) => `${VIDEO_BASE}/video-${i + 1}.mp4`)
+import { VIDEOS } from '@/lib/vibeVideos'
 
 // Per-video tour CTA shown at the bottom of the lightbox. Edit titles,
 // prices and destination slugs here (link goes to /trips?destination=<slug>).
@@ -27,11 +26,40 @@ const TOURS = [
 ]
 
 export function VibeWithUs() {
+  const sectionRef = React.useRef(null)
   const trackRef = React.useRef(null)
   const videoRefs = React.useRef([])
   const dragRef = React.useRef(null)
+  const hasDraggedRef = React.useRef(false)
   const [dragging, setDragging] = React.useState(false)
   const [muted, setMuted] = React.useState(() => VIDEOS.map(() => true))
+  const [visible, setVisible] = React.useState(false)
+
+  React.useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        const isVisible = entries[0]?.isIntersecting
+        setVisible(isVisible)
+      },
+      { rootMargin: '200px' }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
+  React.useEffect(() => {
+    videoRefs.current.forEach((v) => {
+      if (!v) return
+      if (visible) {
+        const p = v.play()
+        if (p && typeof p.catch === 'function') p.catch(() => {})
+      } else {
+        v.pause()
+      }
+    })
+  }, [visible])
 
   // Lightbox state: index of the open video (null = closed) + its mute state
   const [active, setActive] = React.useState(null)
@@ -41,8 +69,10 @@ export function VibeWithUs() {
   const lbVideoRef = React.useRef(null)
 
   function onPointerDown(e) {
-    // Touch devices scroll natively; mouse users get hold-and-drag.
+    // Touch scrolls natively; mouse drag handled here for whole card
     if (e.pointerType !== 'mouse') return
+    if (e.button !== 0) return
+    hasDraggedRef.current = false
     dragRef.current = { startX: e.clientX, startScrollLeft: trackRef.current.scrollLeft }
     setDragging(true)
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -50,12 +80,24 @@ export function VibeWithUs() {
 
   function onPointerMove(e) {
     if (!dragRef.current) return
-    trackRef.current.scrollLeft = dragRef.current.startScrollLeft - (e.clientX - dragRef.current.startX)
+    if (e.cancelable) e.preventDefault()
+    const walk = e.clientX - dragRef.current.startX
+    if (Math.abs(walk) > 10) hasDraggedRef.current = true
+    trackRef.current.scrollLeft = dragRef.current.startScrollLeft - walk
   }
 
-  function onPointerUp() {
+  function onPointerUp(e) {
     dragRef.current = null
     setDragging(false)
+    try {
+      e.currentTarget?.releasePointerCapture?.(e.pointerId)
+    } catch {}
+    // keep hasDragged true for one tick to suppress click that follows drag
+    if (hasDraggedRef.current) {
+      setTimeout(() => {
+        hasDraggedRef.current = false
+      }, 0)
+    }
   }
 
   function toggleMute(i) {
@@ -135,7 +177,7 @@ export function VibeWithUs() {
     'grid h-9 w-9 place-items-center rounded-full bg-white/15 text-white backdrop-blur-sm transition-colors hover:bg-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white'
 
   return (
-    <section aria-label="Vibe with Us — traveller videos" className="bg-background py-10 lg:py-12">
+    <section ref={sectionRef} aria-label="Vibe with Us — traveller videos" className="bg-background py-10 lg:py-12">
       <Container className="max-w-none mx-0 w-full px-5 sm:px-6 lg:px-[90px]">
         <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
           Vibe with Us
@@ -150,23 +192,34 @@ export function VibeWithUs() {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
+        onClickCapture={(e) => {
+          if (hasDraggedRef.current) {
+            e.preventDefault()
+            e.stopPropagation()
+          }
+        }}
         className={cn(
-          'mt-8 flex select-none gap-4 overflow-x-auto px-5 pb-2 [scrollbar-width:none] sm:px-6 lg:px-[90px] [&::-webkit-scrollbar]:hidden',
+          'mt-8 flex select-none gap-12 overflow-x-auto px-5 pb-2 [scrollbar-width:none] sm:px-6 lg:px-[90px] [&::-webkit-scrollbar]:hidden overscroll-x-contain touch-pan-x scroll-smooth',
           dragging ? 'cursor-grabbing' : 'cursor-grab'
         )}
       >
         {VIDEOS.map((src, i) => (
           <div
             key={src}
-            className="relative h-[540px] w-[300px] shrink-0 overflow-hidden rounded-xl"
-            style={{ width: '300px', height: '540px', flex: '0 0 300px' }}
+            className="relative h-[550px] w-[320px] shrink-0 overflow-hidden rounded-xl"
+            style={{ width: '320px', height: '550px', flex: '0 0 320px' }}
           >
             <button
               type="button"
-              onClick={() => openLightbox(i)}
+              onClick={() => {
+                if (hasDraggedRef.current) return
+                openLightbox(i)
+              }}
               onPointerDown={(e) => e.stopPropagation()}
               aria-label={`Play traveller video ${i + 1} in fullscreen`}
-              className="block h-full w-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="block h-full w-full cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              draggable={false}
+              onDragStart={(e) => e.preventDefault()}
             >
               <video
                 ref={(el) => (videoRefs.current[i] = el)}
@@ -175,12 +228,12 @@ export function VibeWithUs() {
                 muted
                 loop
                 playsInline
-                preload="auto"
+                preload="none"
                 draggable={false}
                 tabIndex={-1}
                 aria-hidden="true"
                 className="pointer-events-none block h-full w-full object-cover"
-                style={{ width: '300px', height: '540px', objectFit: 'cover' }}
+                style={{ width: '320px', height: '550px', objectFit: 'cover' }}
               />
             </button>
             <button

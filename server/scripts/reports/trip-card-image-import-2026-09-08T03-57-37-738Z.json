@@ -1,0 +1,70 @@
+{
+  "timestamp": "2026-09-08T03:57:37.738Z",
+  "dryRun": true,
+  "force": true,
+  "concurrency": 5,
+  "tripsFound": 3,
+  "imagesUploaded": 0,
+  "tripsUpdated": 0,
+  "tripsSkipped": 0,
+  "tripsFailed": 3,
+  "entries": [
+    {
+      "tripId": "6a9f19c5253eca70e1508797",
+      "tripCode": "TRP-000001",
+      "tripName": "Sri Lanka Family",
+      "destination": {
+        "id": "6a9ebc0d19275a8182ffc2b9",
+        "name": "Sri Lanka Tour Packages",
+        "slug": "sri-lanka-tour-packages",
+        "country": "Sri Lanka"
+      },
+      "pixabayImageId": null,
+      "pixabayQuery": null,
+      "pixabaySourceUrl": null,
+      "selectedImageUrl": null,
+      "s3Key": null,
+      "uploadStatus": "failed",
+      "mongoUpdateStatus": "failed",
+      "error": "PIXABAY_API_KEY missing"
+    },
+    {
+      "tripId": "6a9f48812887f10cfab64683",
+      "tripCode": "TRP-000002",
+      "tripName": "Sri Lanka Island Highlights",
+      "destination": {
+        "id": "6a9ebc0d19275a8182ffc2b9",
+        "name": "Sri Lanka Tour Packages",
+        "slug": "sri-lanka-tour-packages",
+        "country": "Sri Lanka"
+      },
+      "pixabayImageId": null,
+      "pixabayQuery": null,
+      "pixabaySourceUrl": null,
+      "selectedImageUrl": null,
+      "s3Key": null,
+      "uploadStatus": "failed",
+      "mongoUpdateStatus": "failed",
+      "error": "PIXABAY_API_KEY missing"
+    },
+    {
+      "tripId": "6a9f48812887f10cfab64686",
+      "tripCode": "TRP-000003",
+      "tripName": "Sri Lanka Family Escape",
+      "destination": {
+        "id": "6a9ebc0d19275a8182ffc2b9",
+        "name": "Sri Lanka Tour Packages",
+        "slug": "sri-lanka-tour-packages",
+        "country": "Sri Lanka"
+      },
+      "pixabayImageId": null,
+      "pixabayQuery": null,
+      "pixabaySourceUrl": null,
+      "selectedImageUrl": null,
+      "s3Key": null,
+      "uploadStatus": "failed",
+      "mongoUpdateStatus": "failed",
+      "error": "PIXABAY_API_KEY missing"
+    }
+  ]
+}

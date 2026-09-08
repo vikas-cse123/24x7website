@@ -141,8 +141,8 @@ export function DestinationPage() {
   // Travel styles present in this destination's trips — a pill renders ONLY
   // for styles with at least one trip (derived from the canonical trip-type
   // taxonomy, same labels as the trip cards and trip filters).
-  const availableStyles = [...new Set(trips.map((t) => t.tripType).filter(Boolean))]
-  const visibleTrips = styleFilter ? trips.filter((t) => t.tripType === styleFilter) : trips
+  const availableStyles = [...new Set(trips.flatMap((t) => Array.isArray(t.tripType) ? t.tripType : t.tripType ? [t.tripType] : []).filter(Boolean))]
+  const visibleTrips = styleFilter ? trips.filter((t) => (Array.isArray(t.tripType) ? t.tripType : t.tripType ? [t.tripType] : []).includes(styleFilter)) : trips
 
   useSeo({
     title: destination ? destinationSeoTitle(destination.name) : undefined,
@@ -152,11 +152,96 @@ export function DestinationPage() {
 
   if (isLoading) {
     return (
-      <Container className="py-10">
-        <div className="h-72 animate-pulse rounded-2xl bg-muted" />
-        <div className="mt-6 h-8 w-1/2 animate-pulse rounded bg-muted" />
-        <div className="mt-4 h-4 w-2/3 animate-pulse rounded bg-muted" />
-      </Container>
+      <div>
+        {/* Hero skeleton — same aspect as real hero, title centered in gradient area */}
+        <div className="relative w-full overflow-hidden">
+          <div className="skeleton aspect-[0.7/1] w-full md:aspect-[3.17/1]" aria-hidden="true" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent px-4 pb-6 pt-16 sm:pb-8">
+            <div className="mx-auto flex justify-center">
+              <div className="skeleton h-7 w-56 rounded-full bg-white/30 sm:h-9 sm:w-72" />
+            </div>
+          </div>
+        </div>
+
+        <div className="w-full px-5 pb-8 pt-[60px] sm:px-8 lg:px-[84px] lg:pb-10">
+          {/* Heading — Norsy 30px simulation, Featured pill */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="skeleton h-[36px] w-[260px] rounded sm:h-[36px] sm:w-[320px]" />
+            <div className="skeleton h-5 w-16 rounded-full" />
+          </div>
+
+          {/* Description preview — 2-3 lines + Read More */}
+          <div className="mt-4 max-w-3xl space-y-2.5">
+            <div className="skeleton h-4 w-full rounded" />
+            <div className="skeleton h-4 w-[88%] rounded" />
+            <div className="skeleton h-4 w-[72%] rounded sm:hidden" />
+            <div className="skeleton mt-2 h-4 w-20 rounded" />
+          </div>
+
+          {/* Style pills + Trip-card grid heading */}
+          <div className="mt-12">
+            <div className="flex flex-wrap gap-2">
+              <div className="skeleton h-8 w-14 rounded-full" />
+              <div className="skeleton h-8 w-20 rounded-full" />
+              <div className="skeleton h-8 w-24 rounded-full" />
+              <div className="skeleton h-8 w-20 rounded-full" />
+            </div>
+            <div className="mt-4 grid gap-7 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="overflow-hidden rounded-xl border border-slate-200 bg-white"
+                >
+                  <div className="skeleton aspect-[1.377/1] w-full lg:aspect-[3/2]" />
+                  <div className="p-4">
+                    <div className="skeleton h-3 w-24 rounded" />
+                    <div className="mt-2 space-y-2">
+                      <div className="skeleton h-4 w-full rounded" />
+                      <div className="skeleton h-4 w-[78%] rounded" />
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      <div className="skeleton h-5 w-32 rounded" />
+                      <div className="skeleton h-3 w-40 rounded" />
+                    </div>
+                    <div className="mt-3 flex items-center gap-1.5 border-t border-slate-100 pt-3">
+                      <div className="skeleton h-3 w-3 rounded-full" />
+                      <div className="skeleton h-3 flex-1 rounded" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* FAQs skeleton */}
+          <div className="mt-10">
+            <div className="skeleton h-6 w-40 rounded" />
+            <div className="mt-4 space-y-2">
+              <div className="skeleton h-14 w-full rounded-xl" />
+              <div className="skeleton h-14 w-full rounded-xl" />
+            </div>
+          </div>
+
+          {/* Related destinations */}
+          <div className="mt-12">
+            <div className="flex items-center justify-between">
+              <div className="skeleton h-6 w-44 rounded" />
+              <div className="skeleton h-4 w-24 rounded" />
+            </div>
+            <div className="mt-4 grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                  <div className="skeleton aspect-[4/3] w-full" />
+                  <div className="p-3">
+                    <div className="skeleton h-4 w-28 rounded" />
+                    <div className="mt-2 h-3 w-20 rounded skeleton" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     )
   }
 
@@ -333,7 +418,7 @@ export function DestinationPage() {
         )}
 
         {tripsQuery.isLoading ? (
-          <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-4 grid gap-7 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-72 animate-pulse rounded-xl bg-muted" />
             ))}
@@ -343,7 +428,7 @@ export function DestinationPage() {
             No trips available for this destination yet.
           </p>
         ) : (
-          <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-4 grid gap-7 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {visibleTrips.map((trip) => (
               <TripCard key={trip.id} trip={trip} />
             ))}
@@ -409,7 +494,7 @@ function RelatedDestinations({ category, currentSlug }) {
     return (
       <div className="mt-10">
         <div className="h-6 w-40 animate-pulse rounded bg-muted" />
-        <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-64 animate-pulse rounded-xl bg-muted" />
           ))}
@@ -430,7 +515,7 @@ function RelatedDestinations({ category, currentSlug }) {
           View all destinations
         </Link>
       </div>
-      <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
         {related.map((d) => (
           <DestinationCard key={d.id} destination={d} />
         ))}

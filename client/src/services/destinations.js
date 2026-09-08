@@ -2,11 +2,11 @@ import httpClient from './http.js'
 
 // Public destination queries.
 export const destinationApi = {
-  list(params) {
-    return httpClient.get('/destinations', { params })
+  list(params, { signal } = {}) {
+    return httpClient.get('/destinations', { params, signal })
   },
-  getBySlug(slug) {
-    return httpClient.get(`/destinations/${slug}`)
+  getBySlug(slug, { signal } = {}) {
+    return httpClient.get(`/destinations/${slug}`, { signal })
   },
 }
 

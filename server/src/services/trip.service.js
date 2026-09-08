@@ -11,7 +11,7 @@ import { ratingSummary } from './review.service.js'
 import * as imageStorage from './imageStorage.service.js'
 
 const PUBLIC_PROJECTION = '-createdBy -updatedBy -__v'
-const DEST_POPULATE = 'name slug country'
+const DEST_POPULATE = 'name slug country heroImage heroVideo'
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -138,9 +138,30 @@ export async function listPublic({
     ])
     batchMap = new Map(rows.map((r) => [r._id.toString(), r]))
     if (hasBatchFilters) {
-      const ids = [...batchMap.keys()]
-      if (ids.length === 0) return emptyPage(page, limit)
-      filter._id = { $in: ids }
+      const qualifyingIds = [...batchMap.keys()]
+      // Price-based filtering must also consider trips with no upcoming public batches:
+      // their display price is Trip.startingPrice. Without this, Europe (startingPrice 103k, 0 batches)
+      // disappears when filtering minPrice=75000.
+      if (batchDatePriceFilter.price) {
+        const priceRange = batchDatePriceFilter.price
+        // All trips that have at least one upcoming public batch (any price) — these are already
+        // represented by batchMap (which is price-filtered). Fallback should only apply to trips with no batches.
+        const allPublicTripIds = await TripBatch.distinct('tripId', publicVisibilityFilter({}))
+        const baseFilterForFallback = { ...filter }
+        const fallbackFilter = {
+          ...baseFilterForFallback,
+          _id: { $nin: allPublicTripIds },
+          startingPrice: priceRange,
+        }
+        // Ensure we don't match trips with null startingPrice when filtering by price
+        const fallbackIds = (await Trip.distinct('_id', fallbackFilter)).map((id) => id.toString())
+        const combinedIds = [...new Set([...qualifyingIds, ...fallbackIds])]
+        if (combinedIds.length === 0) return emptyPage(page, limit)
+        filter._id = { $in: combinedIds }
+      } else {
+        if (qualifyingIds.length === 0) return emptyPage(page, limit)
+        filter._id = { $in: qualifyingIds }
+      }
     }
   }
 
@@ -272,7 +293,13 @@ export async function listAdmin({ page = 1, limit = 20, search, destinationId, t
   if (published !== undefined) filter.published = published
   if (search) {
     const rx = new RegExp(escapeRegex(search), 'i')
-    filter.$or = [{ name: rx }, { tripCode: rx }]
+    const or = [{ name: rx }, { slug: rx }, { tripCode: rx }, { cardName: rx }, { pageHeading: rx }]
+    // Also match destination name/country/slug
+    const destIds = await Destination.find({ $or: [{ name: rx }, { country: rx }, { slug: rx }] })
+      .select('_id')
+      .lean()
+    if (destIds.length) or.push({ destinationId: { $in: destIds.map((d) => d._id) } })
+    filter.$or = or
   }
 
   const total = await Trip.countDocuments(filter)

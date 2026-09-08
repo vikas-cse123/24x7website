@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 import { isAppKey } from '../utils/imageFolders.js'
 import { s3Config } from '../config/s3.js'
+import { resolveTripPricing } from '../utils/pricing.js'
 
 const imageSchema = new mongoose.Schema(
   {
@@ -65,6 +66,15 @@ const costingRowSchema = new mongoose.Schema(
   { _id: false }
 )
 
+// Things to Carry item — compact pill with icon/emoji + name.
+const thingsToCarryItemSchema = new mongoose.Schema(
+  {
+    icon: { type: String, trim: true, maxlength: 20, default: '' },
+    name: { type: String, trim: true, maxlength: 100, default: '' },
+  },
+  { _id: false }
+)
+
 const tripSchema = new mongoose.Schema(
   {
     destinationId: {
@@ -89,9 +99,31 @@ const tripSchema = new mongoose.Schema(
     shortDescription: { type: String, trim: true, maxlength: 300, default: '' },
     description: { type: String, trim: true, default: '' },
     tripType: {
-      type: String,
-      enum: ['group', 'customized', 'honeymoon', 'family', 'adventure', 'weekend', 'international', 'domestic'],
-      default: 'group',
+      type: [String],
+      enum: [
+        'group',
+        'customized',
+        'honeymoon',
+        'family',
+        'adventure',
+        'weekend',
+        'international',
+        'domestic',
+        'bike',
+        'spiritual',
+        'match_maker',
+        'wellness',
+        'trek',
+        'northern_lights_early_bird',
+        'middle_age_trips',
+        'upcoming_group_trips',
+        'corporate',
+      ],
+      default: ['group'],
+      validate: {
+        validator: (v) => Array.isArray(v) && v.length > 0,
+        message: 'At least one trip type is required',
+      },
     },
     durationDays: { type: Number, min: 1, default: 1 },
     durationNights: { type: Number, min: 0, default: 0 },
@@ -100,7 +132,7 @@ const tripSchema = new mongoose.Schema(
     // Original/MRP price. When present and above the selling price, the card
     // shows it struck through with a derived discount (never fabricated).
     originalPrice: { type: Number, min: 0, default: null },
-    // Explicit "Dates on Request" mode — the card shows exactly that instead
+    // Explicit "All dates available" mode — the card shows exactly that instead
     // of any dates, without requiring specific departure dates.
     datesOnRequest: { type: Boolean, default: false },
     // Trip-level departure dates (in addition to dated TripBatch inventory).
@@ -118,6 +150,7 @@ const tripSchema = new mongoose.Schema(
     inclusions: { type: [String], default: [] },
     exclusions: { type: [String], default: [] },
     importantInformation: { type: String, trim: true, default: '' },
+    thingsToCarry: { type: [thingsToCarryItemSchema], default: [] },
     faqs: { type: [faqSchema], default: [] },
     costing: { type: [costingRowSchema], default: [] },
     reviews: { type: [tripReviewSchema], default: [] },
@@ -148,6 +181,7 @@ tripSchema.index({ tripCode: 1 }, { unique: true })
 tripSchema.index({ published: 1, featured: 1, displayOrder: 1 })
 
 // Normalise a populated destination for public/admin output.
+// Now includes destination heroImage so Trip pages can use destination hero.
 function toPublicDestination(destination) {
   if (!destination || typeof destination !== 'object') return null
   return {
@@ -155,6 +189,8 @@ function toPublicDestination(destination) {
     name: destination.name,
     slug: destination.slug,
     country: destination.country,
+    heroImage: proxifyImage(destination.heroImage) || {},
+    heroVideo: proxifyImage(destination.heroVideo) || {},
   }
 }
 
@@ -172,6 +208,12 @@ function toPublicReview(review) {
     published: !!review.published,
     displayOrder: review.displayOrder ?? 0,
   }
+}
+
+function normalizeTripType(v) {
+  if (!v) return ['group']
+  if (Array.isArray(v)) return v.length ? v : ['group']
+  return [String(v)]
 }
 
 // Public-facing shape. Never exposes createdBy/updatedBy. `destination` is
@@ -193,6 +235,15 @@ export function toPublicTrip(doc) {
       ? rawDest._id.toString()
       : rawDest?.toString?.() || null
 
+  const pricing = resolveTripPricing({
+    startingPrice: doc.startingPrice,
+    originalPrice: doc.originalPrice,
+    id: doc._id?.toString() || doc.id,
+    tripCode: doc.tripCode,
+    slug: doc.slug,
+    name: doc.name,
+  })
+
   return {
     id: doc.id || doc._id?.toString(),
     destinationId,
@@ -204,12 +255,12 @@ export function toPublicTrip(doc) {
     tripCode: doc.tripCode,
     shortDescription: doc.shortDescription,
     description: doc.description,
-    tripType: doc.tripType,
+    tripType: normalizeTripType(doc.tripType),
     durationDays: doc.durationDays,
     durationNights: doc.durationNights,
     maxGroupSize: doc.maxGroupSize,
     startingPrice: doc.startingPrice ?? null,
-    originalPrice: doc.originalPrice ?? null,
+    originalPrice: pricing.originalPrice,
     datesOnRequest: !!doc.datesOnRequest,
     departures: Array.isArray(doc.departures) ? doc.departures : [],
     currency: doc.currency,
@@ -220,6 +271,7 @@ export function toPublicTrip(doc) {
     inclusions: doc.inclusions || [],
     exclusions: doc.exclusions || [],
     importantInformation: doc.importantInformation,
+    thingsToCarry: Array.isArray(doc.thingsToCarry) ? doc.thingsToCarry : [],
     faqs: doc.faqs || [],
     costing: Array.isArray(doc.costing) ? doc.costing : [],
     // Public shape exposes published reviews only — unpublished drafts stay

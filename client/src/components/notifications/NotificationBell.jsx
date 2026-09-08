@@ -42,15 +42,19 @@ export function NotificationBell(){
 
   const { data: listData } = useQuery({
     queryKey:['notifications','recent'],
-    queryFn:()=>notificationApi.list({ limit:5 }),
+    queryFn:({ signal })=>notificationApi.list({ limit:5 }, { signal }),
     enabled: isAuthenticated,
     refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
   })
   const { data: countData } = useQuery({
     queryKey:['notifications','count'],
-    queryFn:()=>notificationApi.unreadCount(),
+    queryFn:({ signal })=>notificationApi.unreadCount({ signal }),
     enabled: isAuthenticated,
     refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
   })
 
   const items=listData?.data?.data?.items||[]

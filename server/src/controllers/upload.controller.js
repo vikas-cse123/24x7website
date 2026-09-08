@@ -35,11 +35,26 @@ export async function uploadBatch(req, res, next) {
 export async function uploadOneVideo(req, res, next) {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: 'No video file provided' })
-    const meta = await imageStorage.upload(req.file.buffer, {
-      folder: pickFolder(req),
-      originalName: req.file.originalname,
-      mimeType: req.file.mimetype,
-    })
+    const { cleanupTempFile } = await import('../middleware/upload.js')
+    let meta
+    try {
+      const useDisk = Boolean(req.file.path)
+      if (useDisk) {
+        meta = await imageStorage.uploadFile(req.file, {
+          folder: pickFolder(req),
+          originalName: req.file.originalname,
+          mimeType: req.file.mimetype,
+        })
+      } else {
+        meta = await imageStorage.upload(req.file.buffer, {
+          folder: pickFolder(req),
+          originalName: req.file.originalname,
+          mimeType: req.file.mimetype,
+        })
+      }
+    } finally {
+      cleanupTempFile(req.file)
+    }
     res.status(201).json({ success: true, data: { ...meta, resourceType: 'video' } })
   } catch (err) { next(err) }
 }

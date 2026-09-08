@@ -26,9 +26,14 @@ const TABS = [
 
 export function TravelerGallery({ tripId, tripName }){
   const [tab, setTab] = React.useState('all')
-  const { data: items = [], isLoading } = useTravelerMedia(tripId, tab==='all'?null:tab)
-  const photos = items.filter(m=>m.mediaType==='photo')
+  const { data: allItems = [], isLoading } = useTravelerMedia(tripId, null)
+  const items = tab === 'all' ? allItems : allItems.filter((m) => m.mediaType === tab)
+  const photos = items.filter((m) => m.mediaType === 'photo')
   const [photoIndex, setPhotoIndex] = React.useState(null)
+
+  if (!isLoading && allItems.length === 0) {
+    return null
+  }
 
   return (
     <div className="mt-10">

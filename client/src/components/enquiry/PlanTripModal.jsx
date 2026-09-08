@@ -13,7 +13,6 @@ import { Label } from '@/components/ui/label'
 // Public visitors can submit without logging in.
 
 const MOBILE = /^[6-9]\d{9}$/
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function DestinationField({ value, onChange, destinations, isLoading, isError }) {
   const [open, setOpen] = React.useState(false)
@@ -143,7 +142,6 @@ export function PlanTripModal() {
   const [name, setName] = React.useState('')
   const [destination, setDestination] = React.useState({ id: null, name: '', error: null })
   const [phone, setPhone] = React.useState('')
-  const [email, setEmail] = React.useState('')
   const [fieldErrors, setFieldErrors] = React.useState({})
   const [submitError, setSubmitError] = React.useState(null)
   const formRef = React.useRef(null)
@@ -178,7 +176,6 @@ export function PlanTripModal() {
       setName('')
       setDestination({ id: null, name: '', error: null })
       setPhone('')
-      setEmail('')
       setFieldErrors({})
       setSubmitError(null)
     }
@@ -201,7 +198,6 @@ export function PlanTripModal() {
     else if (name.trim().length > 120) errors.name = 'Name is too long'
     if (!destination.id) errors.destination = 'Please select a destination'
     if (!MOBILE.test(phone.replace(/\s/g, ''))) errors.phone = 'Please enter a valid mobile number'
-    if (!EMAIL.test(email.trim())) errors.email = 'Please enter a valid email address'
     setFieldErrors(errors)
     setSubmitError(null)
     return Object.keys(errors).length === 0
@@ -240,7 +236,6 @@ export function PlanTripModal() {
       name: name.trim(),
       destinationId: destination.id,
       phone: phone.replace(/\s/g, ''),
-      email: email.trim(),
       source: 'custom_trip',
     })
   }
@@ -375,27 +370,6 @@ export function PlanTripModal() {
                     </div>
                     {fieldErrors.phone && (
                       <p className="mt-1 text-xs text-destructive">{fieldErrors.phone}</p>
-                    )}
-                  </div>
-
-                  {/* Email */}
-                  <div>
-                    <Label htmlFor="plan-trip-email" className="text-slate-700">Email</Label>
-                    <input
-                      id="plan-trip-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      autoComplete="email"
-                      aria-invalid={!!fieldErrors.email}
-                      className={cn(
-                        'mt-1.5 h-11 w-full rounded-md border bg-white px-3 text-sm shadow-sm transition-colors placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
-                        fieldErrors.email ? 'border-destructive' : 'border-input'
-                      )}
-                    />
-                    {fieldErrors.email && (
-                      <p className="mt-1 text-xs text-destructive">{fieldErrors.email}</p>
                     )}
                   </div>
                 </div>

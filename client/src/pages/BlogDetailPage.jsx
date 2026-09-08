@@ -1,12 +1,13 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, CalendarDays, Clock3, MapPin, User } from 'lucide-react'
+import { ArrowLeft, CalendarDays, Clock3, HelpCircle, MapPin, User } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
 import { BlogCard } from '@/components/blogs/BlogCard'
 import { BlogContentView } from '@/components/blogs/BlogContentView'
+import { Accordion } from '@/components/ui/accordion'
 import { blogApi } from '@/services/blogs'
 import { BLOG_CATEGORY_LABELS } from '@/schemas/blog'
 import { formatDateLong } from '@/lib/dates'
@@ -147,6 +148,19 @@ export function BlogDetailPage() {
         <div className="mt-8">
           <BlogContentView blocks={blog.content} />
         </div>
+
+        {/* FAQs — only when present, accordion style, mobile-friendly */}
+        {Array.isArray(blog.faqs) && blog.faqs.length > 0 && (
+          <section aria-label="Frequently asked questions" className="mt-12">
+            <h2 className="flex items-center gap-2 text-xl font-semibold">
+              <HelpCircle className="h-5 w-5 text-primary" aria-hidden="true" />
+              Frequently Asked Questions
+            </h2>
+            <div className="mt-4">
+              <Accordion items={blog.faqs} />
+            </div>
+          </section>
+        )}
       </article>
 
       {/* Related blogs */}

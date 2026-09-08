@@ -1,16 +1,11 @@
 import { Link } from 'react-router-dom'
-import { IndianRupee, CalendarDays, Hourglass } from 'lucide-react'
+import { IndianRupee } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
-import { WishlistButton } from '@/components/wishlist/WishlistButton'
 import { StarRating } from '@/components/reviews/StarRating'
 import { formatDateShort } from '@/lib/dates'
+import { resolveTripPricing } from '@/lib/pricing'
 
-// Resolve display pricing from real data only.
-// 1. Embedded upcoming public batches (discovery/homepage): cheapest batch wins,
-//    its originalPrice drives the strikethrough + derived discount.
-// 2. Else a server-computed pricingSummary (batch-aware queries).
-// 3. Else the Trip.startingPrice fallback. Nothing is ever fabricated.
 function getCardPricing(trip) {
   const batches = Array.isArray(trip.batches) ? trip.batches : []
   if (batches.length > 0) {
@@ -54,56 +49,35 @@ function getCardPricing(trip) {
   return null
 }
 
-// Reusable public trip card — Capture A Trip information hierarchy with our own
-// identity: image → duration → name → destination → price/original/discount →
-// departure dates. Fully clickable, keyboard accessible.
 export function TripCard({ trip }) {
   const pricing = getCardPricing(trip)
-  const hasStartingPrice = trip.startingPrice !== null && trip.startingPrice !== undefined
-  // Independent card fields with legacy fallback to the canonical trip values.
+  const hasStartingPrice = trip.startingPrice != null && Number(trip.startingPrice) > 0
   const cardName = trip.cardName || trip.name
   const cardImage =
     trip.cardImage?.url || trip.cardImage?.secureUrl ? trip.cardImage : trip.heroImage
-  // Trip-level discount, derived only when an original price above the selling
-  // price is actually stored. Never fabricated.
-  const tripDiscount =
-    trip.originalPrice != null &&
-    trip.startingPrice != null &&
-    Number(trip.originalPrice) > Number(trip.startingPrice)
-      ? Number(trip.originalPrice) - Number(trip.startingPrice)
-      : null
-  // Trip-level departure dates (admin-managed). Batches/summaries take display
-  // precedence via `pricing.dates` when present.
+  const { originalPrice: autoOriginalPrice, discount: autoDiscount } = resolveTripPricing(trip)
+  const tripDiscount = autoDiscount
+  const tripOriginalPrice = autoOriginalPrice
   const tripDepartureDates = (Array.isArray(trip.departures) ? trip.departures : [])
     .map((d) => formatDateShort(d))
     .filter(Boolean)
 
   return (
-    <Card className="group h-full w-full overflow-hidden transition-shadow hover:shadow-card-hover focus-within:ring-2 focus-within:ring-ring lg:max-w-[300px]">
+    <Card className="group relative flex h-full w-full flex-col overflow-hidden rounded-xl border border-border bg-white transition-transform duration-200 hover:scale-[1.03] hover:z-10 hover:shadow-md focus-within:ring-2 focus-within:ring-ring lg:max-w-[300px]">
       <Link
         to={`/trip/${trip.slug}`}
         aria-label={`${cardName} — view trip details`}
-        className="block focus-visible:outline-none"
+        className="flex h-full flex-col focus-visible:outline-none"
+        draggable={false}
+        onDragStart={(e) => e.preventDefault()}
       >
-        <div className="relative aspect-[1.377/1] lg:aspect-[3/2]">
+        <div className="relative aspect-[16/10] w-full overflow-hidden">
           <DestinationImage
             src={cardImage?.url}
             alt={cardImage?.alt || cardName}
-            className="h-full w-full"
+            className="h-full w-full object-cover"
+            draggable={false}
           />
-          {/* Curved white transition: the card body flows into the image with a
-              smooth asymmetric curve (higher on the left, behind the duration
-              row). Pure overlay — adds no layout height; badges render above it. */}
-          <svg
-            aria-hidden="true"
-            focusable="false"
-            preserveAspectRatio="none"
-            viewBox="0 0 400 32"
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-8 w-full"
-          >
-            <path d="M0 32 L0 14 C 150 14 250 26 400 24 L400 32 Z" fill="white" />
-          </svg>
-          <WishlistButton type="trip" id={trip.id || trip._id} className="absolute right-2.5 bottom-2.5" />
           {pricing?.discountAmount != null && (
             <span className="absolute left-2.5 top-2.5 rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground">
               {`${pricing.currency === 'INR' ? '₹' : ''}${pricing.discountAmount.toLocaleString('en-IN')} Off`}
@@ -111,86 +85,77 @@ export function TripCard({ trip }) {
           )}
         </div>
 
-        <div className="p-4">
-          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Hourglass className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            {trip.durationNights} nights / {trip.durationDays} days
-          </p>
-
-          <h3 className="mt-1.5 line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-foreground group-hover:text-primary">
+        <div className="flex flex-1 flex-col bg-white px-4 pb-3 pt-3">
+          <div className="flex items-center gap-1.5 text-xs font-medium leading-none text-gray-700">
+            <span aria-hidden="true" className="shrink-0 text-[13px] leading-none">⌛</span>
+            <span>{trip.durationNights} nights / {trip.durationDays} days</span>
+          </div>
+          <h3 className="line-clamp-2 min-h-[2.75rem] text-[14px] font-semibold leading-snug text-gray-900">
             {cardName}
           </h3>
 
           {trip.ratingSummary?.total > 0 && (
             <p className="mt-1.5 flex items-center gap-1.5">
               <StarRating value={trip.ratingSummary.average} />
-              <span className="text-xs font-semibold text-foreground">
+              <span className="text-xs font-semibold text-gray-900">
                 {Number(trip.ratingSummary.average).toFixed(1)}
               </span>
-              <span className="text-xs text-muted-foreground">
-                ({trip.ratingSummary.total})
-              </span>
+              <span className="text-xs text-muted-foreground">({trip.ratingSummary.total})</span>
             </p>
           )}
 
-          <div className="mt-2 min-h-[2.5rem]">
+          <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             {pricing ? (
               <>
-                <p className="flex items-center text-base font-bold leading-none">
-                  <IndianRupee className="h-4 w-4" aria-hidden="true" />
+                <span className="inline-flex items-center text-[15px] font-bold leading-none text-gray-900">
+                  <IndianRupee className="h-4 w-4 shrink-0" aria-hidden="true" />
                   {pricing.price.toLocaleString('en-IN')}
-                  {pricing.originalPrice != null && (
-                    <span className="ml-1.5 text-xs font-normal text-muted-foreground line-through">
-                      ₹{pricing.originalPrice.toLocaleString('en-IN')}
-                    </span>
-                  )}
-                </p>
+                </span>
+                {pricing.originalPrice != null && (
+                  <span className="text-xs font-normal leading-none text-gray-400 line-through">
+                    ₹{pricing.originalPrice.toLocaleString('en-IN')}
+                  </span>
+                )}
                 {pricing.discountAmount != null && (
-                  <p className="mt-0.5 text-xs font-medium text-red-600">
-                    ₹{pricing.discountAmount.toLocaleString('en-IN')} Off · per person
-                  </p>
+                  <span className="text-xs font-semibold leading-none text-red-600">
+                    ₹{pricing.discountAmount.toLocaleString('en-IN')} Off
+                  </span>
                 )}
               </>
-            ) : hasStartingPrice ? (
+              ) : hasStartingPrice ? (
               <>
-                <p className="flex items-center text-base font-bold leading-none">
-                  <IndianRupee className="h-4 w-4" aria-hidden="true" />
+                <span className="inline-flex items-center text-[15px] font-bold leading-none text-gray-900">
+                  <IndianRupee className="h-4 w-4 shrink-0" aria-hidden="true" />
                   {trip.startingPrice.toLocaleString('en-IN')}
-                  {trip.originalPrice != null && tripDiscount != null && (
-                    <span className="ml-1.5 text-xs font-normal text-muted-foreground line-through">
-                      ₹{Number(trip.originalPrice).toLocaleString('en-IN')}
-                    </span>
-                  )}
-                </p>
+                </span>
+                {tripOriginalPrice != null && tripDiscount != null && (
+                  <span className="text-xs font-normal leading-none text-gray-400 line-through">
+                    ₹{Number(tripOriginalPrice).toLocaleString('en-IN')}
+                  </span>
+                )}
                 {tripDiscount != null && (
-                  <p className="mt-0.5 text-xs font-medium text-red-600">
+                  <span className="text-xs font-semibold leading-none text-red-600">
                     ₹{tripDiscount.toLocaleString('en-IN')} Off
-                  </p>
+                  </span>
                 )}
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">Price on request</p>
+              <span className="text-sm text-muted-foreground">Price on request</span>
             )}
           </div>
 
-          <p className="mt-2 border-t border-border pt-2 text-xs leading-relaxed text-muted-foreground/80">
-            <CalendarDays className="mr-1 inline h-3.5 w-3.5 align-[-3px]" aria-hidden="true" />
-            {trip.datesOnRequest ? (
-              'Dates on Request'
-            ) : pricing && pricing.dates.length > 0 ? (
-              <>
-                {pricing.dates.slice(0, 4).join(', ')}
-                {pricing.dates.length > 4 && ` +${pricing.extraDates} more`}
-              </>
-            ) : tripDepartureDates.length > 0 ? (
-              <>
-                {tripDepartureDates.slice(0, 4).join(', ')}
-                {tripDepartureDates.length > 4 && ` +${tripDepartureDates.length - 4} more`}
-              </>
-            ) : (
-              'Departure dates coming soon'
-            )}
-          </p>
+          <div className="mt-3 flex items-center gap-1.5 border-t border-gray-100 pt-2.5">
+            <span aria-hidden="true" className="shrink-0 text-[13px] leading-none">📅</span>
+            <p className="min-w-0 flex-1 truncate text-xs leading-none text-gray-500">
+              {trip.datesOnRequest
+                ? 'All dates available'
+                : pricing && pricing.dates.length > 0
+                  ? `${pricing.dates.slice(0, 4).join(', ')}${pricing.dates.length > 4 ? ` +${pricing.extraDates} more` : ''}`
+                  : tripDepartureDates.length > 0
+                    ? `${tripDepartureDates.slice(0, 4).join(', ')}${tripDepartureDates.length > 4 ? ` +${tripDepartureDates.length - 4} more` : ''}`
+                    : 'Departure dates coming soon'}
+            </p>
+          </div>
         </div>
       </Link>
     </Card>

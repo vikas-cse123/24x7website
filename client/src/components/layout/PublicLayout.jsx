@@ -4,6 +4,8 @@ import { PromoBanner } from '@/components/layout/PromoBanner'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { WhatsAppButton } from '@/components/layout/WhatsAppButton'
+import { BottomNav } from '@/components/layout/BottomNav'
+import { MobilePlayViewer } from '@/components/layout/MobilePlayViewer'
 import { LoginModal } from '@/components/auth/LoginModal'
 import { PlanTripModal } from '@/components/enquiry/PlanTripModal'
 import { useUIStore } from '@/stores/ui'
@@ -17,11 +19,11 @@ import { AUTO_ENQUIRY_DELAY_MS, AUTO_ENQUIRY_NEXT_SHOW_KEY } from '@/lib/autoEnq
 export function PublicLayout() {
   const authModalOpen = useUIStore((s) => s.authModalOpen)
   const setAuthModalOpen = useUIStore((s) => s.setAuthModalOpen)
-  const { fetchMe } = useAuth()
+  const { fetchMe, status } = useAuth()
 
   React.useEffect(() => {
-    fetchMe()
-  }, [fetchMe])
+    if (status === 'loading') fetchMe()
+  }, [fetchMe, status])
 
   // Automatic lead-enquiry popup — uses centralized AUTO_ENQUIRY_DELAY_MS (3 min)
   // Public only (PublicLayout is not mounted for /admin), not while already open,
@@ -77,15 +79,19 @@ export function PublicLayout() {
     prevOpenRef.current = planTripOpen
   }, [planTripOpen])
 
+  const [playOpen, setPlayOpen] = React.useState(false)
+
   return (
     <div className="flex min-h-screen flex-col">
       <PromoBanner />
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 pb-16 sm:pb-0">
         <Outlet />
       </main>
       <Footer />
-      <WhatsAppButton />
+      <BottomNav onOpenPlay={() => setPlayOpen(true)} isPlayOpen={playOpen} />
+      {!playOpen && <WhatsAppButton />}
+      <MobilePlayViewer open={playOpen} onClose={() => setPlayOpen(false)} />
       <LoginModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
       <PlanTripModal />
     </div>

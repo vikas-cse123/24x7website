@@ -2,17 +2,17 @@ import httpClient from './http.js'
 
 // Public reviews for a trip (approved only) + rating summary.
 export const reviewApi = {
-  listByTrip(slugOrId, params) {
-    return httpClient.get(`/reviews/trips/${slugOrId}/reviews`, { params })
+  listByTrip(slugOrId, params, { signal } = {}) {
+    return httpClient.get(`/reviews/trips/${slugOrId}/reviews`, { params, signal })
   },
-  eligibility(slugOrId) {
-    return httpClient.get(`/reviews/trips/${slugOrId}/reviews/eligibility`)
+  eligibility(slugOrId, { signal } = {}) {
+    return httpClient.get(`/reviews/trips/${slugOrId}/reviews/eligibility`, { signal })
   },
   create(data) {
     return httpClient.post('/reviews', data)
   },
-  myReviews(params) {
-    return httpClient.get('/reviews/me', { params })
+  myReviews(params, { signal } = {}) {
+    return httpClient.get('/reviews/me', { params, signal })
   },
 }
 

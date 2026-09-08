@@ -38,8 +38,8 @@ export const DEFAULT_PROMOTIONAL_BANNER = {
 // WhatsApp floating button defaults — safe fallbacks only, never override DB values.
 export const DEFAULT_WHATSAPP = {
   enabled: true,
-  phoneNumber: '919310660016',
-  prefilledMessage: 'Hey! Capture A Trip I am interested in your trips',
+  phoneNumber: '919958723666',
+  prefilledMessage: 'Hey! 24x7chhutti I am interested in your trips',
   icon: null, // { url, publicId } when custom, null → default icon
   position: 'bottom-right', // bottom-right | bottom-left
   size: 'medium', // small | medium | large
@@ -197,7 +197,7 @@ export async function updatePromotionalBanner(input = {}) {
 }
 
 // --- whatsapp -------------------------------------------------------------------
-// Normalize phone: strip non-digits, allow +91 / 91 prefix, store as digits only (e.g. 919310660016)
+// Normalize phone: strip non-digits, allow +91 / 91 prefix, store as digits only (e.g. 919958723666)
 function normalizePhone(value) {
   const raw = String(value || '').trim()
   const digits = raw.replace(/\D/g, '')

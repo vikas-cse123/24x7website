@@ -1,5 +1,7 @@
+import * as React from 'react'
 import { Link } from 'react-router-dom'
-import { Phone, Mail, MessageCircle, Map } from 'lucide-react'
+import { Phone, Mail, Map } from 'lucide-react'
+import { FaWhatsapp, FaInstagram, FaFacebookF } from 'react-icons/fa'
 import { Container } from '@/components/ui/container'
 import {
   FOOTER_QUICK_LINKS,
@@ -56,11 +58,9 @@ function YouTubeIcon(props) {
 }
 
 const SOCIAL_ICONS = {
-  WhatsApp: function WhatsAppIcon(props) {
-    return <img src="/whatappNew.svg" alt="" className="h-4 w-4" {...props} />
-  },
-  Instagram: InstagramIcon,
-  Facebook: FacebookIcon,
+  WhatsApp: FaWhatsapp,
+  Instagram: FaInstagram,
+  Facebook: FaFacebookF,
   LinkedIn: LinkedInIcon,
   X: XIcon,
   YouTube: YouTubeIcon,
@@ -82,18 +82,47 @@ function AddressBlock({ company, address, children }) {
   )
 }
 
+function FooterAccordion({ title, children, defaultOpen = false }) {
+  const [open, setOpen] = React.useState(defaultOpen)
+  return (
+    <div className="border-t border-[#1b4332]/15 py-3 first:border-t-0 sm:border-t-0 sm:py-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between py-2 text-left sm:hidden"
+      >
+        <span className="text-[15px] font-semibold tracking-tight text-[#1b4332]">{title}</span>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className={`h-4 w-4 shrink-0 text-[#1b4332] transition-transform ${open ? 'rotate-180' : ''}`}
+          aria-hidden="true"
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      <div className="hidden sm:block">
+        <Heading>{title}</Heading>
+        <div className="mt-4">{children}</div>
+      </div>
+      {open && <div className="pb-3 pt-1 sm:hidden">{children}</div>}
+    </div>
+  )
+}
+
 export function FooterInfo() {
-  const { delhi, gurgaon, support } = FOOTER_CONTACT
+  const { delhi, support } = FOOTER_CONTACT
   return (
     <Container className="max-w-none mx-0 w-full px-5 sm:px-6 lg:px-[90px]">
-      <div className="grid gap-10 py-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1.2fr] lg:gap-12">
-        {/* Address */}
-        <div>
-          <Heading>Address</Heading>
-          <AddressBlock company={delhi.company} address={delhi.address} />
-          <AddressBlock company={gurgaon.company} address={gurgaon.address}>
+      {/* Mobile accordion, Desktop grid */}
+      <div className="sm:hidden">
+        <FooterAccordion title="Address">
+          <AddressBlock company={delhi.company} address={delhi.address}>
             <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(gurgaon.mapQuery)}`}
+              href="https://maps.app.goo.gl/NPn8DfeDYZCwJYmH9"
               target="_blank"
               rel="noreferrer"
               className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-[#1b4332]/30 px-3.5 py-1.5 text-xs font-medium text-[#1b4332] transition-colors hover:bg-[#1b4332]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -102,15 +131,74 @@ export function FooterInfo() {
               View on Map
             </a>
           </AddressBlock>
-          <p className="mt-5 text-[13px] leading-tight text-[#4b5563]">
-            Mobile:{' '}
+        </FooterAccordion>
+        <FooterAccordion title="Quick Links">
+          <ul className="space-y-2">
+            {FOOTER_QUICK_LINKS.map((link) => (
+              <li key={link.label}>
+                <Link
+                  to={link.href}
+                  className="text-[13px] leading-[1.4] text-[#374151] transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </FooterAccordion>
+        <FooterAccordion title="Talk To Us">
+          <ul className="space-y-2.5 text-[13px] leading-[1.4] text-[#374151]">
+            <li className="flex items-center gap-2.5">
+              <Phone className="h-4 w-4 shrink-0 text-primary" />
+              <a href={support.phone.href} className="transition-colors hover:text-primary">
+                {support.phone.label}
+              </a>
+            </li>
+            <li className="flex items-center gap-2.5">
+              <Mail className="h-4 w-4 shrink-0 text-primary" />
+              <a href={support.email.href} className="transition-colors hover:text-primary">
+                {support.email.label}
+              </a>
+            </li>
+          </ul>
+        </FooterAccordion>
+        <div className="border-t border-[#1b4332]/15 py-3">
+          <h3 className="text-[15px] font-semibold tracking-tight text-[#1b4332]">Follow us on</h3>
+          <div className="mt-3 flex items-center gap-5">
+            {FOOTER_SOCIALS.map(({ label, href }) => {
+              const Icon = SOCIAL_ICONS[label]
+              return (
+                <a
+                  key={label}
+                  href={href}
+                  target={href.startsWith('http') ? '_blank' : undefined}
+                  rel="noreferrer"
+                  aria-label={label}
+                  className="inline-flex text-[#374151] transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {Icon ? <Icon className="h-[18px] w-[18px]" /> : null}
+                </a>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="hidden gap-10 py-10 sm:grid sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1.2fr] lg:gap-12">
+        {/* Address */}
+        <div>
+          <Heading>Address</Heading>
+          <AddressBlock company={delhi.company} address={delhi.address}>
             <a
-              href={gurgaon.mobileHref}
-              className="transition-colors hover:text-primary"
+              href="https://maps.app.goo.gl/NPn8DfeDYZCwJYmH9"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-[#1b4332]/30 px-3.5 py-1.5 text-xs font-medium text-[#1b4332] transition-colors hover:bg-[#1b4332]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              {gurgaon.mobile}
+              <Map className="h-3.5 w-3.5" />
+              View on Map
             </a>
-          </p>
+          </AddressBlock>
         </div>
 
         {/* Quick Links */}
@@ -144,17 +232,6 @@ export function FooterInfo() {
               <Mail className="h-4 w-4 shrink-0 text-primary" />
               <a href={support.email.href} className="transition-colors hover:text-primary">
                 {support.email.label}
-              </a>
-            </li>
-            <li className="flex items-center gap-2.5">
-              <MessageCircle className="h-4 w-4 shrink-0 text-primary" />
-              <a
-                href={support.whatsapp.href}
-                target="_blank"
-                rel="noreferrer"
-                className="transition-colors hover:text-primary"
-              >
-                {support.whatsapp.label}
               </a>
             </li>
           </ul>

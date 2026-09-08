@@ -62,9 +62,9 @@ export function UpcomingTripsSection() {
 
         <div className="mt-6">
           {isLoading ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="aspect-[4/5] animate-pulse rounded-xl bg-muted" />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="aspect-[4/3] animate-pulse rounded-xl bg-muted" />
               ))}
             </div>
           ) : isError ? (
@@ -76,7 +76,7 @@ export function UpcomingTripsSection() {
               No trips available yet.
             </p>
           ) : (
-            <HorizontalCarousel aria-label="Upcoming group trips" itemClassName="w-[15rem] sm:w-[17rem] lg:w-[18rem]">
+            <HorizontalCarousel aria-label="Upcoming group trips" itemClassName="w-[88vw] max-w-[360px] sm:w-[380px] lg:w-[340px]">
               {trips.map((trip) => (
                 <TripCard key={trip.id} trip={trip} />
               ))}

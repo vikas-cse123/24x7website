@@ -7,7 +7,7 @@ import mongoose from 'mongoose'
 const enquirySchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 120 },
-    email: { type: String, required: true, trim: true, lowercase: true, maxlength: 200 },
+    email: { type: String, trim: true, lowercase: true, maxlength: 200, default: '' },
     phone: { type: String, required: true, trim: true, maxlength: 20 },
     countryCode: { type: String, trim: true, maxlength: 6, default: '+91' },
     destinationId: {

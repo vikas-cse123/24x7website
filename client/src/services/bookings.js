@@ -6,14 +6,14 @@ export const bookingApi = {
   create(data) {
     return httpClient.post('/bookings', data)
   },
-  list(params) {
-    return httpClient.get('/bookings', { params })
+  list(params, { signal } = {}) {
+    return httpClient.get('/bookings', { params, signal })
   },
-  getById(id) {
-    return httpClient.get(`/bookings/${id}`)
+  getById(id, { signal } = {}) {
+    return httpClient.get(`/bookings/${id}`, { signal })
   },
-  getByCode(code) {
-    return httpClient.get(`/bookings/code/${code}`)
+  getByCode(code, { signal } = {}) {
+    return httpClient.get(`/bookings/code/${code}`, { signal })
   },
   cancel(id) {
     return httpClient.post(`/bookings/${id}/cancel`)

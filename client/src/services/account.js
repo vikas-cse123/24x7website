@@ -16,8 +16,8 @@ export const wishlistApi = {
 }
 
 export const notificationApi = {
-  list(params){ return httpClient.get('/account/notifications', { params }) },
-  unreadCount(){ return httpClient.get('/account/notifications/unread-count') },
+  list(params, { signal } = {}){ return httpClient.get('/account/notifications', { params, signal }) },
+  unreadCount({ signal } = {}){ return httpClient.get('/account/notifications/unread-count', { signal }) },
   markRead(id){ return httpClient.patch(`/account/notifications/${id}/read`) },
   markAllRead(){ return httpClient.patch('/account/notifications/read-all') },
   remove(id){ return httpClient.delete(`/account/notifications/${id}`) },

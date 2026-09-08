@@ -1,0 +1,70 @@
+{
+  "timestamp": "2026-09-08T04:07:44.844Z",
+  "dryRun": true,
+  "force": true,
+  "concurrency": 5,
+  "tripsFound": 3,
+  "imagesUploaded": 0,
+  "tripsUpdated": 0,
+  "tripsSkipped": 0,
+  "tripsFailed": 0,
+  "entries": [
+    {
+      "tripId": "6a9f48812887f10cfab64683",
+      "tripCode": "TRP-000002",
+      "tripName": "Sri Lanka Island Highlights",
+      "destination": {
+        "id": "6a9ebc0d19275a8182ffc2b9",
+        "name": "Sri Lanka Tour Packages",
+        "slug": "sri-lanka-tour-packages",
+        "country": "Sri Lanka"
+      },
+      "pixabayImageId": 3758193,
+      "pixabayQuery": "Sri Lanka travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/travels-ocean-sri-lanka-island-sea-3758193/",
+      "selectedImageUrl": "https://pixabay.com/get/g1358d309888e17d4be02d5807441e9d52cf6d5efc7ac17ae8f84b23135bef12c75638b8618cfc18e5de7c376ef7bd51d228815fb7efb47c9279d370a2992e70c_1280.jpg",
+      "s3Key": "trips/TRP-000002/card/trp-000002-3758193.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48812887f10cfab64686",
+      "tripCode": "TRP-000003",
+      "tripName": "Sri Lanka Family Escape",
+      "destination": {
+        "id": "6a9ebc0d19275a8182ffc2b9",
+        "name": "Sri Lanka Tour Packages",
+        "slug": "sri-lanka-tour-packages",
+        "country": "Sri Lanka"
+      },
+      "pixabayImageId": 4818532,
+      "pixabayQuery": "Sri Lanka travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/galle-galle-fort-southern-sri-lanka-4818532/",
+      "selectedImageUrl": "https://pixabay.com/get/gad967e4243afa6c738c987bc8bc786f4059498d8b966bdb9ffcd83d6f7215f8c2fbb1175bc0321031baa785c6ae533d7ae53fe457699bc2656ef717353888425_1280.jpg",
+      "s3Key": "trips/TRP-000003/card/trp-000003-4818532.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f19c5253eca70e1508797",
+      "tripCode": "TRP-000001",
+      "tripName": "Sri Lanka Family",
+      "destination": {
+        "id": "6a9ebc0d19275a8182ffc2b9",
+        "name": "Sri Lanka Tour Packages",
+        "slug": "sri-lanka-tour-packages",
+        "country": "Sri Lanka"
+      },
+      "pixabayImageId": 4818528,
+      "pixabayQuery": "Sri Lanka travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/galle-galle-fort-southern-sri-lanka-4818528/",
+      "selectedImageUrl": "https://pixabay.com/get/g1d1508a08b93465909d4c05e3c376405c8bdc38313ba02cb7fa8b974cd65ec6c0cdd605af534a714ba90d38dc412f4e926240f916a4f6cc542807e10f430cdd5_1280.jpg",
+      "s3Key": "trips/TRP-000001/card/trp-000001-4818528.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    }
+  ]
+}

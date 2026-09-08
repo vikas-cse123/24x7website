@@ -41,13 +41,35 @@ function DeleteDialog({ trip, open, onOpenChange, onConfirm, deleting }) {
 export function AdminTripsPage() {
   const queryClient = useQueryClient()
   const [deleteTarget, setDeleteTarget] = React.useState(null)
+  const [page, setPage] = React.useState(1)
+  const [searchInput, setSearchInput] = React.useState('')
+  const [search, setSearch] = React.useState('')
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['admin', 'trips', { page: 1, limit: PAGE_SIZE }],
-    queryFn: () => adminTripApi.list({ page: 1, limit: PAGE_SIZE }),
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput)
+      setPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
+  const { data, isLoading, isError, error, isFetching } = useQuery({
+    queryKey: ['admin', 'trips', { page, limit: PAGE_SIZE, search: search || undefined }],
+    queryFn: () =>
+      adminTripApi.list({
+        page,
+        limit: PAGE_SIZE,
+        ...(search ? { search } : {}),
+      }),
+    placeholderData: (prev) => prev,
   })
 
   const list = data?.data?.data
+  const isInitialLoading = isLoading && !data
+
+  React.useEffect(() => {
+    if (list && list.page !== page) setPage(list.page)
+  }, [list?.page])
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin', 'trips'] })
 
@@ -77,14 +99,6 @@ export function AdminTripsPage() {
     setDeleteTarget(trip)
   }
 
-  const [search, setSearch] = React.useState('')
-  const filtered = React.useMemo(() => {
-    if (!list?.items) return []
-    if (!search.trim()) return list.items
-    const q = search.toLowerCase()
-    return list.items.filter((t) => `${t.name} ${t.slug} ${t.tripCode} ${t.destination?.name || ''}`.toLowerCase().includes(q))
-  }, [list, search])
-
   return (
     <div className="w-full space-y-4">
       <div className="flex items-center gap-1.5 text-xs text-slate-500">
@@ -93,9 +107,17 @@ export function AdminTripsPage() {
         <span className="font-medium text-slate-700">Trips</span>
       </div>
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:px-5">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight sm:text-[22px]">Trips</h1>
-          <p className="mt-1 text-xs text-slate-500 sm:text-[13px]">Manage trips. Publish to make them visible.</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight sm:text-[22px]">Trips</h1>
+            <p className="mt-1 text-xs text-slate-500 sm:text-[13px]">Manage trips. Publish to make them visible.</p>
+          </div>
+          {isFetching && list && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+              <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" aria-hidden="true" />
+              Refreshing
+            </span>
+          )}
         </div>
         <Link to="/admin/trips/new">
           <Button size="sm" className="h-9 min-w-[110px] rounded-md bg-slate-900 px-4 text-xs font-semibold text-white hover:bg-slate-800">
@@ -112,19 +134,24 @@ export function AdminTripsPage() {
               <path d="m21 21-4.3-4.3" />
             </svg>
           </span>
-          <Input placeholder="Search trips..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-9 pl-8 text-xs focus-visible:ring-1 focus-visible:ring-slate-900 focus-visible:ring-offset-0 focus-visible:border-slate-900" />
+          <Input placeholder="Search trips..." value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="h-9 pl-8 text-xs focus-visible:ring-1 focus-visible:ring-slate-900 focus-visible:ring-offset-0 focus-visible:border-slate-900" />
         </div>
       </div>
 
-      {isLoading ? (
+      {isError && list && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          Could not refresh trips. Showing cached data.
+        </div>
+      )}
+      {isInitialLoading ? (
         <div className="space-y-1">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-11 animate-pulse rounded-md bg-slate-100" />
           ))}
         </div>
-      ) : isError ? (
+      ) : isError && !list ? (
         <Card className="border-red-200 bg-red-50 p-3 text-xs text-red-700">Could not load trips. {error?.message || 'Please try again.'}</Card>
-      ) : list && filtered.length === 0 ? (
+      ) : !list || list.items.length === 0 ? (
         <Card className="flex min-h-[170px] flex-col items-center justify-center border-slate-200 bg-white px-6 py-8 text-center">
           <p className="text-[14px] font-semibold text-slate-900">{search ? `No results for "${search}"` : 'No trips yet'}</p>
           <p className="mt-1.5 text-xs leading-relaxed text-slate-500">Create your first trip to get started.</p>
@@ -147,10 +174,10 @@ export function AdminTripsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filtered.map((t) => (
+                  {list.items.map((t) => (
                     <tr key={t.id} className="hover:bg-slate-50">
                       <td className="px-2 py-1.5">
-                        <DestinationImage src={t.heroImage?.url} alt={t.name} className="h-7 w-10 shrink-0 rounded border border-slate-200" />
+                        <DestinationImage src={t.cardImage?.url || t.heroImage?.url} alt={t.name} className="h-7 w-10 shrink-0 rounded border border-slate-200" />
                       </td>
                       <td className="px-2 py-1.5">
                         <Link to={`/admin/trips/${t.id}/edit`} className="font-medium text-slate-900 hover:underline">
@@ -179,6 +206,24 @@ export function AdminTripsPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+            <span>
+              Showing {list.items.length} of {list.total} {search ? `(filtered)` : ''} {list.totalPages > 1 ? `• Page ${list.page}/${list.totalPages}` : ''}
+            </span>
+            {list.totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" className="h-7 text-xs" disabled={list.page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                  Previous
+                </Button>
+                <span className="px-2 text-xs">
+                  {list.page} / {list.totalPages}
+                </span>
+                <Button variant="outline" size="sm" className="h-7 text-xs" disabled={list.page >= list.totalPages} onClick={() => setPage((p) => Math.min(list.totalPages, p + 1))}>
+                  Next
+                </Button>
+              </div>
+            )}
           </div>
         </>
       )}

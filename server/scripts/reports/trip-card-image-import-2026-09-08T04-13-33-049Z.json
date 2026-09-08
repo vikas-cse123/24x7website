@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-09-08T04:13:33.049Z",
+  "dryRun": false,
+  "force": true,
+  "concurrency": 5,
+  "tripsFound": 1,
+  "imagesUploaded": 1,
+  "tripsUpdated": 1,
+  "tripsSkipped": 0,
+  "tripsFailed": 0,
+  "entries": [
+    {
+      "tripId": "6a9f48812887f10cfab64683",
+      "tripCode": "TRP-000002",
+      "tripName": "Sri Lanka Island Highlights",
+      "destination": {
+        "id": "6a9ebc0d19275a8182ffc2b9",
+        "name": "Sri Lanka Tour Packages",
+        "slug": "sri-lanka-tour-packages",
+        "country": "Sri Lanka"
+      },
+      "pixabayImageId": 3758193,
+      "pixabayQuery": "Sri Lanka travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/travels-ocean-sri-lanka-island-sea-3758193/",
+      "selectedImageUrl": "https://pixabay.com/get/g318f1da47cffc07249c02e189c1576e310c305be2e027f0bd90e87219ba4cb1c8cc50e695984f86186d0b38f777f05dc5bcc461e4d227021035f5db4f6e8ca72_1280.jpg",
+      "s3Key": "trips/TRP-000002/card/1788840812625-97131df7-e3f9-43c0-8e03-b75a78accb91.jpg",
+      "uploadStatus": "uploaded",
+      "mongoUpdateStatus": "updated",
+      "error": null
+    }
+  ]
+}

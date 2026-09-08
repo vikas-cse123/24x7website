@@ -5,12 +5,26 @@ import { isSafeBannerUrl, isExternalUrl } from '@/lib/settings'
 
 // Full-width admin-controlled promotional banner. Rendered as the very first
 // element of every public page (above the header). Driven by the centralized
-// public settings API; an empty database falls back to the default config.
+// public settings API; while loading, a subtle skeleton preserves height
+// without flashing the old hardcoded default.
 export function PromoBanner() {
-  const { promotionalBanner } = usePublicSettings()
+  const { promotionalBanner, isBannerLoading, isPending } = usePublicSettings()
+
+  const isLoading = isBannerLoading ?? isPending
+
+  if (isLoading) {
+    return (
+      <div className="bg-primary text-primary-foreground" aria-hidden="true" aria-busy="true">
+        <div className="mx-auto flex min-h-10 w-full items-center justify-center gap-2 px-10 py-1.5">
+          <div className="h-4 w-64 max-w-[60vw] rounded bg-white/20" />
+          <div className="hidden h-5 w-24 rounded bg-white/15 sm:block" />
+        </div>
+      </div>
+    )
+  }
 
   const banner = promotionalBanner
-  if (!banner.enabled) return null
+  if (!banner || !banner.enabled) return null
 
   const ctaUrl = banner.ctaUrl
   // Button only renders when the admin saved BOTH text and a safe URL.
@@ -22,8 +36,7 @@ export function PromoBanner() {
   }
 
   return (
-    <div className="relative overflow-hidden bg-primary text-primary-foreground" style={style}>
-      {banner.shimmerEnabled && <div className="banner-shimmer" aria-hidden="true" />}
+    <div className="bg-primary text-primary-foreground" style={style}>
 
       <div className="relative z-10 mx-auto flex min-h-10 w-full items-center justify-center gap-2 px-10 py-1.5 text-center text-xs font-medium sm:px-12 sm:text-sm">
         <span className="min-w-0 truncate">{banner.message}</span>

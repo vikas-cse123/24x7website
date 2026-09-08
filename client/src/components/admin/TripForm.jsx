@@ -2,7 +2,7 @@ import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Loader2, Plus, Trash2, Eye } from 'lucide-react'
+import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,7 +13,6 @@ import { tripSchema, TRIP_TYPES, TRIP_TYPE_LABELS, tripFormDefault } from '@/sch
 import { ImageUploader } from '@/components/ui/ImageUploader'
 import { ListItemEditor } from '@/components/trips/ListItemEditor'
 import { FaqListEditor } from '@/components/trips/FaqListEditor'
-import { StarRatingInput } from '@/components/reviews/StarRating'
 import { TripItineraryBuilder } from '@/components/trips/TripItineraryBuilder'
 import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import httpClient from '@/services/http'
@@ -47,7 +46,7 @@ const TRIP_TABS = [
   { id: 'itinerary', label: 'Itinerary' },
   { id: 'media', label: 'Media' },
   { id: 'pricing', label: 'Pricing' },
-  { id: 'content', label: 'Reviews & FAQs' },
+  { id: 'content', label: 'FAQs' },
   { id: 'publish', label: 'Publish' },
 ]
 
@@ -85,50 +84,6 @@ function DeparturesEditor({ dates, disabled, error, onChange }) {
     </div>
   )
 }
-const EMPTY_REVIEW = { name: '', review: '', rating: 5, image: { url: '', alt: '' }, published: false, displayOrder: 0 }
-function ReviewForm({ draft, onChange, onCancel, onSave }) {
-  return (
-    <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div><Label>Reviewer Name *</Label><Input value={draft.name || ''} onChange={(e) => onChange({ ...draft, name: e.target.value })} placeholder="e.g. Avish Poojary" className="mt-1.5 h-8 text-sm" /></div>
-        <div><Label>Rating</Label><div className="mt-1.5"><StarRatingInput value={draft.rating || 5} onChange={(v) => onChange({ ...draft, rating: v })} /></div></div>
-      </div>
-      <div><Label>Review Text *</Label><Textarea rows={3} value={draft.review || ''} onChange={(e) => onChange({ ...draft, review: e.target.value })} placeholder="Write the traveller's review…" className="mt-1.5 text-sm" /></div>
-      <div><Label>Review Image (optional)</Label><div className="mt-1.5"><ImageUploader value={draft.image} onChange={(v) => onChange({ ...draft, image: { ...(draft.image || {}), ...v } })} folder="trip-reviews" /></div></div>
-      <div className="flex flex-wrap items-center gap-4">
-        <label className="flex items-center gap-2 text-sm"><Checkbox checked={!!draft.published} onCheckedChange={(v) => onChange({ ...draft, published: v })} />Published</label>
-        <div className="flex items-center gap-2"><Label>Order</Label><Input type="number" min={0} value={draft.displayOrder ?? 0} onChange={(e) => onChange({ ...draft, displayOrder: e.target.value === '' ? 0 : Number(e.target.value) })} className="h-8 w-20 text-sm" /></div>
-      </div>
-      <div className="flex gap-2"><Button type="button" size="sm" onClick={onSave} className="h-8 text-xs">Save review</Button><Button type="button" variant="ghost" size="sm" onClick={onCancel} className="h-8 text-xs">Cancel</Button></div>
-    </div>
-  )
-}
-function ReviewsEditor({ reviews, error, onChange }) {
-  const list = Array.isArray(reviews) ? reviews : []
-  const [editingIndex, setEditingIndex] = React.useState(null)
-  const [draft, setDraft] = React.useState(EMPTY_REVIEW)
-  const [adding, setAdding] = React.useState(false)
-  function startAdd() { setDraft({ ...EMPTY_REVIEW, displayOrder: list.length }); setEditingIndex(null); setAdding(true) }
-  function startEdit(i) { setDraft({ ...EMPTY_REVIEW, ...(list[i] || {}) }); setEditingIndex(i); setAdding(false) }
-  function cancel() { setAdding(false); setEditingIndex(null); setDraft(EMPTY_REVIEW) }
-  function save() { if (!String(draft.name || '').trim() || !String(draft.review || '').trim()) return; if (adding) onChange([...list, draft]); else onChange(list.map((r, i) => (i === editingIndex ? draft : r))); cancel() }
-  function removeAt(i) { if (editingIndex === i) cancel(); onChange(list.filter((_, j) => j !== i)) }
-  return (
-    <div>
-      {list.length > 0 ? (
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="w-full min-w-[640px] text-left text-sm">
-            <thead><tr className="border-b border-border bg-muted/50 text-xs text-muted-foreground"><th className="px-3 py-2 font-medium">Reviewer</th><th className="px-3 py-2 font-medium">Rating</th><th className="px-3 py-2 font-medium">Review Preview</th><th className="px-3 py-2 font-medium">Image</th><th className="px-3 py-2 font-medium">Published</th><th className="px-3 py-2 font-medium">Order</th><th className="px-3 py-2 text-right font-medium">Actions</th></tr></thead>
-            <tbody className="divide-y divide-border">{list.map((r, i) => (<tr key={i}><td className="px-3 py-2 font-medium">{r.name || '—'}</td><td className="px-3 py-2">{r.rating ?? 5} ★</td><td className="max-w-[220px] truncate px-3 py-2 text-muted-foreground">{r.review || '—'}</td><td className="px-3 py-2">{r.image?.secureUrl || r.image?.url ? <img src={r.image.secureUrl || r.image.url} alt="" className="h-10 w-10 rounded object-cover" /> : <span className="text-xs text-muted-foreground">—</span>}</td><td className="px-3 py-2">{r.published ? 'Yes' : 'No'}</td><td className="px-3 py-2">{r.displayOrder ?? 0}</td><td className="px-3 py-2 text-right"><div className="inline-flex gap-1"><Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={() => startEdit(i)}>Edit</Button><Button type="button" variant="ghost" size="sm" className="h-7 text-xs text-destructive" onClick={() => removeAt(i)}>Delete</Button></div></td></tr>))}</tbody>
-          </table>
-        </div>
-      ) : (<p className="text-sm text-muted-foreground">No reviews added yet.</p>)}
-      {(adding || editingIndex !== null) && (<div className="mt-3"><ReviewForm draft={draft} onChange={setDraft} onCancel={cancel} onSave={save} /></div>)}
-      {!adding && editingIndex === null && (<Button type="button" variant="outline" size="sm" onClick={startAdd} className="mt-3 h-8 text-xs"><Plus className="h-4 w-4" />Add Review</Button>)}
-      <FieldError message={error} />
-    </div>
-  )
-}
 function CostingEditor({ rows, error, onChange }) {
   const list = Array.isArray(rows) ? rows : []
   function updateAt(index, patch) { onChange(list.map((r, i) => (i === index ? { ...r, ...patch } : r))) }
@@ -149,6 +104,29 @@ function CostingEditor({ rows, error, onChange }) {
         </ul>
       ) : (<p className="text-sm text-muted-foreground">No costing rows yet.</p>)}
       <Button type="button" variant="outline" size="sm" onClick={add} className="mt-3 h-8 text-xs"><Plus className="h-4 w-4" />Add Costing Row</Button>
+      <FieldError message={error} />
+    </div>
+  )
+}
+function ThingsToCarryEditor({ items, error, onChange }) {
+  const list = Array.isArray(items) ? items : []
+  function updateAt(index, patch) { onChange(list.map((r, i) => (i === index ? { ...r, ...patch } : r))) }
+  function removeAt(index) { onChange(list.filter((_, i) => i !== index)) }
+  function add() { onChange([...list, { icon: '', name: '' }]) }
+  return (
+    <div>
+      {list.length > 0 ? (
+        <ul className="space-y-2">
+          {list.map((row, i) => (
+            <li key={i} className="flex items-end gap-2 rounded-lg border border-border bg-muted/30 p-3">
+              <div className="w-20 shrink-0"><Label className="text-xs font-semibold">Icon</Label><Input value={row.icon || ''} onChange={(e) => updateAt(i, { icon: e.target.value })} placeholder="" className="mt-1 h-8 text-center text-lg" maxLength={4} /></div>
+              <div className="flex-1"><Label className="text-xs font-semibold">Item</Label><Input value={row.name || ''} onChange={(e) => updateAt(i, { name: e.target.value })} placeholder="e.g. Shoes" className="mt-1 h-8 text-sm" /></div>
+              <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-destructive" onClick={() => removeAt(i)} aria-label={`Remove item ${row.name || i + 1}`}><Trash2 className="h-4 w-4" /></Button>
+            </li>
+          ))}
+        </ul>
+      ) : (<p className="text-sm text-muted-foreground">No items added yet.</p>)}
+      <Button type="button" variant="outline" size="sm" onClick={add} className="mt-3 h-8 text-xs"><Plus className="h-4 w-4" />Add Item</Button>
       <FieldError message={error} />
     </div>
   )
@@ -192,17 +170,6 @@ function TripGalleryManager({ tripId }) {
     </div>
   )
 }
-function TripHeroVideoBlock({ value, onChange }) {
-  const src = value?.secureUrl || value?.url; const has = !!src; const [uploading, setUploading] = React.useState(false); const [progress, setProgress] = React.useState(null); const [uploadError, setUploadError] = React.useState(null); const inputRef = React.useRef(null)
-  async function handleFile(file) { if (!file) return; setUploadError(null); setUploading(true); setProgress(0); try { const form = new FormData(); form.append('video', file); const { data } = await httpClient.post('/admin/upload/video?folder=trip-media', form, { headers: { 'Content-Type': 'multipart/form-data' }, onUploadProgress: (e) => setProgress(Math.round(((e.loaded || 0) * 100) / (e.total || 1))) }); onChange(data.data) } catch (e) { setUploadError(e.response?.data?.message || e.message || 'Video upload failed') } finally { setUploading(false); setProgress(null) } }
-  return (
-    <div>
-      {has ? (<div><video src={src} controls muted playsInline preload="metadata" className="aspect-video w-full max-w-md rounded-lg border border-border bg-black" /><div className="mt-2 flex gap-2"><Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => inputRef.current?.click()} className="h-8 text-xs">{uploading ? `Uploading… ${progress ?? 0}%` : 'Replace video'}</Button><Button type="button" variant="ghost" size="sm" className="h-8 text-xs text-destructive" onClick={() => onChange({ url: '', secureUrl: '', publicId: '', alt: '' })}>Remove</Button></div></div>) : (<div><Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => inputRef.current?.click()} className="h-8 text-xs">{uploading ? `Uploading… ${progress ?? 0}%` : 'Upload video'}</Button><p className="mt-1 text-xs text-muted-foreground">MP4 or WebM — max 100 MB</p></div>)}
-      <input ref={inputRef} type="file" accept="video/*" className="hidden" onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = '' }} />
-      {uploadError && <p className="mt-1 text-xs text-destructive">{uploadError}</p>}
-    </div>
-  )
-}
 export function TripForm({ initialValues, destinations, tripCode, tripId, isSubmitting, submitLabel, onSubmit }) {
   const { register, handleSubmit, control, setValue, watch, reset, formState: { errors, isDirty }, trigger } = useForm({ mode: 'onChange', resolver: zodResolver(tripSchema), defaultValues: initialValues || tripFormDefault })
   const [activeTab, setActiveTab] = React.useState('basic')
@@ -213,10 +180,10 @@ export function TripForm({ initialValues, destinations, tripCode, tripId, isSubm
   const goNext = async () => {
     const fieldsByTab = {
       basic: ['destinationId','cardName','pageHeading','slug','tripType','durationDays','durationNights','maxGroupSize','shortDescription','description'],
-      itinerary: ['itinerary','inclusions','exclusions','importantInformation'],
-      media: ['cardImage','heroImage','heroVideo'],
+      itinerary: ['itinerary','inclusions','exclusions','importantInformation','thingsToCarry'],
+      media: ['cardImage'],
       pricing: ['startingPrice','originalPrice','currency','datesOnRequest','departures','costing'],
-      content: ['faqs','reviews'],
+      content: ['faqs'],
       publish: ['featured','published','displayOrder','seoTitle','seoDescription','seoKeywords']
     }
     const fields = fieldsByTab[activeTab] || []
@@ -242,7 +209,7 @@ export function TripForm({ initialValues, destinations, tripCode, tripId, isSubm
           <div className="space-y-0 divide-y divide-slate-200 border border-slate-200 bg-white min-w-0 max-w-full overflow-hidden">
             <div className="p-4"><RecordSection title="Basic Information"><div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:gap-4">
               <DenseField label="Destination" required error={errors.destinationId?.message}><Select {...register('destinationId')} defaultValue=""><option value="">Select a destination</option>{destinations.map(d=>(<option key={d.id} value={d.id}>{d.name}</option>))}</Select></DenseField>
-              <DenseField label="Trip type" required error={errors.tripType?.message}><Select {...register('tripType')}>{TRIP_TYPES.map(t=>(<option key={t} value={t}>{TRIP_TYPE_LABELS[t]}</option>))}</Select></DenseField>
+              <DenseField label="Trip type" required error={errors.tripType?.message} hint="Select one or more types"><div className="grid grid-cols-1 gap-2 rounded-md border border-input p-3 sm:grid-cols-2">{TRIP_TYPES.filter((t) => t !== 'match_maker').map((t) => { const selected = Array.isArray(watch('tripType')) ? watch('tripType').includes(t) : false; return (<label key={t} className="flex items-center gap-2 text-sm"><Checkbox checked={selected} onCheckedChange={(checked) => { const curr = Array.isArray(watch('tripType')) ? watch('tripType') : []; const next = checked ? [...curr, t] : curr.filter((v) => v !== t); setValue('tripType', next, { shouldValidate: true, shouldDirty: true }); }} />{TRIP_TYPE_LABELS[t]}</label>); })}</div></DenseField>
               <DenseField label="Trip Card Name" required error={errors.cardName?.message} hint="Short name shown on trip cards only. Enter independently — never auto-copied."><Input placeholder="e.g. 8 Days Sri Lanka Trip in December" {...register('cardName')} className="h-8 text-sm" /></DenseField>
               <DenseField label="Trip Page Heading" error={errors.pageHeading?.message} hint="Heading shown in the trip detail page below the hero. Enter independently."><Input placeholder="e.g. Days Sri Lanka Trip in December" {...register('pageHeading')} className="h-8 text-sm" /></DenseField>
               <DenseField label="Slug" error={errors.slug?.message} hint="URL-safe. Auto-generated from the Trip Card Name if left blank."><Input placeholder="vietnam-8-days" aria-invalid={!!errors.slug} {...register('slug')} className="h-8 text-sm" /></DenseField>
@@ -260,27 +227,25 @@ export function TripForm({ initialValues, destinations, tripCode, tripId, isSubm
             <div className="p-4"><RecordSection title="Inclusions"><ListItemEditor control={control} name="inclusions" label="Inclusions" placeholder="e.g. Airport transfers" /></RecordSection></div>
             <div className="p-4"><RecordSection title="Exclusions"><ListItemEditor control={control} name="exclusions" label="Exclusions" placeholder="e.g. International flights" /></RecordSection></div>
             <div className="p-4"><RecordSection title="Important Information"><DenseField label="Travel information" error={errors.importantInformation?.message} hint="Visa, passport, cancellation, fitness, luggage, weather…"><RichTextEditor value={watch('importantInformation')||''} onChange={(html)=>setValue('importantInformation',html,{shouldValidate:true,shouldDirty:true})} placeholder="Important details travellers should know" error={!!errors.importantInformation} /></DenseField></RecordSection></div>
+            <div className="p-4"><RecordSection title="Things to Carry"><ThingsToCarryEditor items={watch('thingsToCarry')||[]} error={errors.thingsToCarry?.message} onChange={(next)=> setValue('thingsToCarry', next, { shouldValidate: true, shouldDirty: true })} /></RecordSection></div>
           </div>
         )}
         {activeTab==='media' && (
           <div className="space-y-0 divide-y divide-slate-200 border border-slate-200 bg-white">
-            <div className="p-4"><RecordSection title="Trip Card Image"><div className="space-y-1"><Label className="text-xs font-semibold">Image shown on trip cards across the website. Independent from the page hero below.</Label><div className="mt-1.5"><ImageUploader value={watch('cardImage')} onChange={(v)=> setValue('cardImage', {...(watch('cardImage')||{}), ...v, alt: v.alt || watch('cardImage.alt')}, {shouldValidate:true, shouldDirty:true})} folder="trip-media" /></div><div className="mt-2"><Input placeholder="Alt text" {...register('cardImage.alt')} className="h-8 text-sm" /></div></div></RecordSection></div>
-            <div className="p-4"><RecordSection title="Trip Page Hero Image"><div className="space-y-1"><Label className="text-xs font-semibold">Image shown at the top of the individual trip page. Independent from the card image above.</Label><div className="mt-1.5"><ImageUploader value={watch('heroImage')} onChange={(v)=> setValue('heroImage', {...(watch('heroImage')||{}), ...v, alt: v.alt || watch('heroImage.alt')}, {shouldValidate:true, shouldDirty:true})} folder="trip-media" /></div><div className="mt-2"><Input placeholder="Alt text" {...register('heroImage.alt')} className="h-8 text-sm" /></div></div></RecordSection></div>
-            <div className="p-4"><RecordSection title="Trip Page Hero Video (optional)"><div className="space-y-1"><Label className="text-xs font-semibold">Image/video shown at the top of the individual trip page. When a video is set, the trip page shows it instead of the hero image.</Label><div className="mt-1.5"><TripHeroVideoBlock value={watch('heroVideo')} onChange={(v)=> setValue('heroVideo', v, { shouldValidate: true, shouldDirty: true })} /></div></div></RecordSection></div>
+            <div className="p-4"><RecordSection title="Trip Card Image"><div className="space-y-1"><Label className="text-xs font-semibold">Image shown on trip cards across the website.</Label><div className="mt-1.5"><ImageUploader value={watch('cardImage')} onChange={(v)=> setValue('cardImage', {...(watch('cardImage')||{}), ...v, alt: v.alt || watch('cardImage.alt')}, {shouldValidate:true, shouldDirty:true})} folder="trip-media" /></div><div className="mt-2"><Input placeholder="Alt text" {...register('cardImage.alt')} className="h-8 text-sm" /></div></div></RecordSection></div>
             <div className="p-4"><RecordSection title="Gallery"><TripGalleryManager tripId={tripId} /></RecordSection></div>
           </div>
         )}
         {activeTab==='pricing' && (
           <div className="space-y-0 divide-y divide-slate-200 border border-slate-200 bg-white">
             <div className="p-4"><RecordSection title="Pricing"><div className="grid gap-3 sm:grid-cols-3"><DenseField label="Starting price" required error={errors.startingPrice?.message} hint="Base package price only. Departure-specific pricing comes later."><Input type="number" min={0} placeholder="51999" {...register('startingPrice')} className="h-8 text-sm" /></DenseField><DenseField label="Original price (MRP)" error={errors.originalPrice?.message} hint="Optional. When above the starting price, the card shows it struck through with the derived discount."><Input type="number" min={0} placeholder="59999" {...register('originalPrice')} className="h-8 text-sm" /></DenseField><DenseField label="Currency" required error={errors.currency?.message}><Input placeholder="INR" {...register('currency')} className="h-8 text-sm" /></DenseField></div></RecordSection></div>
-            <div className="p-4"><RecordSection title="Departures"><div className="space-y-4"><label className="flex items-center gap-2.5 text-sm"><Checkbox checked={!!watch('datesOnRequest')} onCheckedChange={(v)=> setValue('datesOnRequest', v, { shouldValidate: true, shouldDirty: true })} /><span>Dates on Request<span className="ml-1 text-xs text-muted-foreground">(card shows exactly “Dates on Request”, no dates required)</span></span></label><DeparturesEditor dates={watch('departures')||[]} disabled={!!watch('datesOnRequest')} error={errors.departures?.message} onChange={(next)=> setValue('departures', next, { shouldValidate: true, shouldDirty: true })} /></div></RecordSection></div>
+            <div className="p-4"><RecordSection title="Departures"><div className="space-y-4"><label className="flex items-center gap-2.5 text-sm"><Checkbox checked={!!watch('datesOnRequest')} onCheckedChange={(v)=> setValue('datesOnRequest', v, { shouldValidate: true, shouldDirty: true })} /><span>All dates available<span className="ml-1 text-xs text-muted-foreground">(card shows exactly “All dates available”, no dates required)</span></span></label><DeparturesEditor dates={watch('departures')||[]} disabled={!!watch('datesOnRequest')} error={errors.departures?.message} onChange={(next)=> setValue('departures', next, { shouldValidate: true, shouldDirty: true })} /></div></RecordSection></div>
             <div className="p-4"><RecordSection title="Costing"><CostingEditor rows={watch('costing')||[]} error={errors.costing?.message} onChange={(next)=> setValue('costing', next, { shouldValidate: true, shouldDirty: true })} /></RecordSection></div>
           </div>
         )}
         {activeTab==='content' && (
           <div className="space-y-0 divide-y divide-slate-200 border border-slate-200 bg-white">
             <div className="p-4"><RecordSection title="FAQs"><FaqListEditor control={control} /></RecordSection></div>
-            <div className="p-4"><RecordSection title="Reviews"><ReviewsEditor reviews={watch('reviews')||[]} error={errors.reviews?.message} onChange={(next)=> setValue('reviews', next, { shouldValidate: true, shouldDirty: true })} /></RecordSection></div>
           </div>
         )}
         {activeTab==='publish' && (

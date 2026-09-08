@@ -2,14 +2,14 @@ import httpClient from './http.js'
 
 // Public settings — read by the whole website, never requires authentication.
 export const brandingApi = {
-  get() {
-    return httpClient.get('/settings/branding')
+  get({ signal } = {}) {
+    return httpClient.get('/settings/branding', { signal })
   },
 }
 
 export const publicSettingsApi = {
-  get() {
-    return httpClient.get('/settings')
+  get({ signal } = {}) {
+    return httpClient.get('/settings', { signal })
   },
 }
 
@@ -55,7 +55,7 @@ export const adminSettingsApi = {
 }
 
 export const publicWhatsappApi = {
-  get() {
-    return httpClient.get('/settings/whatsapp')
+  get({ signal } = {}) {
+    return httpClient.get('/settings/whatsapp', { signal })
   },
 }

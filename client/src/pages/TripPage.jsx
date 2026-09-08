@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useParams, Link } from 'react-router-dom'
 import * as React from 'react'
 import { createPortal } from 'react-dom'
-import { MapPin, CalendarDays, Users, ArrowLeft, Clock, HelpCircle, Star, X, ChevronDown, Download, Minus, Plus, Check } from 'lucide-react'
+import { MapPin, CalendarDays, Users, ArrowLeft, Clock, HelpCircle, X, ChevronDown, Minus, Plus, Check } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
 import { Accordion } from '@/components/ui/accordion'
@@ -13,10 +13,8 @@ import { publicWhatsappApi } from '@/services/settings'
 import { DEFAULT_WHATSAPP } from '@/lib/settings'
 import { tripBatchApi } from '@/services/tripBatches'
 import { TripDepartures } from '@/components/trips/TripDepartures'
-import { TripTravellerReviews } from '@/components/trips/TripTravellerReviews'
 import { WishlistButton } from '@/components/wishlist/WishlistButton'
 import { PlanTripTrigger } from '@/components/enquiry/PlanTripTrigger'
-import { TripReviews } from '@/components/trips/TripReviews'
 import { faqApi } from '@/services/faqs'
 import { useSeo, tripSeoTitle } from '@/lib/seo'
 import { TRIP_TYPE_LABELS } from '@/schemas/trip'
@@ -222,6 +220,33 @@ export function TripPage() {
   const maxTravellers =
     selectedOption?.batch?.availableSeats > 0 ? Number(selectedOption.batch.availableSeats) : 10
 
+  // Sticky section nav — Itinerary / Inclusions / Costing / Notes (matches screenshot)
+  const [activeSticky, setActiveSticky] = React.useState('itinerary')
+  const scrollToSection = React.useCallback((id) => {
+    const el = document.getElementById(id)
+    if (!el) return
+    const headerOffset = 180
+    const top = el.getBoundingClientRect().top + window.scrollY - headerOffset
+    window.scrollTo({ top, behavior: 'smooth' })
+    setActiveSticky(id)
+  }, [])
+  React.useEffect(() => {
+    const ids = ['itinerary', 'inclusions', 'costing', 'notes']
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setActiveSticky(entry.target.id)
+        })
+      },
+      { rootMargin: '-180px 0px -60% 0px', threshold: 0.1 }
+    )
+    ids.forEach((id) => {
+      const el = document.getElementById(id)
+      if (el) observer.observe(el)
+    })
+    return () => observer.disconnect()
+  }, [trip?.itinerary, trip?.inclusions, trip?.exclusions, trip?.costing, trip?.importantInformation])
+
   // WhatsApp contact pill — same admin-managed configuration as the floating
   // button (hidden when disabled or unconfigured).
   const { data: whatsappData } = useQuery({
@@ -256,11 +281,185 @@ export function TripPage() {
 
   if (isLoading) {
     return (
-      <Container className="py-10">
-        <div className="h-72 animate-pulse rounded-2xl bg-muted" />
-        <div className="mt-6 h-8 w-1/2 animate-pulse rounded bg-muted" />
-        <div className="mt-4 h-4 w-2/3 animate-pulse rounded bg-muted" />
-      </Container>
+      <div>
+        {/* Hero skeleton + breadcrumb placeholder — preserves outer height */}
+        <div className="h-3 bg-white" aria-hidden="true" />
+        <div className="relative w-full overflow-hidden">
+          <div className="skeleton aspect-[0.7/1] w-full md:aspect-[3.17/1]" aria-hidden="true" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/30 via-black/5 to-transparent px-4 pb-6 pt-16 sm:pb-8">
+            <div className="mx-auto flex justify-center">
+              <div className="skeleton h-7 w-64 rounded-full bg-white/30 sm:h-9 sm:w-80" />
+            </div>
+          </div>
+          <div className="absolute right-3 top-3">
+            <div className="skeleton h-10 w-10 rounded-full" />
+          </div>
+        </div>
+
+        <div className="w-full px-5 py-8 sm:px-8 lg:px-[84px] lg:py-10">
+          <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+            <div className="min-w-0">
+              {/* Title */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="skeleton h-8 w-[320px] rounded sm:h-9 sm:w-[420px]" />
+                <div className="skeleton h-5 w-16 rounded-full" />
+              </div>
+              {/* Metadata row */}
+              <div className="mt-3 flex flex-wrap gap-4">
+                <div className="skeleton h-4 w-28 rounded-full" />
+                <div className="skeleton h-4 w-32 rounded-full" />
+                <div className="skeleton h-4 w-24 rounded-full" />
+                <div className="skeleton h-4 w-20 rounded-full" />
+              </div>
+              {/* Description */}
+              <div className="mt-4 max-w-3xl space-y-2">
+                <div className="skeleton h-4 w-full rounded" />
+                <div className="skeleton h-4 w-20 rounded" />
+              </div>
+
+              {/* Upcoming departures */}
+              <div className="mt-10">
+                <div className="skeleton h-6 w-48 rounded" />
+                <div className="mt-4 space-y-3">
+                  <div className="skeleton h-24 w-full rounded-xl" />
+                  <div className="skeleton h-24 w-full rounded-xl" />
+                </div>
+              </div>
+
+              {/* Sticky pills skeleton */}
+              <div className="mt-6 flex gap-2 overflow-hidden">
+                <div className="skeleton h-8 w-20 rounded-full" />
+                <div className="skeleton h-8 w-24 rounded-full" />
+                <div className="skeleton h-8 w-20 rounded-full" />
+                <div className="skeleton h-8 w-16 rounded-full" />
+              </div>
+
+              {/* Itinerary */}
+              <div className="mt-10">
+                <div className="skeleton h-8 w-56 rounded" />
+                <div className="mt-5 space-y-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="rounded-xl border border-slate-200 bg-white p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="skeleton h-6 w-14 rounded-full" />
+                        <div className="skeleton h-4 flex-1 rounded" />
+                        <div className="skeleton h-4 w-4 rounded" />
+                      </div>
+                      {i === 0 && (
+                        <div className="mt-4 space-y-2">
+                          <div className="skeleton h-3 w-full rounded" />
+                          <div className="skeleton h-3 w-[85%] rounded" />
+                          <div className="skeleton h-3 w-[70%] rounded" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Inclusions / Exclusions */}
+              <div className="mt-10">
+                <div className="skeleton h-7 w-64 rounded" />
+                <div className="mt-6 grid gap-8 sm:grid-cols-2">
+                  <div>
+                    <div className="skeleton h-5 w-20 rounded" />
+                    <div className="mt-4 space-y-3">
+                      <div className="skeleton h-4 w-full rounded" />
+                      <div className="skeleton h-4 w-[90%] rounded" />
+                      <div className="skeleton h-4 w-[85%] rounded" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="skeleton h-5 w-28 rounded" />
+                    <div className="mt-4 space-y-3">
+                      <div className="skeleton h-4 w-full rounded" />
+                      <div className="skeleton h-4 w-[88%] rounded" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Costing */}
+              <div className="mt-10">
+                <div className="skeleton h-7 w-24 rounded" />
+                <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">
+                  <div className="grid grid-cols-2 gap-px bg-slate-200">
+                    <div className="bg-white p-4"><div className="skeleton mx-auto h-4 w-16 rounded" /></div>
+                    <div className="bg-white p-4"><div className="skeleton mx-auto h-4 w-16 rounded" /></div>
+                  </div>
+                  <div className="space-y-px bg-slate-200">
+                    <div className="grid grid-cols-2 gap-px">
+                      <div className="bg-white p-4"><div className="skeleton h-4 w-24 rounded" /></div>
+                      <div className="bg-white p-4"><div className="skeleton mx-auto h-4 w-20 rounded" /></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-px">
+                      <div className="bg-white p-4"><div className="skeleton h-4 w-28 rounded" /></div>
+                      <div className="bg-white p-4"><div className="skeleton mx-auto h-4 w-24 rounded" /></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Important Information / Notes */}
+              <div className="mt-10">
+                <div className="skeleton h-7 w-20 rounded" />
+                <div className="mt-5 space-y-2">
+                  <div className="skeleton h-4 w-full rounded" />
+                  <div className="skeleton h-4 w-[92%] rounded" />
+                  <div className="skeleton h-4 w-[78%] rounded" />
+                </div>
+              </div>
+
+              {/* Things to Carry */}
+              <div className="mt-10">
+                <div className="skeleton h-7 w-40 rounded" />
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <div className="skeleton h-9 w-28 rounded-full" />
+                  <div className="skeleton h-9 w-32 rounded-full" />
+                  <div className="skeleton h-9 w-24 rounded-full" />
+                  <div className="skeleton h-9 w-28 rounded-full" />
+                </div>
+              </div>
+
+              {/* FAQs */}
+              <div className="mt-10">
+                <div className="skeleton h-6 w-64 rounded" />
+                <div className="mt-5 space-y-2">
+                  <div className="skeleton h-14 w-full rounded-xl" />
+                  <div className="skeleton h-14 w-full rounded-xl" />
+                  <div className="skeleton h-14 w-full rounded-xl" />
+                </div>
+              </div>
+            </div>
+
+            {/* Booking card skeleton — matches aside dimensions */}
+            <aside className="h-fit rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="skeleton h-3 w-28 rounded" />
+              <div className="mt-2 flex items-baseline gap-2">
+                <div className="skeleton h-8 w-32 rounded" />
+                <div className="skeleton h-4 w-20 rounded" />
+              </div>
+              <div className="mt-1 skeleton h-3 w-16 rounded" />
+              <div className="mt-6 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="skeleton h-4 w-24 rounded" />
+                  <div className="skeleton h-6 w-20 rounded-full" />
+                </div>
+                <div className="space-y-2">
+                  <div className="skeleton h-14 w-full rounded-lg" />
+                  <div className="skeleton h-14 w-full rounded-lg" />
+                </div>
+              </div>
+              <div className="mt-5 flex items-center justify-between">
+                <div className="skeleton h-4 w-32 rounded" />
+                <div className="skeleton h-7 w-24 rounded-full" />
+              </div>
+              <div className="mt-5 skeleton h-12 w-full rounded-full" />
+              <div className="mt-4 skeleton h-8 w-32 rounded-full" />
+            </aside>
+          </div>
+        </div>
+      </div>
     )
   }
 
@@ -280,8 +479,13 @@ export function TripPage() {
     )
   }
 
-  // Hero media: dedicated hero video wins, else the dedicated hero image.
-  const heroVideoSrc = trip.heroVideo?.secureUrl || trip.heroVideo?.url || ''
+  // Hero media is now entirely from the destination — trip hero media removed from form.
+  // Destination hero video wins, else destination hero image.
+  const heroVideoSrc =
+    trip.destination?.heroVideo?.secureUrl || trip.destination?.heroVideo?.url || ''
+  const destinationHeroSrc =
+    trip.destination?.heroImage?.secureUrl || trip.destination?.heroImage?.url || ''
+  const destinationHeroAlt = trip.destination?.heroImage?.alt || ''
   // Overlay uses the Trip Card Name; the content heading uses the Trip Page
   // Heading. Each falls back to the canonical name for legacy trips only.
   const overlayName = trip.cardName || trip.name
@@ -289,16 +493,6 @@ export function TripPage() {
 
   return (
     <div>
-      <Container className="py-3">
-        <Link
-          to="/trips"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          All trips
-        </Link>
-      </Container>
-
       {/* Full-bleed hero — same sizing/behavior as the destination hero */}
       <div className="relative w-full overflow-hidden">
         {heroVideoSrc ? (
@@ -317,8 +511,8 @@ export function TripPage() {
           />
         ) : (
           <DestinationImage
-            src={trip.heroImage?.url}
-            alt={trip.heroImage?.alt || overlayName}
+            src={destinationHeroSrc}
+            alt={destinationHeroAlt || overlayName}
             className="aspect-[0.7/1] w-full md:aspect-[3.17/1]"
           />
         )}
@@ -355,16 +549,6 @@ export function TripPage() {
               <CalendarDays className="h-4 w-4" />
               {trip.durationDays} Days / {trip.durationNights} Nights
             </span>
-            <span className="inline-flex items-center gap-1.5 capitalize">
-              <Clock className="h-4 w-4" />
-              {TRIP_TYPE_LABELS[trip.tripType] || trip.tripType}
-            </span>
-            {trip.maxGroupSize > 0 && (
-              <span className="inline-flex items-center gap-1.5">
-                <Users className="h-4 w-4" />
-                Max {trip.maxGroupSize}
-              </span>
-            )}
           </div>
 
           {/* Description preview — one line + Read More, like the destination page */}
@@ -411,22 +595,39 @@ export function TripPage() {
             />
           </div>
 
+          {/* Sticky section pills — Itinerary / Inclusions / Costing / Notes */}
+          <div className="sticky top-[104px] z-10 mt-6 bg-white/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/80 lg:top-[148px]">
+            <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+              <div className="flex gap-2 overflow-x-auto">
+                {[
+                  { id: 'itinerary', label: 'Itinerary' },
+                  { id: 'inclusions', label: 'Inclusions' },
+                  { id: 'costing', label: 'Costing' },
+                  { id: 'notes', label: 'Notes' },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => scrollToSection(tab.id)}
+                    className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                      activeSticky === tab.id
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Itinerary — reference-style accordion: gray collapsed rows,
               mint expanded row, "Day N" outline pills, chevron toggles.
               First day open by default. */}
           {trip.itinerary && trip.itinerary.length > 0 && (
-            <div className="mt-10">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-[28px] font-extrabold leading-tight tracking-tight">Itinerary Breakdown</h2>
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <Download className="h-4 w-4" aria-hidden="true" />
-                  Download Itinerary
-                </button>
-              </div>
+            <div id="itinerary" className="mt-10 scroll-mt-40">
+              <h2 className="text-[28px] font-extrabold leading-tight tracking-tight">Itinerary Breakdown</h2>
               <div className="mt-5 space-y-3">
                 {trip.itinerary.map((day, idx) => {
                   // openDay: null = default (first day open), a day number =
@@ -497,7 +698,7 @@ export function TripPage() {
 
           {/* What's in the Package? — Included / Not Included editorial columns */}
           {(trip.inclusions?.length > 0 || trip.exclusions?.length > 0) && (
-            <div className="mt-10">
+            <div id="inclusions" className="mt-10 scroll-mt-40">
               <h2 className="text-[26px] font-extrabold leading-tight tracking-tight text-gray-900">
                 What&apos;s in the Package?
               </h2>
@@ -528,7 +729,7 @@ export function TripPage() {
 
           {/* Costing — room-sharing table, only when rows exist */}
           {trip.costing?.length > 0 && (
-            <div className="mt-10">
+            <div id="costing" className="mt-10 scroll-mt-40">
               <h2 className="text-[26px] font-extrabold leading-tight tracking-tight text-gray-900">
                 Costing
               </h2>
@@ -568,7 +769,7 @@ export function TripPage() {
 
           {/* Notes — clean editorial list treatment (data untouched) */}
           {trip.importantInformation && (
-            <div className="mt-10">
+            <div id="notes" className="mt-10 scroll-mt-40">
               <h2 className="text-[26px] font-extrabold leading-tight tracking-tight text-gray-900">Notes</h2>
               <div
                 className="prose mt-5 max-w-none break-words text-[15px] font-normal leading-8 text-gray-900 prose-headings:font-bold prose-p:my-4 prose-ul:my-4 prose-ul:space-y-4 prose-ul:pl-5 prose-ol:my-4 prose-ol:space-y-4 prose-ol:pl-5 prose-li:my-2 prose-li:pl-1 prose-strong:font-semibold prose-a:text-primary prose-a:underline [&_br]:mb-4 [&_br]:block"
@@ -577,16 +778,20 @@ export function TripPage() {
             </div>
           )}
 
-          {/* Reviews & ratings (approved only, verified bookings) */}
-          <div className="mt-10">
-            <h2 className="flex items-center gap-2 text-xl font-semibold">
-              <Star className="h-5 w-5 fill-amber-400 text-amber-400" aria-hidden="true" />
-              Ratings &amp; Reviews
-            </h2>
-            <div className="mt-4">
-              <TripReviews trip={trip} />
+          {/* Things to Carry — compact pills directly below Notes */}
+          {Array.isArray(trip.thingsToCarry) && trip.thingsToCarry.filter((t) => t && (t.name || '').trim()).length > 0 && (
+            <div className="mt-10">
+              <h2 className="text-[26px] font-extrabold leading-tight tracking-tight text-gray-900">Things to Carry</h2>
+              <div className="mt-5 flex flex-wrap gap-3">
+                {trip.thingsToCarry.filter((t) => t && (t.name || '').trim()).map((item, i) => (
+                  <span key={i} className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-800 shadow-sm">
+                    {item.icon ? <span aria-hidden="true">{item.icon}</span> : null}
+                    <span>{item.name}</span>
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* FAQs - CMS-managed (trip → destination → global) */}
           <TripFaqs slug={trip.slug} name={trip.name} />
@@ -600,16 +805,13 @@ export function TripPage() {
           {/* Gallery by Travelers — Photos/Videos tabs */}
           <TravelerGallery tripId={trip.id} tripName={trip.name} />
 
-          {/* Admin-curated reviews for this trip only */}
-          <TripTravellerReviews trip={trip} />
-
           {/* Related trips — same destination */}
           <RelatedTrips trip={trip} />
         </div>
 
         {/* Booking card — reference hierarchy: price header, trip dates,
             travellers, Book Now, WhatsApp. All values from real trip data. */}
-        <aside className="h-fit rounded-xl border border-border bg-card p-5 shadow-card sm:p-6 lg:sticky lg:top-24">
+        <aside className="h-fit overflow-visible rounded-xl border border-border bg-card p-5 shadow-card sm:p-6 lg:sticky lg:top-24">
           <p className="text-[13px] font-medium text-muted-foreground">Trip Starts From</p>
           {sellingPrice != null ? (
             <>
@@ -633,11 +835,11 @@ export function TripPage() {
           )}
 
           {trip.datesOnRequest ? (
-            <div className="mt-5">
+            <div className="mt-5 rounded-lg border border-border bg-muted/30 px-3 py-3">
               <p className="flex items-center gap-1.5 text-sm font-semibold">
-                <span aria-hidden="true">📅</span> Trip Dates
+                <span aria-hidden="true">📅</span> Dates available
               </p>
-              <p className="mt-2 text-sm text-muted-foreground">Dates on Request</p>
+              <p className="mt-1 text-sm text-muted-foreground">All dates available — send an enquiry for your preferred date.</p>
             </div>
           ) : dateOptions.length > 0 ? (
             <div className="mt-5">
@@ -698,11 +900,11 @@ export function TripPage() {
             </div>
           ) : null}
 
-          <div className="mt-5 flex items-center justify-between gap-3">
-            <p className="flex items-center gap-1.5 text-sm font-semibold">
+          <div className="mt-5 flex min-w-0 items-center justify-between gap-3">
+            <p className="flex min-w-0 items-center gap-1.5 text-sm font-semibold">
               <span aria-hidden="true">👥</span> No. of Travellers
             </p>
-            <div className="flex items-center gap-4">
+            <div className="flex shrink-0 items-center gap-4">
               <button
                 type="button"
                 aria-label="Remove a traveller"

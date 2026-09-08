@@ -2,14 +2,14 @@ import httpClient from './http.js'
 
 // Public FAQs. All endpoints return only published FAQs.
 export const faqApi = {
-  list(params) {
-    return httpClient.get('/faqs', { params })
+  list(params, { signal } = {}) {
+    return httpClient.get('/faqs', { params, signal })
   },
-  listForDestination(slug, params) {
-    return httpClient.get(`/destinations/${slug}/faqs`, { params })
+  listForDestination(slug, params, { signal } = {}) {
+    return httpClient.get(`/destinations/${slug}/faqs`, { params, signal })
   },
-  listForTrip(slug, params) {
-    return httpClient.get(`/trips/${slug}/faqs`, { params })
+  listForTrip(slug, params, { signal } = {}) {
+    return httpClient.get(`/trips/${slug}/faqs`, { params, signal })
   },
 }
 

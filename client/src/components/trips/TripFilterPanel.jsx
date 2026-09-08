@@ -57,64 +57,13 @@ export function TripFilterPanel({
         </Button>
       </div>
 
-      <Group title="Check dates on calendar">
-        <div className="space-y-3">
-          <div>
-            <Label htmlFor={`${idPrefix}-date`} className="text-xs text-muted-foreground">
-              Departing on
-            </Label>
-            <Input
-              id={`${idPrefix}-date`}
-              type="date"
-              className="mt-1.5"
-              value={filters.departureDate || ''}
-              onChange={(e) =>
-                set({
-                  departureDate: e.target.value || null,
-                  departureFrom: null,
-                  departureTo: null,
-                })
-              }
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label htmlFor={`${idPrefix}-from`} className="text-xs text-muted-foreground">
-                From
-              </Label>
-              <Input
-                id={`${idPrefix}-from`}
-                type="date"
-                className="mt-1.5"
-                value={filters.departureFrom || ''}
-                onChange={(e) =>
-                  set({ departureFrom: e.target.value || null, departureDate: null })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor={`${idPrefix}-to`} className="text-xs text-muted-foreground">
-                To
-              </Label>
-              <Input
-                id={`${idPrefix}-to`}
-                type="date"
-                className="mt-1.5"
-                value={filters.departureTo || ''}
-                onChange={(e) => set({ departureTo: e.target.value || null, departureDate: null })}
-              />
-            </div>
-          </div>
-        </div>
-      </Group>
-
       <Group title="Trip Type">
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => set({ tripType: null })}
             aria-pressed={!filters.tripType}
-            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+            className={`max-w-full break-words rounded-full px-3 py-1.5 text-xs font-medium leading-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
               !filters.tripType
                 ? 'bg-primary text-primary-foreground'
                 : 'border border-input bg-background text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -122,7 +71,7 @@ export function TripFilterPanel({
           >
             All types
           </button>
-          {TRIP_TYPES.map((t) => {
+          {TRIP_TYPES.filter((t) => t !== 'match_maker').map((t) => {
             const active = filters.tripType === t
             return (
               <button
@@ -130,7 +79,7 @@ export function TripFilterPanel({
                 type="button"
                 onClick={() => set({ tripType: active ? null : t })}
                 aria-pressed={active}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                className={`max-w-full break-words rounded-full px-3 py-1.5 text-xs font-medium leading-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   active
                     ? 'bg-primary text-primary-foreground'
                     : 'border border-input bg-background text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -144,7 +93,7 @@ export function TripFilterPanel({
       </Group>
 
       <Group title="Domestic / International">
-        <div className="grid grid-cols-3 gap-2" role="group" aria-label="Domestic or international trips">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Domestic or international trips">
           {[
             { value: null, label: 'All' },
             { value: 'domestic', label: 'Domestic' },
@@ -157,7 +106,7 @@ export function TripFilterPanel({
                 type="button"
                 onClick={() => set({ category: opt.value })}
                 aria-pressed={active}
-                className={`rounded-md border px-2 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                className={`rounded-md border px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   active
                     ? 'border-primary bg-primary/10 text-primary'
                     : 'border-input bg-background text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -189,7 +138,7 @@ export function TripFilterPanel({
       </Group>
 
       <Group title="Budget (per person)">
-        <div className="mb-3 flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           {BUDGET_PRESETS.map((p) => {
             const active = activeBudgetPreset === p.label
             return (
@@ -215,46 +164,7 @@ export function TripFilterPanel({
             )
           })}
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <Label htmlFor={`${idPrefix}-min-price`} className="text-xs text-muted-foreground">
-              Min price (₹)
-            </Label>
-            <Input
-              id={`${idPrefix}-min-price`}
-              type="number"
-              min={0}
-              placeholder="0"
-              className="mt-1.5"
-              value={filters.minPrice ?? ''}
-              onChange={(e) => set({ minPrice: e.target.value === '' ? null : e.target.value })}
-            />
-          </div>
-          <div>
-            <Label htmlFor={`${idPrefix}-max-price`} className="text-xs text-muted-foreground">
-              Max price (₹)
-            </Label>
-            <Input
-              id={`${idPrefix}-max-price`}
-              type="number"
-              min={0}
-              placeholder="Any"
-              className="mt-1.5"
-              value={filters.maxPrice ?? ''}
-              onChange={(e) => set({ maxPrice: e.target.value === '' ? null : e.target.value })}
-            />
-          </div>
-        </div>
       </Group>
-
-      <label className="flex items-center gap-2.5 text-sm" htmlFor={`${idPrefix}-featured`}>
-        <Checkbox
-          id={`${idPrefix}-featured`}
-          checked={!!filters.featured}
-          onCheckedChange={(v) => set({ featured: v ? true : null })}
-        />
-        Featured trips only
-      </label>
     </div>
   )
 }

@@ -2,11 +2,11 @@ import httpClient from './http.js'
 
 // Public trip queries.
 export const tripApi = {
-  list(params) {
-    return httpClient.get('/trips', { params })
+  list(params, { signal } = {}) {
+    return httpClient.get('/trips', { params, signal })
   },
-  getBySlug(slug) {
-    return httpClient.get(`/trips/${slug}`)
+  getBySlug(slug, { signal } = {}) {
+    return httpClient.get(`/trips/${slug}`, { signal })
   },
 }
 

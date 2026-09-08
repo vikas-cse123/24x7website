@@ -22,7 +22,7 @@ export const createEnquirySchema = z
       .regex(PHONE, 'Please enter a valid mobile number')
       .max(15, 'Please enter a valid mobile number'),
     countryCode: z.string().trim().max(6).optional().default('+91'),
-    email: z.string().trim().email('Please enter a valid email address').max(200),
+    email: z.union([z.string().trim().email('Please enter a valid email address').max(200), z.literal('')]).optional(),
     message: z.string().trim().max(2000).optional().default(''),
     // Channel that produced the lead. Allowed set keeps the naming convention
     // consistent (lowercase snake_case); unexpected values are rejected.

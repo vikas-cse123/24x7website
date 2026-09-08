@@ -29,6 +29,11 @@ const faqSchema = z.object({
   answer: z.string().trim().max(2000),
 })
 
+const thingsToCarryItemSchema = z.object({
+  icon: z.string().trim().max(20).optional().default(''),
+  name: z.string().trim().min(1, 'Item name is required').max(100),
+})
+
 const costingRowSchema = z.object({
   mode: z.string().trim().max(80).default(''),
   price: z.coerce.number().min(0).nullable().default(null),
@@ -59,7 +64,16 @@ const tripFields = {
   // tripCode is intentionally NOT accepted from clients.
   shortDescription: z.string().trim().max(5000).optional(),
   description: z.string().trim().max(10000).optional(),
-  tripType: z.enum(TRIP_TYPES).optional(),
+  tripType: z
+    .preprocess(
+      (v) => {
+        if (v === undefined || v === null || v === '') return v
+        if (Array.isArray(v)) return v
+        if (typeof v === 'string') return [v]
+        return v
+      },
+      z.array(z.enum(TRIP_TYPES)).min(1, 'Select at least one trip type').optional()
+    ),
   durationDays: z.coerce.number().int().min(1, 'Duration days must be at least 1').optional(),
   durationNights: z.coerce.number().int().min(0).optional(),
   maxGroupSize: z.coerce.number().int().min(1).optional(),
@@ -75,6 +89,7 @@ const tripFields = {
   inclusions: z.array(z.string().trim().max(300)).max(60).optional(),
   exclusions: z.array(z.string().trim().max(300)).max(60).optional(),
   importantInformation: z.string().trim().max(10000).optional(),
+  thingsToCarry: z.array(thingsToCarryItemSchema).max(30).optional(),
   faqs: z.array(faqSchema).max(60).optional(),
   costing: z.array(costingRowSchema).max(30).optional(),
   reviews: z.array(tripReviewSchema).max(50).optional(),
@@ -95,7 +110,7 @@ export const createTripSchema = z.object({
   slug: tripFields.slug,
   shortDescription: tripFields.shortDescription.default(''),
   description: tripFields.description.default(''),
-  tripType: tripFields.tripType.default('group'),
+  tripType: tripFields.tripType.default(['group']),
   durationDays: tripFields.durationDays.default(1),
   durationNights: tripFields.durationNights.default(0),
   maxGroupSize: tripFields.maxGroupSize.default(10),
@@ -111,6 +126,7 @@ export const createTripSchema = z.object({
   inclusions: tripFields.inclusions.default([]),
   exclusions: tripFields.exclusions.default([]),
   importantInformation: tripFields.importantInformation.default(''),
+  thingsToCarry: tripFields.thingsToCarry.default([]),
   faqs: tripFields.faqs.default([]),
   costing: tripFields.costing.default([]),
   reviews: tripFields.reviews.default([]),

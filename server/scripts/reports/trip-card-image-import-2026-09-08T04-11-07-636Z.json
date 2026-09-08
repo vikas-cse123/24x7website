@@ -1,0 +1,1191 @@
+{
+  "timestamp": "2026-09-08T04:11:07.636Z",
+  "dryRun": true,
+  "force": true,
+  "concurrency": 5,
+  "tripsFound": 62,
+  "imagesUploaded": 0,
+  "tripsUpdated": 0,
+  "tripsSkipped": 0,
+  "tripsFailed": 0,
+  "entries": [
+    {
+      "tripId": "6a9f48822887f10cfab6468c",
+      "tripCode": "TRP-000006",
+      "tripName": "Singapore City Break",
+      "destination": {
+        "id": "6a9ec47bbf28ee9da8fbed9a",
+        "name": "Singapore Tour Packages",
+        "slug": "singapore-tour-packages",
+        "country": "Singapore"
+      },
+      "pixabayImageId": 1990090,
+      "pixabayQuery": "Singapore travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/singapore-marina-bay-sands-landmark-1990090/",
+      "selectedImageUrl": "https://pixabay.com/get/g59ba9662e18090aa7d4269bdbdeea34bb33a34383cebddadc6641f733b4dd76d45863156c886fe89f3b2b369056490ae919446d4b256c9f62e2f89b0d70f5cad_1280.jpg",
+      "s3Key": "trips/TRP-000006/card/trp-000006-1990090.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab6468a",
+      "tripCode": "TRP-000005",
+      "tripName": "Vietnam Girls Adventure",
+      "destination": {
+        "id": "6a9ec132b3d32c1685c1f330",
+        "name": "Vietnam Tour Packages",
+        "slug": "vietnam-tour-packages",
+        "country": "Vietnam"
+      },
+      "pixabayImageId": 1014712,
+      "pixabayQuery": "Vietnam travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/sunrise-boat-rowing-boat-nobody-1014712/",
+      "selectedImageUrl": "https://pixabay.com/get/g9178b973c195ffece75645dda8b1eaf698a650810dbe97b3e918f922464f79553c4dd4e09d0a54a77fd0c6be8f4ddabe1bf5f73d18a7ffa7bd1c15c1e567de20_1280.jpg",
+      "s3Key": "trips/TRP-000005/card/trp-000005-1014712.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48812887f10cfab64686",
+      "tripCode": "TRP-000003",
+      "tripName": "Sri Lanka Family Escape",
+      "destination": {
+        "id": "6a9ebc0d19275a8182ffc2b9",
+        "name": "Sri Lanka Tour Packages",
+        "slug": "sri-lanka-tour-packages",
+        "country": "Sri Lanka"
+      },
+      "pixabayImageId": 3758193,
+      "pixabayQuery": "Sri Lanka travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/travels-ocean-sri-lanka-island-sea-3758193/",
+      "selectedImageUrl": "https://pixabay.com/get/g802329b01bc6f180df4c47a80d0a4dcd10f6ed0be9f30fd9be7e0a147aaaae962bb83d82b892e2ddc64c678840fbfd3db4e791225afe9e7f372dfaccc7cc6734_1280.jpg",
+      "s3Key": "trips/TRP-000003/card/trp-000003-3758193.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48812887f10cfab64683",
+      "tripCode": "TRP-000002",
+      "tripName": "Sri Lanka Island Highlights",
+      "destination": {
+        "id": "6a9ebc0d19275a8182ffc2b9",
+        "name": "Sri Lanka Tour Packages",
+        "slug": "sri-lanka-tour-packages",
+        "country": "Sri Lanka"
+      },
+      "pixabayImageId": 4818532,
+      "pixabayQuery": "Sri Lanka travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/galle-galle-fort-southern-sri-lanka-4818532/",
+      "selectedImageUrl": "https://pixabay.com/get/gdaf828a4ee8ac3e76c77daa99acf50e59c139fe54485390544db63aa6ebe6f008abfe3e659d8e4319a2bd6b4b97237afb1d5d8a8cec6a9779df2ef213ed7225e_1280.jpg",
+      "s3Key": "trips/TRP-000002/card/trp-000002-4818532.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab64688",
+      "tripCode": "TRP-000004",
+      "tripName": "Vietnam Grand Explorer",
+      "destination": {
+        "id": "6a9ec132b3d32c1685c1f330",
+        "name": "Vietnam Tour Packages",
+        "slug": "vietnam-tour-packages",
+        "country": "Vietnam"
+      },
+      "pixabayImageId": 7819801,
+      "pixabayQuery": "Vietnam travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/man-bus-transport-urban-vietnam-7819801/",
+      "selectedImageUrl": "https://pixabay.com/get/g4b544c9a8809438aa99c6de4e2b4af0c26e16e1dcbd86ad1e043479341f4d47eea33dc7bf13b39691ee8b4dd39e87ce3442f05cc154fc81b412efc27c704505e_1280.jpg",
+      "s3Key": "trips/TRP-000004/card/trp-000004-7819801.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab6468e",
+      "tripCode": "TRP-000007",
+      "tripName": "Singapore & Malaysia Highlights",
+      "destination": {
+        "id": "6a9ec47bbf28ee9da8fbed9a",
+        "name": "Singapore Tour Packages",
+        "slug": "singapore-tour-packages",
+        "country": "Singapore"
+      },
+      "pixabayImageId": 6482060,
+      "pixabayQuery": "Singapore travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/architecture-airport-changi-6482060/",
+      "selectedImageUrl": "https://pixabay.com/get/g7d644562c82ff2cadfe948fe2f267052d8a711a67f78279411c19cca22f03fa151f5f9a8b396bccf69dd85e6067a643a6dbb71af61a928c6e7f43c8679e77e8b_1280.jpg",
+      "s3Key": "trips/TRP-000007/card/trp-000007-6482060.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab64694",
+      "tripCode": "TRP-000010",
+      "tripName": "Thailand Special Batch",
+      "destination": {
+        "id": "6a9ecd2e58ad42cc53034ee5",
+        "name": "Thailand Tour Packages",
+        "slug": "thailand-tour-packages",
+        "country": "Thailand"
+      },
+      "pixabayImageId": 4852830,
+      "pixabayQuery": "Thailand travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/beach-sea-sand-thailand-4852830/",
+      "selectedImageUrl": "https://pixabay.com/get/gf9abb41163a89924796cb888a36586c7d1b45da3dcb771df2e1b9ec663c9526bd2f670dc2568897bd7bfa68c3fbd5010a6284697005fba5aadcd288b7d7264b1_1280.jpg",
+      "s3Key": "trips/TRP-000010/card/trp-000010-4852830.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab64692",
+      "tripCode": "TRP-000009",
+      "tripName": "Bali & Gili Islands Escape",
+      "destination": {
+        "id": "6a9ecade58ad42cc53034e67",
+        "name": "Bali Tour Packages",
+        "slug": "bali-tour-packages",
+        "country": "Indonesia"
+      },
+      "pixabayImageId": 2975787,
+      "pixabayQuery": "Bali travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/bali-palm-trees-sunset-travel-2975787/",
+      "selectedImageUrl": "https://pixabay.com/get/gf76cf596c1ec2126f7678e8185c523cb6f73d5923d50da86771e0982068cc38421f98180870d472f0023795766faa93da08923e87679632ff9b96914c350408e_1280.jpg",
+      "s3Key": "trips/TRP-000009/card/trp-000009-2975787.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab64696",
+      "tripCode": "TRP-000011",
+      "tripName": "Thailand Full Moon Adventure",
+      "destination": {
+        "id": "6a9ecd2e58ad42cc53034ee5",
+        "name": "Thailand Tour Packages",
+        "slug": "thailand-tour-packages",
+        "country": "Thailand"
+      },
+      "pixabayImageId": 1670926,
+      "pixabayQuery": "Thailand travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/temple-architecture-building-facade-1670926/",
+      "selectedImageUrl": "https://pixabay.com/get/g8e4f9a9cdbae5a65aa8f2d9b21ac26bd0028cb5710e72dbcc92fc28bd87b72b2d87bac0696cbff5cb834deaac84984c497afc7c1c479292968243f5eccca5754_1280.jpg",
+      "s3Key": "trips/TRP-000011/card/trp-000011-1670926.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab64690",
+      "tripCode": "TRP-000008",
+      "tripName": "Bali with Gili Island",
+      "destination": {
+        "id": "6a9ecade58ad42cc53034e67",
+        "name": "Bali Tour Packages",
+        "slug": "bali-tour-packages",
+        "country": "Indonesia"
+      },
+      "pixabayImageId": 2698078,
+      "pixabayQuery": "Bali travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/bali-beach-suardiana-ocean-sea-2698078/",
+      "selectedImageUrl": "https://pixabay.com/get/g5310be5b909bc0b710bb01dbe566a89a0dbf238178fdf4e0dfe84306516902ce6855fd1b26f8c529d571816380ec81cacac92a5cec1c88f0e2e77ba2dab8a641_1280.jpg",
+      "s3Key": "trips/TRP-000008/card/trp-000008-2698078.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab6469a",
+      "tripCode": "TRP-000013",
+      "tripName": "European Journey Zurich to Paris",
+      "destination": {
+        "id": "6a9ece4f58ad42cc53034f32",
+        "name": "Europe Tour Packages",
+        "slug": "europe-tour-packages",
+        "country": "Europe"
+      },
+      "pixabayImageId": 2602208,
+      "pixabayQuery": "Europe travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/neuschwanstein-castle-germany-2602208/",
+      "selectedImageUrl": "https://pixabay.com/get/g71eeb133df68921e75eb2069d3309a37955a37f512a7973ca36e848078da5ad52cacd37c8ae9be4ab578ae48efc4a06b4ef5f4a596fb5965235b16a03324a933_1280.jpg",
+      "s3Key": "trips/TRP-000013/card/trp-000013-2602208.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab646a0",
+      "tripCode": "TRP-000016",
+      "tripName": "Japan Community Explorer",
+      "destination": {
+        "id": "6a9ed12458ad42cc53035062",
+        "name": "Japan Tour Packages",
+        "slug": "japan-tour-packages",
+        "country": "Japan"
+      },
+      "pixabayImageId": 2014618,
+      "pixabayQuery": "Japan travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/japan-street-night-osaka-asia-2014618/",
+      "selectedImageUrl": "https://pixabay.com/get/g1fb6fec325aeb651c8e0e43330eaafc0bfdb7d3b0ae64935f82e0e54e8c1ae576dc9c2695d80d4a3a4c25808f0c34173fb0830787f1081365cd6d8265b751bc2_1280.jpg",
+      "s3Key": "trips/TRP-000016/card/trp-000016-2014618.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab6469e",
+      "tripCode": "TRP-000015",
+      "tripName": "Bhutan with Phobjikha Valley",
+      "destination": {
+        "id": "6a9ecfbf58ad42cc53034ffa",
+        "name": "Bhutan Tour Packages",
+        "slug": "bhutan-tour-packages",
+        "country": "Bhutan"
+      },
+      "pixabayImageId": 2691183,
+      "pixabayQuery": "Bhutan travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/buddha-statue-bhutan-country-2691183/",
+      "selectedImageUrl": "https://pixabay.com/get/g1016b7df44b7c4a5cb3e60bfcd19877259afaa42c40e0e433b5c14f2a574dcd05350e17921fb7687bb4ea4084a8c5fc4880d444bd125dbef65cdda1e26368321_1280.jpg",
+      "s3Key": "trips/TRP-000015/card/trp-000015-2691183.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab64698",
+      "tripCode": "TRP-000012",
+      "tripName": "Europe Highlights",
+      "destination": {
+        "id": "6a9ece4f58ad42cc53034f32",
+        "name": "Europe Tour Packages",
+        "slug": "europe-tour-packages",
+        "country": "Europe"
+      },
+      "pixabayImageId": 7128531,
+      "pixabayQuery": "Europe travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/europe-switzerland-lucerne-city-7128531/",
+      "selectedImageUrl": "https://pixabay.com/get/g671be8a7d603da86ec4d3c51208fd83f7d25e4f62f16263040df87976b0ccbc93ee370cdf50d0579adfd5110f621a775160cd77ca9aea30bbeaa3bbb9cc938a1_1280.jpg",
+      "s3Key": "trips/TRP-000012/card/trp-000012-7128531.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab6469c",
+      "tripCode": "TRP-000014",
+      "tripName": "Bhutan Classic Journey",
+      "destination": {
+        "id": "6a9ecfbf58ad42cc53034ffa",
+        "name": "Bhutan Tour Packages",
+        "slug": "bhutan-tour-packages",
+        "country": "Bhutan"
+      },
+      "pixabayImageId": 2725141,
+      "pixabayQuery": "Bhutan travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/palace-bhutan-architecture-country-2725141/",
+      "selectedImageUrl": "https://pixabay.com/get/ge45bfde26b9f580141e16ce8bad299d13c68ef3bfa0a6c860ffa853698c0cef4bd9fd1d763f251be4dcb9b47434d7f90f35ec48e1ead77af4c124ef3dabd8516_1280.jpg",
+      "s3Key": "trips/TRP-000014/card/trp-000014-2725141.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab646a6",
+      "tripCode": "TRP-000019",
+      "tripName": "Nepal Kathmandu–Pokhara Extended",
+      "destination": {
+        "id": "6a9ed2b695ae82b7c77955d9",
+        "name": "Nepal Tour Packages",
+        "slug": "nepal-tour-packages",
+        "country": "Nepal"
+      },
+      "pixabayImageId": 1309205,
+      "pixabayQuery": "Nepal travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/nepal-himalayan-travel-airphoto-1309205/",
+      "selectedImageUrl": "https://pixabay.com/get/gc9534e53d9be3a66bdc82fb19c049cb3f98974722e99ef4d052924c9627700b40477513ba6e4d99acff48c5c630251af189287eadfdaa1c7956e64d0d44713f6_1280.jpg",
+      "s3Key": "trips/TRP-000019/card/trp-000019-1309205.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab646a2",
+      "tripCode": "TRP-000017",
+      "tripName": "Japan Cherry Blossom Community Trip",
+      "destination": {
+        "id": "6a9ed12458ad42cc53035062",
+        "name": "Japan Tour Packages",
+        "slug": "japan-tour-packages",
+        "country": "Japan"
+      },
+      "pixabayImageId": 2014619,
+      "pixabayQuery": "Japan travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/japan-osaka-night-asia-landmark-2014619/",
+      "selectedImageUrl": "https://pixabay.com/get/g8981961d2f4f1dc6a738f080c9606407049a33283adc72ec2298ee48db7677cce43269bce3bb84ea1d051dc2a701aac424c3407337980ea34e8f5f84d9647e55_1280.jpg",
+      "s3Key": "trips/TRP-000017/card/trp-000017-2014619.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab646a8",
+      "tripCode": "TRP-000020",
+      "tripName": "Almaty Mountains & Lakes",
+      "destination": {
+        "id": "6a9ed47995ae82b7c77956c4",
+        "name": "Almaty",
+        "slug": "almaty",
+        "country": "Kazakhstan"
+      },
+      "pixabayImageId": 8785493,
+      "pixabayQuery": "Almaty travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/travel-nature-landscape-kazakhstan-8785493/",
+      "selectedImageUrl": "https://pixabay.com/get/g8aa905bd0959c21e9fbb989ca8d2d7563034d292f4c5039812696f8be622d8800a315cba709de1c906dc6f976417540e296b371d510ba81efc24d5031c665541_1280.jpg",
+      "s3Key": "trips/TRP-000020/card/trp-000020-8785493.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab646a4",
+      "tripCode": "TRP-000018",
+      "tripName": "Nepal Kathmandu & Pokhara",
+      "destination": {
+        "id": "6a9ed2b695ae82b7c77955d9",
+        "name": "Nepal Tour Packages",
+        "slug": "nepal-tour-packages",
+        "country": "Nepal"
+      },
+      "pixabayImageId": 6395759,
+      "pixabayQuery": "Nepal travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/mount-everest-mountains-trekking-6395759/",
+      "selectedImageUrl": "https://pixabay.com/get/g6d5cea64f56fbc37a68f018cad6690c1394cf02ad9706994193f04df03b4c4cb3662742b4457c4ce3c094b4f68d2cc9f6a1b09593e9b8698c551818806314192_1280.jpg",
+      "s3Key": "trips/TRP-000018/card/trp-000018-6395759.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab646aa",
+      "tripCode": "TRP-000021",
+      "tripName": "Almaty & Central Asia Explorer",
+      "destination": {
+        "id": "6a9ed47995ae82b7c77956c4",
+        "name": "Almaty",
+        "slug": "almaty",
+        "country": "Kazakhstan"
+      },
+      "pixabayImageId": 4895885,
+      "pixabayQuery": "Almaty travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/mountains-almaty-kazakhstan-4895885/",
+      "selectedImageUrl": "https://pixabay.com/get/gfe9ab0a3e2d7c263bd22f2b645759a56c50c703491f1a9396e48f4d52a6706547adb849bcd8c30e8576bf13a4d81263b69af65f1070b778c144dcfb1654df40a_1280.jpg",
+      "s3Key": "trips/TRP-000021/card/trp-000021-4895885.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab646ae",
+      "tripCode": "TRP-000023",
+      "tripName": "Spain Highlights Escape",
+      "destination": {
+        "id": "6a9ed4c395ae82b7c77956d7",
+        "name": "Spain Tour Packages",
+        "slug": "spain-tour-packages",
+        "country": "Spain"
+      },
+      "pixabayImageId": 6470467,
+      "pixabayQuery": "Spain travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/travel-europe-nature-spain-trip-6470467/",
+      "selectedImageUrl": "https://pixabay.com/get/ge9aab1dacb9c039b88f7d8893cdc0c1277df2690745420c17e063c320c006396c35c35e29719e2d24fa1da57b732d4b0154881ad8b4f526f2f8332d08a90b211_1280.jpg",
+      "s3Key": "trips/TRP-000023/card/trp-000023-6470467.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab646b0",
+      "tripCode": "TRP-000024",
+      "tripName": "Meghalaya Backpacking",
+      "destination": {
+        "id": "6a9ee69b54a8e12bef02d5c4",
+        "name": "Meghalaya Tour Packages",
+        "slug": "meghalaya-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 6815304,
+      "pixabayQuery": "Meghalaya travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/mountain-nature-travel-exploration-6815304/",
+      "selectedImageUrl": "https://pixabay.com/get/g54f58442194b1fd2b7f39aceb8f4577e7cc46817a394c14f65bba016b61d16e8af82a293f46de1b35dc7c97eae89135884275725dcc83c1b7491235647586638_1280.jpg",
+      "s3Key": "trips/TRP-000024/card/trp-000024-6815304.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab646b4",
+      "tripCode": "TRP-000026",
+      "tripName": "Leh Turtuk Tso Moriri",
+      "destination": {
+        "id": "6a9ee69c54a8e12bef02d5c8",
+        "name": "Ladakh Tour Packages",
+        "slug": "ladakh-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 2818861,
+      "pixabayQuery": "Ladakh travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/ladakh-mountains-river-himalayas-2818861/",
+      "selectedImageUrl": "https://pixabay.com/get/g4b2aa6ca823e07d2c8a77071f03d4b8adf861ca24450e7425510dbfbbbcbda827648c3dc7ec4764c1be5a2d3766f6c9185dbb67b45a509b330e18c68eb28379c_1280.jpg",
+      "s3Key": "trips/TRP-000026/card/trp-000026-2818861.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab646b2",
+      "tripCode": "TRP-000025",
+      "tripName": "Kaziranga Meghalaya Explorer",
+      "destination": {
+        "id": "6a9ee69b54a8e12bef02d5c4",
+        "name": "Meghalaya Tour Packages",
+        "slug": "meghalaya-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 3502188,
+      "pixabayQuery": "Meghalaya travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/fantasy-to-travel-travel-vacations-3502188/",
+      "selectedImageUrl": "https://pixabay.com/get/ga3535c0af7e7f16c95d93ae76c131572078ea5c0666ef7ce702f2cd251c8c695e534e142466785c7a2680a96527704fc6ef29f501d69831d7e5255ca3fac0eb0_1280.jpg",
+      "s3Key": "trips/TRP-000025/card/trp-000025-3502188.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48822887f10cfab646ac",
+      "tripCode": "TRP-000022",
+      "tripName": "Spain with Ibiza & La Tomatina",
+      "destination": {
+        "id": "6a9ed4c395ae82b7c77956d7",
+        "name": "Spain Tour Packages",
+        "slug": "spain-tour-packages",
+        "country": "Spain"
+      },
+      "pixabayImageId": 4522800,
+      "pixabayQuery": "Spain travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/spain-granada-alhambra-andalusia-4522800/",
+      "selectedImageUrl": "https://pixabay.com/get/g3994e0021359ef3af6a84020614b321c29a551b737f58b53ce5822a832d334db53f59fa84d557dfd12f04f836f0b72ec26795976bcf9c72f2f889b020f220c16_1280.jpg",
+      "s3Key": "trips/TRP-000022/card/trp-000022-4522800.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646ba",
+      "tripCode": "TRP-000029",
+      "tripName": "Andaman Island Explorer",
+      "destination": {
+        "id": "6a9ee69d54a8e12bef02d5cc",
+        "name": "Andaman Tour Packages",
+        "slug": "andaman-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 1451383,
+      "pixabayQuery": "Andaman travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/thailand-phuket-koh-phi-phi-1451383/",
+      "selectedImageUrl": "https://pixabay.com/get/g98b53de8465ed41bcf5c470f5eb149453ccfb9c7ad5704f0abcc3051b0dceb2fa6713fb205ff8daf8cd7d868ec3920d4a12ba8959254cb5f5c9f9ffabcc3c359_1280.jpg",
+      "s3Key": "trips/TRP-000029/card/trp-000029-1451383.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646b6",
+      "tripCode": "TRP-000027",
+      "tripName": "Delhi–Leh–Srinagar Expedition",
+      "destination": {
+        "id": "6a9ee69c54a8e12bef02d5c8",
+        "name": "Ladakh Tour Packages",
+        "slug": "ladakh-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 2300904,
+      "pixabayQuery": "Ladakh travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/ladakh-traveler-travel-nature-leh-2300904/",
+      "selectedImageUrl": "https://pixabay.com/get/gfb174df8f2b1e96fa254ba112d5b6d298bbe4127d681e333dc3057360c108d9bf517c490ae65908b189270fab2cc994b8cf1136750bfe73c1f0c7c35494cc04a_1280.jpg",
+      "s3Key": "trips/TRP-000027/card/trp-000027-2300904.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646bc",
+      "tripCode": "TRP-000030",
+      "tripName": "Manali–Jispa–Kasol–Jibhi",
+      "destination": {
+        "id": "6a9ee69e54a8e12bef02d5d0",
+        "name": "Manali Tour Packages",
+        "slug": "manali-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 5104279,
+      "pixabayQuery": "Manali travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/manali-himachal-pradesh-india-5104279/",
+      "selectedImageUrl": "https://pixabay.com/get/g73ca0e043543ace7213c6354aba62b763775d6c69e43b6307253f8eabd67a7aa43339aa8465ea586b67f225e35ff3580ad6c590b74972eccaeb64b70140164f2_1280.jpg",
+      "s3Key": "trips/TRP-000030/card/trp-000030-5104279.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646b8",
+      "tripCode": "TRP-000028",
+      "tripName": "Andaman Island Escape",
+      "destination": {
+        "id": "6a9ee69d54a8e12bef02d5cc",
+        "name": "Andaman Tour Packages",
+        "slug": "andaman-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 1451379,
+      "pixabayQuery": "Andaman travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/thailand-phuket-koh-phi-phi-1451379/",
+      "selectedImageUrl": "https://pixabay.com/get/g33c0ed6e369b058d7b15ba9260c9b55cdab858c62378893b35c676e3169a73e08474cd2b6dee57dd4fa0e5b2edc56edd1f7ec0116cd7eeec8791971a682524b1_1280.jpg",
+      "s3Key": "trips/TRP-000028/card/trp-000028-1451379.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646be",
+      "tripCode": "TRP-000031",
+      "tripName": "Manali–Kasol–Jibhi",
+      "destination": {
+        "id": "6a9ee69e54a8e12bef02d5d0",
+        "name": "Manali Tour Packages",
+        "slug": "manali-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 4685851,
+      "pixabayQuery": "Manali travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/nature-himachal-pradesh-4685851/",
+      "selectedImageUrl": "https://pixabay.com/get/gd8874e61a658e0375c1b90f544832998fd3fd45d1f766efe18e3dcf3f40c8cc624ee80ee46af4fffb02b5caf9e58f392ecc0885da2ec4f560946d9bf66b8d35e_1280.jpg",
+      "s3Key": "trips/TRP-000031/card/trp-000031-4685851.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646c2",
+      "tripCode": "TRP-000033",
+      "tripName": "Chopta Chandrashila Trek",
+      "destination": {
+        "id": "6a9ee69f54a8e12bef02d5d4",
+        "name": "Uttarakhand Tour Packages",
+        "slug": "uttarakhand-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 4785189,
+      "pixabayQuery": "Uttarakhand travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/rishikesh-india-g-shiva-hindu-4785189/",
+      "selectedImageUrl": "https://pixabay.com/get/gf857421b7ec2210f097c2b40b2aa0d48a1ec18d1a924749cbfac75087351bd9a7feb45d69cc2d222181d0431fb89dbf861b861e0cab7d4ce62ea9062c93f9eab_1280.jpg",
+      "s3Key": "trips/TRP-000033/card/trp-000033-4785189.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646c6",
+      "tripCode": "TRP-000035",
+      "tripName": "Kashmir Long Circuit",
+      "destination": {
+        "id": "6a9ee69f54a8e12bef02d5d8",
+        "name": "Kashmir Tour Packages",
+        "slug": "kashmir-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 3396109,
+      "pixabayQuery": "Kashmir travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/dal-lake-srinagar-landscape-3396109/",
+      "selectedImageUrl": "https://pixabay.com/get/g91f5ffe577328ed0d5c34d6b0a82844d68d23e6775fba2f48850d94946b829cc4b769450d4cb4dcfad2ffc7df9138212ca8144e4c2b3f1c3901102776f206ada_1280.jpg",
+      "s3Key": "trips/TRP-000035/card/trp-000035-3396109.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646c8",
+      "tripCode": "TRP-000036",
+      "tripName": "Spiti Full Circuit",
+      "destination": {
+        "id": "6a9ee6a054a8e12bef02d5dc",
+        "name": "Spiti Valley Tour Packages",
+        "slug": "spiti-valley-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 2805145,
+      "pixabayQuery": "Spiti Valley travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/mountains-himalayas-landscape-2805145/",
+      "selectedImageUrl": "https://pixabay.com/get/g31487be91ee4f6c7bdfa885843775802e6ac9a88884c74acd3de99f4e4ae26f0ddd842031631a2e2147db8126ac93c14b40bab5fddd1eaa50d5019153f4af718_1280.jpg",
+      "s3Key": "trips/TRP-000036/card/trp-000036-2805145.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646c0",
+      "tripCode": "TRP-000032",
+      "tripName": "Kedarnath Luxury Journey",
+      "destination": {
+        "id": "6a9ee69f54a8e12bef02d5d4",
+        "name": "Uttarakhand Tour Packages",
+        "slug": "uttarakhand-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 7243347,
+      "pixabayQuery": "Uttarakhand travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/mussoorie-city-diaries-travel-7243347/",
+      "selectedImageUrl": "https://pixabay.com/get/gc0883f7513f0ff2117be5289af6421a802fb4a5aa99aacee66542caa4bb441382444226e1e2603542903adf56d50a2f268e322f767eebed5b570d66ed91677ab_1280.jpg",
+      "s3Key": "trips/TRP-000032/card/trp-000032-7243347.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646c4",
+      "tripCode": "TRP-000034",
+      "tripName": "Kashmir Winter Short Circuit",
+      "destination": {
+        "id": "6a9ee69f54a8e12bef02d5d8",
+        "name": "Kashmir Tour Packages",
+        "slug": "kashmir-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 7390155,
+      "pixabayQuery": "Kashmir travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/shikara-kashmir-srinagar-dallake-7390155/",
+      "selectedImageUrl": "https://pixabay.com/get/g1fe09b7b6dffa2393bc07eb072d21f6da8e183336efb7cee1dc46cf30c419eca972e1d45f5caf9ddce0d5107ac0024ddcf314506dbf853531d8d2b65b7ff6d1c_1280.jpg",
+      "s3Key": "trips/TRP-000034/card/trp-000034-7390155.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646d0",
+      "tripCode": "TRP-000040",
+      "tripName": "Himachal Short Circuit with Jispa",
+      "destination": {
+        "id": "6a9ee6a154a8e12bef02d5e4",
+        "name": "Himachal Pradesh Tour Packages",
+        "slug": "himachal-pradesh-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 5903633,
+      "pixabayQuery": "Himachal Pradesh travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/shimla-city-mountains-sunset-5903633/",
+      "selectedImageUrl": "https://pixabay.com/get/g67a614c53179b3b38971c2bb2a3619ebed76c27c5c2b3232ee7f859159ec83f22210694c12405e67a3ed57802da1a6e55b6445922ee8b40288c618d29828f8b0_1280.jpg",
+      "s3Key": "trips/TRP-000040/card/trp-000040-5903633.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646ce",
+      "tripCode": "TRP-000039",
+      "tripName": "Tawang & Kaziranga Explorer",
+      "destination": {
+        "id": "6a9ee6a054a8e12bef02d5e0",
+        "name": "Tawang Tour Packages",
+        "slug": "tawang-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 7665653,
+      "pixabayQuery": "Tawang travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/ship-curtain-strip-sea-waves-7665653/",
+      "selectedImageUrl": "https://pixabay.com/get/g66607e8cccc9fd3d2b82ee586eb330c08f4fa684d12667936ad810ded259127ef7b57948c38a5a6df5832c677de6d3b9d5b10f03ee6eb0b2915f87e524af6b8b_1280.jpg",
+      "s3Key": "trips/TRP-000039/card/trp-000039-7665653.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646ca",
+      "tripCode": "TRP-000037",
+      "tripName": "Spiti Summer Short Circuit",
+      "destination": {
+        "id": "6a9ee6a054a8e12bef02d5dc",
+        "name": "Spiti Valley Tour Packages",
+        "slug": "spiti-valley-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 2805134,
+      "pixabayQuery": "Spiti Valley travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/mountains-himalayas-landscape-2805134/",
+      "selectedImageUrl": "https://pixabay.com/get/gd38b857ee6a3ada30766ad19f1b8c6dded39369d2e9053701a3459639d98c974b931c45c261666d5314cae5648eb11c28e5b8f6e9f7785f6e8e4f89a443395a7_1280.jpg",
+      "s3Key": "trips/TRP-000037/card/trp-000037-2805134.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646d2",
+      "tripCode": "TRP-000041",
+      "tripName": "Manali–Kasol–Jibhi Escape",
+      "destination": {
+        "id": "6a9ee6a154a8e12bef02d5e4",
+        "name": "Himachal Pradesh Tour Packages",
+        "slug": "himachal-pradesh-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 2805135,
+      "pixabayQuery": "Himachal Pradesh travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/mountains-himalayas-landscape-2805135/",
+      "selectedImageUrl": "https://pixabay.com/get/g496c2e7a4b8064d0353f0b8e6db9e99403b5450456c4f6d4d469263e37230e51418b8d7d4defd389d54fb8bb952fc69995fecf9016825f0dc7a848085fe9e860_1280.jpg",
+      "s3Key": "trips/TRP-000041/card/trp-000041-2805135.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646cc",
+      "tripCode": "TRP-000038",
+      "tripName": "Tawang Himalayan Escape",
+      "destination": {
+        "id": "6a9ee6a054a8e12bef02d5e0",
+        "name": "Tawang Tour Packages",
+        "slug": "tawang-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 7499281,
+      "pixabayQuery": "Tawang travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/mountains-way-perspective-7499281/",
+      "selectedImageUrl": "https://pixabay.com/get/g46d5e1ec3dbfc3b26c83573f913f5a60b6d37d36418987f59231d676380d6a725209258f3659b1ac8b9cde9b2281ec5725f607c93153f8e9723a4bf9fcc0ef2f_1280.jpg",
+      "s3Key": "trips/TRP-000038/card/trp-000038-7499281.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646d8",
+      "tripCode": "TRP-000044",
+      "tripName": "Rajasthan Backpacking",
+      "destination": {
+        "id": "6a9ee6a254a8e12bef02d5ec",
+        "name": "Rajasthan Tour Packages",
+        "slug": "rajasthan-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 6626542,
+      "pixabayQuery": "Rajasthan travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/desert-camel-travel-transport-sand-6626542/",
+      "selectedImageUrl": "https://pixabay.com/get/g57ed13c852e6e09b3733ce81b3175b95a4a248930024103e884c4a91c1a1ac6ba3fe94147365b93d672b5fa4fb7353a67dac99162b3deb71bd7ff0373b9909f9_1280.jpg",
+      "s3Key": "trips/TRP-000044/card/trp-000044-6626542.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646dc",
+      "tripCode": "TRP-000046",
+      "tripName": "Malaysia Langkawi Explorer",
+      "destination": {
+        "id": "6a9eed74ed8a99cce5e2c5a6",
+        "name": "Malaysia Tour Packages",
+        "slug": "malaysia-tour-packages",
+        "country": "Malaysia"
+      },
+      "pixabayImageId": 911580,
+      "pixabayQuery": "Malaysia travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/petronas-twin-towers-skyscrapers-911580/",
+      "selectedImageUrl": "https://pixabay.com/get/gbc6c1e794d11ebd343bdca6ca7b5770c3c2e472a9587893e9fef1c7c037e9eee4b8317a922f356c9211fe52daf3300dc0f32ba57f6b8693365ab575965218aec_1280.jpg",
+      "s3Key": "trips/TRP-000046/card/trp-000046-911580.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646d6",
+      "tripCode": "TRP-000043",
+      "tripName": "Kerala Backpacking Circuit",
+      "destination": {
+        "id": "6a9ee6a154a8e12bef02d5e8",
+        "name": "Kerala Tour Packages",
+        "slug": "kerala-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 3941573,
+      "pixabayQuery": "Kerala travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/alleppey-kerala-houseboat-india-3941573/",
+      "selectedImageUrl": "https://pixabay.com/get/gdcaf145a009ff681dc4cf1069977f42d0d8d13731a78cd50c00d6d22fdaddb580a0ccc7fa56f96bde44beb1c3d1defe91f953e435bb6de5643827783a42d16dd_1280.jpg",
+      "s3Key": "trips/TRP-000043/card/trp-000043-3941573.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646da",
+      "tripCode": "TRP-000045",
+      "tripName": "Rajasthan Heritage Circuit",
+      "destination": {
+        "id": "6a9ee6a254a8e12bef02d5ec",
+        "name": "Rajasthan Tour Packages",
+        "slug": "rajasthan-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 6772812,
+      "pixabayQuery": "Rajasthan travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/fort-travel-tourism-amer-rajasthan-6772812/",
+      "selectedImageUrl": "https://pixabay.com/get/ge41261eeca96d591e7f15ba1bb6ee025fbc7c85803a1c70e564a8d365a3eba636eaa14d8451fd37930f001b1a875505d05f16b89fadaa439c0cc8c019b853780_1280.jpg",
+      "s3Key": "trips/TRP-000045/card/trp-000045-6772812.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646d4",
+      "tripCode": "TRP-000042",
+      "tripName": "Kerala Delight",
+      "destination": {
+        "id": "6a9ee6a154a8e12bef02d5e8",
+        "name": "Kerala Tour Packages",
+        "slug": "kerala-tour-packages",
+        "country": "India"
+      },
+      "pixabayImageId": 2073391,
+      "pixabayQuery": "Kerala travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/india-travels-bekal-fort-kerala-2073391/",
+      "selectedImageUrl": "https://pixabay.com/get/gb18709470e1d4bc13d38924d511a2357dc825bcf16d4a3cb4ca0285d9492f05bdfbce342b2c9a306067a398cf92a4983a3d8196a29960635ce8f08d043891b4d_1280.jpg",
+      "s3Key": "trips/TRP-000042/card/trp-000042-2073391.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646de",
+      "tripCode": "TRP-000047",
+      "tripName": "Singapore–Malaysia Highlights",
+      "destination": {
+        "id": "6a9eed74ed8a99cce5e2c5a6",
+        "name": "Malaysia Tour Packages",
+        "slug": "malaysia-tour-packages",
+        "country": "Malaysia"
+      },
+      "pixabayImageId": 1373975,
+      "pixabayQuery": "Malaysia travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/mosque-malaysia-sky-cloud-1373975/",
+      "selectedImageUrl": "https://pixabay.com/get/g18d35f6e81f99cc1ed9a558ad7ffd577eac45a05aa0e83620b11ff266f95a53231fb98c8b778c3cfb0961f1f802fcf4c6a669f5c92a93701df57cdb7b77d4d5c_1280.jpg",
+      "s3Key": "trips/TRP-000047/card/trp-000047-1373975.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646e2",
+      "tripCode": "TRP-000049",
+      "tripName": "Oman Classic Escape",
+      "destination": {
+        "id": "6a9eed75ed8a99cce5e2c5aa",
+        "name": "Oman Tour Packages",
+        "slug": "oman-tour-packages",
+        "country": "Oman"
+      },
+      "pixabayImageId": 3108358,
+      "pixabayQuery": "Oman travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/oman-muscat-nutmeg-3108358/",
+      "selectedImageUrl": "https://pixabay.com/get/gb3827ff871cbd15075608bbcc959fcd61124011deec7e0a5c4c2869ac7d3f8d578836b0753cc2665c5712f08006b98bfb4634eeecbe215a55a616cea2cd2888d_1280.jpg",
+      "s3Key": "trips/TRP-000049/card/trp-000049-3108358.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646e0",
+      "tripCode": "TRP-000048",
+      "tripName": "Oman Desert & Mountains",
+      "destination": {
+        "id": "6a9eed75ed8a99cce5e2c5aa",
+        "name": "Oman Tour Packages",
+        "slug": "oman-tour-packages",
+        "country": "Oman"
+      },
+      "pixabayImageId": 7003084,
+      "pixabayQuery": "Oman travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/mosque-oman-architecture-travel-7003084/",
+      "selectedImageUrl": "https://pixabay.com/get/g7ab0eb41f5c2bde1562a28625f4129ee5b0355a3c39d5987bd245fc1886c3904e370b4c4f6d22d5f82d95229a5d9ff593227e2b85ed041b87ba41df4a449f270_1280.jpg",
+      "s3Key": "trips/TRP-000048/card/trp-000048-7003084.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48842887f10cfab646e6",
+      "tripCode": "TRP-000051",
+      "tripName": "Dubai Premium Escape",
+      "destination": {
+        "id": "6a9eed76ed8a99cce5e2c5ae",
+        "name": "Dubai Tour Packages",
+        "slug": "dubai-tour-packages",
+        "country": "United Arab Emirates"
+      },
+      "pixabayImageId": 1767540,
+      "pixabayQuery": "Dubai travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/dubai-skyscraper-city-lights-1767540/",
+      "selectedImageUrl": "https://pixabay.com/get/g5640d7b3cb06b891bb5c83719cdf944929cdeb3609c8f01d0829c28538c837096c8dfd10becc3693ed34d9e333605b7519dc6a4b780d46e6dab5701f254b41df_1280.jpg",
+      "s3Key": "trips/TRP-000051/card/trp-000051-1767540.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48832887f10cfab646e4",
+      "tripCode": "TRP-000050",
+      "tripName": "Dubai & Abu Dhabi Highlights",
+      "destination": {
+        "id": "6a9eed76ed8a99cce5e2c5ae",
+        "name": "Dubai Tour Packages",
+        "slug": "dubai-tour-packages",
+        "country": "United Arab Emirates"
+      },
+      "pixabayImageId": 4045035,
+      "pixabayQuery": "Dubai travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/downtown-dubai-uae-tourism-city-4045035/",
+      "selectedImageUrl": "https://pixabay.com/get/g24e7cd5f16f9ab826acd9e76aa53d4d40b5bf5f3a8f0b4d8c2b1bf5c57405d18a000ee60003edaf48f814bc4428b30eae61b9301b879a11c7ce8b866a447fd89_1280.jpg",
+      "s3Key": "trips/TRP-000050/card/trp-000050-4045035.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48842887f10cfab646f0",
+      "tripCode": "TRP-000056",
+      "tripName": "Egypt Nile & Heritage Tour",
+      "destination": {
+        "id": "6a9eed7aed8a99cce5e2c5ba",
+        "name": "Egypt Tour Packages",
+        "slug": "egypt-tour-packages",
+        "country": "Egypt"
+      },
+      "pixabayImageId": 2371501,
+      "pixabayQuery": "Egypt travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/pyramids-egypt-egyptian-ancient-2371501/",
+      "selectedImageUrl": "https://pixabay.com/get/g9fb12572d9441fa24c86c5f4cbc146fe03b5f385bd3b4153410647ce5773f7c6e2cf1ee73fd223eb4fe5da5a5441e3fb7f70f4a6742502f199f090f3b825b6a8_1280.jpg",
+      "s3Key": "trips/TRP-000056/card/trp-000056-2371501.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48842887f10cfab646ea",
+      "tripCode": "TRP-000053",
+      "tripName": "Georgia Winter/New Year Escape",
+      "destination": {
+        "id": "6a9eed78ed8a99cce5e2c5b2",
+        "name": "Georgia Tour Packages",
+        "slug": "georgia-tour-packages",
+        "country": "Georgia"
+      },
+      "pixabayImageId": 1788319,
+      "pixabayQuery": "Georgia travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/europe-asia-georgia-caucasus-1788319/",
+      "selectedImageUrl": "https://pixabay.com/get/gd178aeb38ad90e6dc12a18bf06fd8c21aefd239980cc49d472c0e8c09611a0149935bfd6d085fedda6692d7c9730fce5d27b14285c2f2f3c99ed4f01f9aa078b_1280.jpg",
+      "s3Key": "trips/TRP-000053/card/trp-000053-1788319.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48842887f10cfab646ee",
+      "tripCode": "TRP-000055",
+      "tripName": "Maldives Resort Escape – OBLU",
+      "destination": {
+        "id": "6a9eed79ed8a99cce5e2c5b6",
+        "name": "Maldives Tour Packages",
+        "slug": "maldives-tour-packages",
+        "country": "Maldives"
+      },
+      "pixabayImageId": 4703551,
+      "pixabayQuery": "Maldives travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/maldives-hut-shack-villa-beach-4703551/",
+      "selectedImageUrl": "https://pixabay.com/get/g39508f302770e4634d9d1944b477f75f043eabab0b436ac4448de86c1b5718fe8d2c72be936fd287749c969ceeb6fc9bb51d67baaf5d367c7cb57a6be26460d5_1280.jpg",
+      "s3Key": "trips/TRP-000055/card/trp-000055-4703551.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48842887f10cfab646e8",
+      "tripCode": "TRP-000052",
+      "tripName": "Georgia Classic Tour",
+      "destination": {
+        "id": "6a9eed78ed8a99cce5e2c5b2",
+        "name": "Georgia Tour Packages",
+        "slug": "georgia-tour-packages",
+        "country": "Georgia"
+      },
+      "pixabayImageId": 1788310,
+      "pixabayQuery": "Georgia travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/europe-asia-georgia-caucasus-1788310/",
+      "selectedImageUrl": "https://pixabay.com/get/g28cd57220feac7450c89e21b9fbf5858286eea1dede25817d62b9988b695d9a1335b02d1c759401959158144570709a233ff0f7fb46f8d392b06f902ab8e852e_1280.jpg",
+      "s3Key": "trips/TRP-000052/card/trp-000052-1788310.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48842887f10cfab646ec",
+      "tripCode": "TRP-000054",
+      "tripName": "Maldives Resort Escape – Adaaran",
+      "destination": {
+        "id": "6a9eed79ed8a99cce5e2c5b6",
+        "name": "Maldives Tour Packages",
+        "slug": "maldives-tour-packages",
+        "country": "Maldives"
+      },
+      "pixabayImageId": 1268661,
+      "pixabayQuery": "Maldives travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/maldives-trip-color-underwater-1268661/",
+      "selectedImageUrl": "https://pixabay.com/get/gebb4bacd4711a03306246c59f7d16c9a4c67b9d6f19200e69a961a3ae96b5d44aeb4f109ce7d410edbcc14e68282453feb279951f98b313675e1f802eaa3c777_1280.jpg",
+      "s3Key": "trips/TRP-000054/card/trp-000054-1268661.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48842887f10cfab646f4",
+      "tripCode": "TRP-000058",
+      "tripName": "Cambodia with Koh Rong",
+      "destination": {
+        "id": "6a9eed7bed8a99cce5e2c5be",
+        "name": "Cambodia Tour Packages",
+        "slug": "cambodia-tour-packages",
+        "country": "Cambodia"
+      },
+      "pixabayImageId": 1071824,
+      "pixabayQuery": "Cambodia travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/cambodia-dancers-dance-travel-show-1071824/",
+      "selectedImageUrl": "https://pixabay.com/get/gfc8e9544c4123f2d2267f724232d6d7a5d9612a3e29744f2807535631d1477691015e56ef9b1ef25a5af7699c53f24cb5a7b416dfe05e32bf2c41d57fcaa52fc_1280.jpg",
+      "s3Key": "trips/TRP-000058/card/trp-000058-1071824.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48842887f10cfab646fa",
+      "tripCode": "TRP-000061",
+      "tripName": "Baku, Gabala & Shahdag",
+      "destination": {
+        "id": "6a9eed7bed8a99cce5e2c5c2",
+        "name": "Baku Tour Packages",
+        "slug": "baku-tour-packages",
+        "country": "Azerbaijan"
+      },
+      "pixabayImageId": 897419,
+      "pixabayQuery": "Baku travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/frog-farewell-travel-suitcase-897419/",
+      "selectedImageUrl": "https://pixabay.com/get/gae40b7586566b245264519f54262db0a3528792235770c7deb91fa815423fd49cba75f5f5f537555140351bae870c6b2369c81607d642a3ccc93f6c2d4b7f256_1280.jpg",
+      "s3Key": "trips/TRP-000061/card/trp-000061-897419.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48842887f10cfab646f2",
+      "tripCode": "TRP-000057",
+      "tripName": "Egypt Classic Discovery",
+      "destination": {
+        "id": "6a9eed7aed8a99cce5e2c5ba",
+        "name": "Egypt Tour Packages",
+        "slug": "egypt-tour-packages",
+        "country": "Egypt"
+      },
+      "pixabayImageId": 6004041,
+      "pixabayQuery": "Egypt travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/beach-girl-vacation-sea-ocean-6004041/",
+      "selectedImageUrl": "https://pixabay.com/get/g330006c30fb844943b7de22cace266ce620740c1cfe46d9ae94f7e1a81b9bed10d8c4f2e2025818cae8aea55c54ee77cb13661e12a9a749a1649a70f53abb678_1280.jpg",
+      "s3Key": "trips/TRP-000057/card/trp-000057-6004041.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48842887f10cfab646f6",
+      "tripCode": "TRP-000059",
+      "tripName": "Cambodia New Year Escape",
+      "destination": {
+        "id": "6a9eed7bed8a99cce5e2c5be",
+        "name": "Cambodia Tour Packages",
+        "slug": "cambodia-tour-packages",
+        "country": "Cambodia"
+      },
+      "pixabayImageId": 3362219,
+      "pixabayQuery": "Cambodia travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/architecture-travel-ancient-old-3362219/",
+      "selectedImageUrl": "https://pixabay.com/get/gb18f25cce86ae8ed1f0671c7ef4058d2f3e99a8ab2c7dfc654822f81d7e7e911828b8f8fab47727a54a956ee1370d987f71d81585b020cfc44e01c39d3dd9957_1280.jpg",
+      "s3Key": "trips/TRP-000059/card/trp-000059-3362219.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48842887f10cfab646f8",
+      "tripCode": "TRP-000060",
+      "tripName": "Baku & Gabala",
+      "destination": {
+        "id": "6a9eed7bed8a99cce5e2c5c2",
+        "name": "Baku Tour Packages",
+        "slug": "baku-tour-packages",
+        "country": "Azerbaijan"
+      },
+      "pixabayImageId": 897418,
+      "pixabayQuery": "Baku travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/frog-farewell-travel-suitcase-897418/",
+      "selectedImageUrl": "https://pixabay.com/get/g713d935a2d000464607791d020c4b664d2578bc35d3b0ce18f8b7f38edfc835fb9a8ecb4bebf89948bb69fe3c9a0ebc16ac790ca9ca6567eb1ddaf3817c13f18_1280.jpg",
+      "s3Key": "trips/TRP-000060/card/trp-000060-897418.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48842887f10cfab646fe",
+      "tripCode": "TRP-000063",
+      "tripName": "Philippines Island Escape",
+      "destination": {
+        "id": "6a9eed7ced8a99cce5e2c5c6",
+        "name": "Philippines Tour Packages",
+        "slug": "philippines-tour-packages",
+        "country": "Philippines"
+      },
+      "pixabayImageId": 2451989,
+      "pixabayQuery": "Philippines travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/sunset-beach-philippines-evening-2451989/",
+      "selectedImageUrl": "https://pixabay.com/get/g84a69d18e92d952a5cd35d663660777b405088bbd8d020521bf182dc41788a53a00f87432efbb85a1a4ab923e39baa9ee78201cc2777998d0dd5c649f7303ff0_1280.jpg",
+      "s3Key": "trips/TRP-000063/card/trp-000063-2451989.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    },
+    {
+      "tripId": "6a9f48842887f10cfab646fc",
+      "tripCode": "TRP-000062",
+      "tripName": "Philippines Community Island Explorer",
+      "destination": {
+        "id": "6a9eed7ced8a99cce5e2c5c6",
+        "name": "Philippines Tour Packages",
+        "slug": "philippines-tour-packages",
+        "country": "Philippines"
+      },
+      "pixabayImageId": 7491218,
+      "pixabayQuery": "Philippines travel",
+      "pixabaySourceUrl": "https://pixabay.com/photos/bohol-philippines-asia-blue-nature-7491218/",
+      "selectedImageUrl": "https://pixabay.com/get/g6a0d670e8c9e33b085d15b745bfc8c150c031e567c389562ce2c2dd2fd332919760774a425c3975f79f9428864a672eda1e6b46de050e281a070cb30ef4e045e_1280.jpg",
+      "s3Key": "trips/TRP-000062/card/trp-000062-7491218.jpg",
+      "uploadStatus": "dry-run",
+      "mongoUpdateStatus": "dry-run",
+      "error": null
+    }
+  ]
+}

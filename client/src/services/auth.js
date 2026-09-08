@@ -32,8 +32,8 @@ export const authApi = {
   resendPasswordReset({ email }) {
     return httpClient.post('/auth/resend-password-reset', { email })
   },
-  me() {
-    return httpClient.get('/auth/me')
+  me({ signal } = {}) {
+    return httpClient.get('/auth/me', { signal })
   },
   logout() {
     return httpClient.post('/auth/logout')

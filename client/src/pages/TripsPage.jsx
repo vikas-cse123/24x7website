@@ -363,7 +363,7 @@ export function TripsPage() {
         {/* Results */}
         <section ref={gridRef} aria-label="Trip results" className="min-w-0 scroll-mt-24">
           {isLoading ? (
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-7 sm:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="overflow-hidden rounded-xl border border-border">
                   <div className="aspect-[3/4] animate-pulse bg-muted" />
@@ -400,7 +400,7 @@ export function TripsPage() {
             </>
           ) : (
             <>
-              <div className={`grid gap-6 transition-opacity sm:grid-cols-2 xl:grid-cols-3 ${isFetching ? 'opacity-60' : ''}`}>
+              <div className={`grid gap-7 transition-opacity sm:grid-cols-2 xl:grid-cols-3 ${isFetching ? 'opacity-60' : ''}`}>
                 {items.map((t) => (
                   <TripCard key={t.id} trip={t} />
                 ))}
@@ -478,20 +478,6 @@ export function TripsPage() {
           </div>
         </SheetContent>
       </Sheet>
-
-      {/* Cross-link back into destination discovery (CAT-style SEO/content area is
-          intentionally minimal here; destination pages carry the long-form content). */}
-      <div className="mt-14 rounded-xl border border-border bg-muted/30 p-6 text-sm text-muted-foreground">
-        Looking for a specific place? Browse our{' '}
-        <Link to="/destinations" className="font-medium text-primary hover:underline">
-          destinations
-        </Link>{' '}
-        for country-level guides, or head back to the{' '}
-        <Link to="/" className="font-medium text-primary hover:underline">
-          homepage
-        </Link>{' '}
-        to explore what 24x7Chhutti is about.
-      </div>
     </Container>
   )
 }
@@ -522,7 +508,7 @@ function SearchDestinations({ search }) {
   return (
     <div className="mt-8">
       <h2 className="text-lg font-semibold">Destinations matching “{search}”</h2>
-      <div className="mt-4 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 grid gap-7 sm:grid-cols-2 xl:grid-cols-4">
         {matches.map((d) => (
           <DestinationCard key={d.id} destination={d} />
         ))}

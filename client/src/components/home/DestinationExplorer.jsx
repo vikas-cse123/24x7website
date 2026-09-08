@@ -46,11 +46,11 @@ function DestinationOval({ destination }) {
   return (
     <Link
       to={`/destination/${destination.slug}`}
-      className="group flex flex-col items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+      className="group flex flex-col items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl sm:gap-2"
       draggable={false}
       onDragStart={(e) => e.preventDefault()}
     >
-      <div className="h-[210px] w-[165px] shrink-0 overflow-hidden rounded-full">
+      <div className="h-[84px] w-[84px] shrink-0 overflow-hidden rounded-full sm:h-[96px] sm:w-[96px] lg:h-[210px] lg:w-[165px]">
         {!showFallback ? (
           <img
             src={src}
@@ -62,12 +62,12 @@ function DestinationOval({ destination }) {
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03] pointer-events-none select-none"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-muted text-xs font-medium text-muted-foreground">
+          <div className="flex h-full w-full items-center justify-center bg-muted text-[11px] font-medium text-muted-foreground sm:text-xs">
             <span className="px-2 text-center leading-tight">{name.slice(0, 2).toUpperCase()}</span>
           </div>
         )}
       </div>
-      <p className="line-clamp-2 min-h-[2.4rem] w-[165px] break-words text-center text-[16px] font-medium leading-tight text-gray-900">
+      <p className="line-clamp-2 min-h-[2.2rem] w-[88px] break-words text-center text-[13px] font-medium leading-tight text-gray-900 sm:min-h-[2.4rem] sm:w-[96px] sm:text-[14px] lg:w-[165px] lg:text-[16px]">
         {name}
       </p>
     </Link>
@@ -96,116 +96,67 @@ export function DestinationExplorer() {
     destinations = sortDestinationsForAll(destinations)
   }
 
-  // --- two-row drag scroll - butter smooth ---
+  // Native-feeling horizontal scroll: overflow-x-auto + 1:1 pointer drag
+  // No momentum RAF, no velocity, no wheel hijack, no snap.
   const trackRef = React.useRef(null)
   const isDraggingRef = React.useRef(false)
   const startXRef = React.useRef(0)
   const scrollLeftRef = React.useRef(0)
   const hasDraggedRef = React.useRef(false)
-  const rafRef = React.useRef(null)
-  const momentumRafRef = React.useRef(null)
-  const lastXRef = React.useRef(0)
-  const lastTimeRef = React.useRef(0)
-  const velocityRef = React.useRef(0)
   const [isDragging, setIsDragging] = React.useState(false)
-  const [hasInteracted, setHasInteracted] = React.useState(false)
-  React.useEffect(() => {
-    setHasInteracted(false)
-  }, [category])
-
-  // Cleanup momentum on unmount / category change
-  React.useEffect(() => {
-    return () => {
-      if (momentumRafRef.current) cancelAnimationFrame(momentumRafRef.current)
-      if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    }
-  }, [])
 
   const onPointerDown = React.useCallback((e) => {
-    if (e.pointerType !== 'mouse' || e.button !== 0) return
+    if (e.pointerType !== 'mouse') return
+    if (e.button !== 0) return
     const el = trackRef.current
     if (!el) return
-    // Stop any running momentum
-    if (momentumRafRef.current) {
-      cancelAnimationFrame(momentumRafRef.current)
-      momentumRafRef.current = null
-    }
-    isDraggingRef.current = true
     hasDraggedRef.current = false
-    velocityRef.current = 0
-    lastXRef.current = e.clientX
-    lastTimeRef.current = performance.now()
-    setIsDragging(true)
-    setHasInteracted(true)
     startXRef.current = e.clientX
     scrollLeftRef.current = el.scrollLeft
-    el.style.scrollBehavior = 'auto'
-    el.style.willChange = 'scroll-position'
+    // Don't enter dragging yet — wait for threshold to avoid suppressing clicks
   }, [])
 
   const onPointerMove = React.useCallback((e) => {
-    if (!isDraggingRef.current || e.pointerType !== 'mouse') return
-    e.preventDefault()
+    if (e.pointerType !== 'mouse') return
     const el = trackRef.current
     if (!el) return
-    const x = e.clientX
-    const now = performance.now()
-    const dt = now - lastTimeRef.current
-    if (dt > 0) {
-      const dx = x - lastXRef.current
-      velocityRef.current = velocityRef.current * 0.7 + (dx / dt) * 16 * 0.3
+    const walk = e.clientX - startXRef.current
+    // Enter dragging only after threshold
+    if (!isDraggingRef.current) {
+      if (Math.abs(walk) <= 6) return
+      isDraggingRef.current = true
+      hasDraggedRef.current = true
+      setIsDragging(true)
+      el.style.scrollBehavior = 'auto'
+      el.style.willChange = 'scroll-position'
+      try {
+        el.setPointerCapture(e.pointerId)
+      } catch {}
     }
-    lastXRef.current = x
-    lastTimeRef.current = now
-    const walk = x - startXRef.current
-    if (Math.abs(walk) > 5) hasDraggedRef.current = true
-    if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    rafRef.current = requestAnimationFrame(() => {
-      el.scrollLeft = scrollLeftRef.current - walk
-    })
+    if (e.cancelable) e.preventDefault()
+    el.scrollLeft = scrollLeftRef.current - walk
   }, [])
 
-  const endDrag = React.useCallback(() => {
-    if (!isDraggingRef.current) return
-    isDraggingRef.current = false
-    setIsDragging(false)
-    const el = trackRef.current
-    if (el) {
-      el.style.willChange = 'auto'
-      const v = velocityRef.current
-      if (Math.abs(v) > 2 && hasDraggedRef.current) {
-        el.style.scrollBehavior = 'auto'
-        let velocity = -v * 0.9
-        const decay = 0.94
-        const step = () => {
-          if (!el || Math.abs(velocity) < 0.5) {
-            el.style.scrollBehavior = 'smooth'
-            if (el && el.scrollLeft <= 5) setHasInteracted(false)
-            return
-          }
-          if ((velocity < 0 && el.scrollLeft <= 0) || (velocity > 0 && el.scrollLeft >= el.scrollWidth - el.clientWidth - 1)) {
-            el.style.scrollBehavior = 'smooth'
-            if (el.scrollLeft <= 5) setHasInteracted(false)
-            return
-          }
-          el.scrollLeft += velocity
-          velocity *= decay
-          momentumRafRef.current = requestAnimationFrame(step)
-        }
-        momentumRafRef.current = requestAnimationFrame(step)
-      } else {
-        el.style.scrollBehavior = 'smooth'
-        if (el.scrollLeft <= 5) setHasInteracted(false)
+  const endDrag = React.useCallback(
+    (e) => {
+      if (!isDraggingRef.current) return
+      isDraggingRef.current = false
+      setIsDragging(false)
+      const el = trackRef.current
+      if (el) el.style.willChange = 'auto'
+      try {
+        if (e && e.pointerId != null) trackRef.current?.releasePointerCapture(e.pointerId)
+      } catch {}
+      // Keep native smooth for wheel/trackpad, but restore for any programmatic scrolls
+      if (el) el.style.scrollBehavior = 'smooth'
+      if (hasDraggedRef.current) {
+        setTimeout(() => {
+          hasDraggedRef.current = false
+        }, 0)
       }
-    }
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current)
-      rafRef.current = null
-    }
-    setTimeout(() => {
-      hasDraggedRef.current = false
-    }, 0)
-  }, [])
+    },
+    []
+  )
 
   const onClickCapture = React.useCallback((e) => {
     if (hasDraggedRef.current) {
@@ -213,18 +164,6 @@ export function DestinationExplorer() {
       e.stopPropagation()
     }
   }, [])
-
-  const onScroll = React.useCallback(() => {
-    const el = trackRef.current
-    if (!el) return
-    // Don't toggle padding while actively dragging (avoids jump)
-    if (isDraggingRef.current) return
-    if (el.scrollLeft <= 5) {
-      if (hasInteracted) setHasInteracted(false)
-    } else if (!hasInteracted && el.scrollLeft > 5) {
-      setHasInteracted(true)
-    }
-  }, [hasInteracted])
 
   return (
     <section className="bg-white py-8 sm:py-10">
@@ -256,12 +195,9 @@ export function DestinationExplorer() {
 
       <div className="mt-7">
         {isLoading ? (
-          <div className={cn('flex gap-8 overflow-hidden', !hasInteracted && 'px-5 sm:px-6 lg:px-[90px]')}>
+          <div className="flex gap-4 overflow-hidden px-5 sm:gap-6 sm:px-6 lg:gap-8 lg:px-[90px]">
             {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="flex shrink-0 flex-col items-center gap-2.5">
-                <div className="h-[210px] w-[165px] animate-pulse rounded-full bg-muted" />
-                <div className="h-4 w-20 animate-pulse rounded bg-muted" />
-              </div>
+              <div key={i} className="h-[84px] w-[84px] shrink-0 rounded-full skeleton sm:h-[96px] sm:w-[96px] lg:h-[210px] lg:w-[165px]" />
             ))}
           </div>
         ) : isError ? (
@@ -284,17 +220,14 @@ export function DestinationExplorer() {
             onPointerLeave={endDrag}
             onPointerCancel={endDrag}
             onClickCapture={onClickCapture}
-            onScroll={onScroll}
             className={cn(
-              'grid grid-flow-col grid-rows-2 gap-8 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden select-none touch-pan-x scroll-smooth transition-[padding] duration-200 ease-out',
-              !hasInteracted && 'px-5 sm:px-6 lg:px-[90px]',
-              hasInteracted && 'px-0',
-              isDragging ? 'cursor-grabbing' : 'cursor-grab'
+              'grid grid-flow-col grid-rows-2 gap-4 overflow-x-auto overscroll-x-contain px-5 pb-2 [scrollbar-width:none] sm:gap-6 sm:px-6 lg:gap-8 lg:px-[90px] [&::-webkit-scrollbar]:hidden touch-pan-x scroll-smooth',
+              isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'
             )}
             style={{ gridAutoColumns: 'max-content' }}
           >
               {destinations.map((d) => (
-                <div key={d.id || d.slug} className="w-[165px] shrink-0 snap-start">
+                <div key={d.id || d.slug} className="w-[88px] shrink-0 sm:w-[96px] lg:w-[165px]">
                   <DestinationOval destination={d} />
                 </div>
               ))}

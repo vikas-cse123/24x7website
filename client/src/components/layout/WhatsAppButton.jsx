@@ -69,7 +69,7 @@ export function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat on WhatsApp"
-      className={`fixed bottom-5 z-40 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${sizeClass} ${positionClass} ${isCustom ? 'flex items-center justify-center rounded-full shadow-lg' : ''}`}
+      className={`hidden sm:flex fixed bottom-5 z-40 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${sizeClass} ${positionClass} ${isCustom ? 'items-center justify-center rounded-full shadow-lg' : ''}`}
       style={isCustom ? { backgroundColor: settings.backgroundColor } : undefined}
     >
       {isCustom ? (

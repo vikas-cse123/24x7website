@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Routes, Route, useParams } from 'react-router-dom'
+import { Routes, Route, useParams, useLocation } from 'react-router-dom'
 import { PublicLayout } from '@/components/layout/PublicLayout'
 import { PlaceholderPage } from '@/pages/PlaceholderPage'
 import { RequireAdmin } from '@/components/admin/RequireAdmin'
@@ -19,12 +19,13 @@ const BlogsPage = React.lazy(() => import('@/pages/BlogsPage').then(m => ({ defa
 const DestinationBlogsPage = React.lazy(() => import('@/pages/BlogsPage').then(m => ({ default: m.DestinationBlogsPage })))
 const BlogDetailPage = React.lazy(() => import('@/pages/BlogDetailPage').then(m => ({ default: m.BlogDetailPage })))
 const FaqsPage = React.lazy(() => import('@/pages/FaqsPage').then(m => ({ default: m.FaqsPage })))
-const AboutPage = React.lazy(() => import('@/pages/AboutPage').then(m => ({ default: m.AboutPage })))
 const ContactPage = React.lazy(() => import('@/pages/ContactPage').then(m => ({ default: m.ContactPage })))
 const PrivacyPolicyPage = React.lazy(() => import('@/pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })))
 const TermsPage = React.lazy(() => import('@/pages/TermsPage').then(m => ({ default: m.TermsPage })))
 const CancellationPolicyPage = React.lazy(() => import('@/pages/CancellationPolicyPage').then(m => ({ default: m.CancellationPolicyPage })))
 const NotFoundPage = React.lazy(() => import('@/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })))
+const MiddleAgeTripsPage = React.lazy(() => import('@/pages/MiddleAgeTripsPage').then(m => ({ default: m.MiddleAgeTripsPage })))
+const UpcomingTripsPage = React.lazy(() => import('@/pages/UpcomingTripsPage').then(m => ({ default: m.UpcomingTripsPage })))
 
 const AccountLayoutPage = React.lazy(() => import('@/pages/account/AccountLayoutPage').then(m => ({ default: m.AccountLayoutPage })))
 const AccountProfilePage = React.lazy(() => import('@/pages/account/AccountProfilePage').then(m => ({ default: m.AccountProfilePage })))
@@ -63,6 +64,40 @@ function RouteFallback() {
   )
 }
 
+class RouteErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+  componentDidCatch(error, info) {
+    console.error('[RouteErrorBoundary]', error, info)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 p-12 text-center">
+          <p className="text-sm text-muted-foreground">This section failed to load.</p>
+          <p className="max-w-md text-xs text-muted-foreground/70">{String(this.state.error?.message || this.state.error || '')}</p>
+          <button
+            type="button"
+            onClick={() => {
+              this.setState({ hasError: false, error: null })
+              window.location.reload()
+            }}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            Reload
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 // /booking/BK-000001 → confirmation; /booking/<trip-slug> → booking wizard.
 function BookingRouteSwitch() {
   const { param } = useParams()
@@ -77,12 +112,30 @@ function adminPlaceholder(title) {
   return <AdminPlaceholderPage title={title} />
 }
 
+function ScrollToTop() {
+  const { pathname, hash, search } = useLocation()
+  React.useEffect(() => {
+    if (hash === '#reviews') return
+    if (hash) {
+      const el = document.querySelector(hash)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        return
+      }
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [pathname, hash, search])
+  return null
+}
+
 // Public route architecture — all pages are lazy-loaded for performance.
 // PublicLayout and auth guards stay eager (small) so navigation is instant.
 export function AppRoutes() {
   return (
-    <React.Suspense fallback={<RouteFallback />}>
-      <Routes>
+    <RouteErrorBoundary>
+      <React.Suspense fallback={<RouteFallback />}>
+        <ScrollToTop />
+        <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
 
@@ -108,7 +161,6 @@ export function AppRoutes() {
           <Route path="/faqs" element={<FaqsPage />} />
 
           {/* Company */}
-          <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-and-conditions" element={<TermsPage />} />
@@ -123,8 +175,8 @@ export function AppRoutes() {
           <Route path="/middle-age-trips" element={placeholder('Middle Age Trips')} />
           <Route path="/customised-trips" element={placeholder('Customised Trips')} />
           <Route path="/more" element={placeholder('More')} />
-          <Route path="/category/upcoming-trips" element={placeholder('Upcoming Group Trips')} />
-          <Route path="/category/middle-age-trips" element={placeholder('Middle Age Trips')} />
+          <Route path="/category/upcoming-trips" element={<UpcomingTripsPage />} />
+          <Route path="/category/middle-age-trips" element={<MiddleAgeTripsPage />} />
 
           {/* Account (private — noindex; layout guards auth) */}
           <Route path="/account" element={<AccountLayoutPage />}>
@@ -179,7 +231,8 @@ export function AppRoutes() {
           <Route path="settings" element={<AdminSettingsPage />} />
           <Route path="*" element={adminPlaceholder('Not found')} />
         </Route>
-      </Routes>
-    </React.Suspense>
+        </Routes>
+      </React.Suspense>
+    </RouteErrorBoundary>
   )
 }

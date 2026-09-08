@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Menu } from 'lucide-react'
+import { Menu, Phone } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { Logo } from '@/components/brand/Logo'
 import { HeaderSearch } from '@/components/layout/HeaderSearch'
@@ -8,50 +8,58 @@ import { HeaderAuth } from '@/components/layout/HeaderAuth'
 import { HeaderPhone } from '@/components/layout/HeaderPhone'
 import { MobileNav } from '@/components/layout/MobileNav'
 
-// Main header: logo (admin-managed branding) left, compact centered search,
-// phone + Login right, navigation row underneath. On mobile the search moves to
-// a dedicated row below the logo so the top row never overflows. The top row
-// spans the full viewport with minimal padding (logo near the left edge,
-// phone + Login near the right edge).
+// Mobile-first header: promo bar (above) + compact white header
+// Mobile: hamburger (left) | centered 24x7Chhutti logo | phone icon (right)
+// Desktop: logo left, centered search, phone + Login right, SiteNav row below.
+// Search moves to full-width pill directly below header on mobile.
 export function Header() {
   const [mobileOpen, setMobileOpen] = React.useState(false)
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background shadow-header">
-      {/* Top row: full-width, no max-width, only ~24-32px side padding.
-          Search is absolutely centered on the page (like the reference site)
-          instead of centering in the leftover space between logo and Login. */}
-      <div className="relative flex h-16 items-center gap-4 px-12 sm:px-14 lg:h-20 lg:px-16 xl:px-20">
-        <Logo imgClassName="h-10 w-[80px] object-contain sm:h-12 sm:w-[96px] lg:h-[55px] lg:w-[110px]" />
+      {/* Top row */}
+      <div className="relative flex h-[56px] items-center justify-between gap-3 px-5 sm:px-6 lg:h-20 lg:px-16 xl:px-20">
+        {/* Mobile hamburger — left */}
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open menu"
+          aria-haspopup="dialog"
+          aria-expanded={mobileOpen}
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+        >
+          <Menu className="h-6 w-6" />
+        </button>
 
-        {/* Desktop / tablet search — compact, page-centered */}
-        <div className="absolute left-1/2 hidden -translate-x-1/2 md:block">
-          <HeaderSearch className="w-[320px] lg:w-[380px] xl:w-[420px]" />
+        {/* Logo: centered on mobile, left-aligned on desktop */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 lg:static lg:left-auto lg:top-auto lg:translate-x-0 lg:translate-y-0 lg:shrink-0">
+          <Logo imgClassName="h-8 w-[72px] object-contain sm:h-10 sm:w-[80px] lg:h-[55px] lg:w-[110px]" />
         </div>
 
-        {/* Right cluster: phone + Login + mobile menu */}
-        <div className="ml-auto flex items-center gap-3 lg:gap-6">
+        {/* Desktop / tablet search — flex centered, not absolute (fixes phone overlapping search at ~1086px) */}
+        <div className="hidden min-w-0 flex-1 justify-center px-2 md:flex lg:px-4">
+          <HeaderSearch className="w-full max-w-[320px] lg:max-w-[380px] xl:max-w-[420px]" />
+        </div>
+
+        {/* Right cluster */}
+        <div className="flex shrink-0 items-center gap-3 lg:gap-6">
           <HeaderPhone className="hidden lg:inline-flex" />
           <div className="hidden sm:block">
             <HeaderAuth />
           </div>
-
-          {/* Mobile hamburger */}
-          <button
-            type="button"
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open menu"
-            aria-haspopup="dialog"
-            aria-expanded={mobileOpen}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+          {/* Mobile phone icon — right */}
+          <a
+            href="tel:+919958723666"
+            aria-label="Call us"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
           >
-            <Menu className="h-5 w-5" />
-          </button>
+            <Phone className="h-5 w-5" />
+          </a>
         </div>
       </div>
 
-      {/* Mobile search row */}
-      <div className="border-t border-border px-12 py-2 sm:px-14 md:hidden">
+      {/* Mobile search row — full-width pill directly below header */}
+      <div className="border-t border-border bg-white px-5 py-3 sm:px-6 md:hidden">
         <HeaderSearch />
       </div>
 

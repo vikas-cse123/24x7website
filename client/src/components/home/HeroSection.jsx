@@ -6,18 +6,14 @@ import { Volume2, VolumeX } from 'lucide-react'
 // on top of the video. The video always starts muted; audio is only enabled
 // after the user explicitly clicks the sound button. The audio state is never
 // persisted — every page load/reload begins muted again.
-const HERO_VIDEO_URL =
-  'https://d1zvcmhypeawxj.cloudfront.net/home/video_web/web-main-banner--mp4-b13fd942f1-1759143371864.mp4'
+// Video is uploaded to S3 (24x7-website/home/video_web/home-video.mp4) and
+// served via CloudFront for fast delivery.
+const HERO_VIDEO_URL = 'https://d1zvcmhypeawxj.cloudfront.net/home/video_web/home-video.mp4'
 
 export function HeroSection() {
   const videoRef = React.useRef(null)
   const [muted, setMuted] = React.useState(true)
 
-  // React does not reliably serialize the `muted` attribute on <video>, which
-  // can break autoplay under browser autoplay policies. Explicitly force muted
-  // and kick off playback so the background video always starts automatically.
-  // We only ever call play() while muted; unmuting happens solely via the
-  // sound button so autoplay is never blocked by the browser.
   React.useEffect(() => {
     const video = videoRef.current
     if (!video) return undefined
@@ -44,40 +40,40 @@ export function HeroSection() {
     const next = !video.muted
     video.muted = next
     setMuted(next)
-    // Ensure playback continues after toggling (the browser may have suspended
-    // the muted autoplay when audio was enabled).
     const p = video.play()
     if (p && typeof p.catch === 'function') p.catch(() => {})
   }
 
   return (
-    <section className="relative flex min-h-[400px] items-center overflow-hidden sm:min-h-[460px]">
-      <video
-        ref={videoRef}
-        className="absolute inset-0 h-full w-full object-cover"
-        src={HERO_VIDEO_URL}
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="auto"
-        disablePictureInPicture
-        controls={false}
-      />
+    <section className="relative w-full overflow-hidden bg-black">
+      <div className="relative aspect-[4/3] w-full overflow-hidden sm:aspect-[16/9] lg:aspect-[3.17/1] lg:min-h-[460px]">
+        <video
+          ref={videoRef}
+          className="absolute inset-0 h-full w-full object-cover"
+          src={HERO_VIDEO_URL}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1920' height='600' viewBox='0 0 1920 600'%3E%3Crect width='1920' height='600' fill='%23000'/%3E%3C/svg%3E"
+          disablePictureInPicture
+          controls={false}
+        />
 
-      {/* Sound toggle — small, bottom-right, no background */}
-      <button
-        type="button"
-        onClick={toggleSound}
-        aria-label={muted ? 'Unmute video' : 'Mute video'}
-        className="absolute bottom-4 right-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full text-white/90 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        {muted ? (
-          <VolumeX className="h-5 w-5" aria-hidden="true" />
-        ) : (
-          <Volume2 className="h-5 w-5" aria-hidden="true" />
-        )}
-      </button>
+        <button
+          type="button"
+          onClick={toggleSound}
+          aria-label={muted ? 'Unmute video' : 'Mute video'}
+          className="absolute bottom-4 right-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full text-white/90 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {muted ? (
+            <VolumeX className="h-5 w-5" aria-hidden="true" />
+          ) : (
+            <Volume2 className="h-5 w-5" aria-hidden="true" />
+          )}
+        </button>
+      </div>
     </section>
   )
 }

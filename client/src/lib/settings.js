@@ -21,8 +21,8 @@ export const DEFAULT_PROMOTIONAL_BANNER = {
 
 export const DEFAULT_WHATSAPP = {
   enabled: true,
-  phoneNumber: '919310660016',
-  prefilledMessage: 'Hey! Capture A Trip I am interested in your trips',
+  phoneNumber: '919958723666',
+  prefilledMessage: 'Hey! 24x7chhutti I am interested in your trips',
   iconUrl: null,
   position: 'bottom-right',
   size: 'medium',

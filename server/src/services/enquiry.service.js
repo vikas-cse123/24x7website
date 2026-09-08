@@ -65,7 +65,7 @@ export async function createPublic(data, userId = null) {
 
   const doc = await Enquiry.create({
     name: data.name,
-    email: data.email,
+    email: data.email || '',
     phone: data.phone,
     countryCode: data.countryCode || '+91',
     destinationId: dest?._id || null,

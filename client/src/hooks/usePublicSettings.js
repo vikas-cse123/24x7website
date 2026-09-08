@@ -12,20 +12,26 @@ export const PUBLIC_SETTINGS_QUERY_KEY = ['settings', 'public']
 export function usePublicSettings() {
   const query = useQuery({
     queryKey: PUBLIC_SETTINGS_QUERY_KEY,
-    queryFn: async () => {
-      const { data } = await publicSettingsApi.get()
+    queryFn: async ({ signal }) => {
+      const { data } = await publicSettingsApi.get({ signal })
       return data.data ?? null
     },
-    // Always stale: the admin panel runs in a separate tab, so cross-tab
-    // invalidation is impossible. A stale query refetches on window focus
-    // (default) and remount, making admin edits visible as soon as the
-    // visitor returns to the site tab. One small aggregate call — cheap.
-    staleTime: 0,
+    staleTime: 30000,
+    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
     retry: 1,
   })
 
   const contact = query.data?.contact ?? DEFAULT_CONTACT
-  const promotionalBanner = query.data?.promotionalBanner ?? DEFAULT_PROMOTIONAL_BANNER
+  // Promotional banner must NEVER flash the hardcoded DEFAULT while loading.
+  // During pending, return null so the banner shows a skeleton/empty state.
+  // After loading, return the saved banner or null (hidden) — never the stale default.
+  // This prevents the ~1s flash of "Early Bird Sale — Save on upcoming group trips"
+  // on every hard refresh.
+  const isBannerLoading = query.isPending
+  const promotionalBanner = isBannerLoading
+    ? null
+    : (query.data?.promotionalBanner ?? null)
 
-  return { ...query, contact, promotionalBanner }
+  return { ...query, contact, promotionalBanner, isBannerLoading }
 }

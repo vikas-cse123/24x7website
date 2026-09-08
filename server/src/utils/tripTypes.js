@@ -10,4 +10,13 @@ export const TRIP_TYPES = [
   'weekend',
   'international',
   'domestic',
+  'bike',
+  'spiritual',
+  'match_maker',
+  'wellness',
+  'trek',
+  'northern_lights_early_bird',
+  'middle_age_trips',
+  'upcoming_group_trips',
+  'corporate',
 ]

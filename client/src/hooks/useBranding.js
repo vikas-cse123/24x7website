@@ -13,8 +13,8 @@ export const BRANDING_QUERY_KEY = ['branding']
 export function useBranding() {
   const query = useQuery({
     queryKey: BRANDING_QUERY_KEY,
-    queryFn: async () => {
-      const { data } = await brandingApi.get()
+    queryFn: async ({ signal }) => {
+      const { data } = await brandingApi.get({ signal })
       return data.data?.logo ?? null
     },
     staleTime: 5 * 60 * 1000,

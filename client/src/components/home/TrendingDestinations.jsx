@@ -1,19 +1,45 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { IndianRupee, ArrowRight } from 'lucide-react'
+import * as React from 'react'
 import { Container } from '@/components/ui/container'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
 import { destinationApi } from '@/services/destinations'
+import { tripApi } from '@/services/trips'
 
 const LIMIT = 12
+const TRIPS_LIMIT = 50
 
 export function TrendingDestinations() {
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['home', 'trending-destinations'],
-    queryFn: () => destinationApi.list({ limit: LIMIT }),
+    queryKey: ['home', 'trending-destinations', { featured: true }],
+    queryFn: () => destinationApi.list({ limit: LIMIT, featured: 'true' }),
   })
 
-  const destinations = data?.data?.data?.items || []
+  const { data: tripsData } = useQuery({
+    queryKey: ['home', 'trending-destinations', 'trips-prices', { limit: TRIPS_LIMIT }],
+    queryFn: () => tripApi.list({ limit: TRIPS_LIMIT }),
+    staleTime: 60_000,
+  })
+
+  // Handle actual API shape: axios response → response.data → { success, data: { items } }
+  // Some interceptors may unwrap one level, so support all shapes.
+  const destinations =
+    data?.data?.data?.items ?? data?.data?.items ?? data?.items ?? []
+  const trips =
+    tripsData?.data?.data?.items ?? tripsData?.data?.items ?? tripsData?.items ?? []
+
+  const priceMap = React.useMemo(() => {
+    const map = new Map()
+    for (const trip of trips) {
+      const destId = trip.destination?.id || trip.destinationId
+      if (!destId) continue
+      const price = Number(trip.startingPrice)
+      if (!price || Number.isNaN(price) || price <= 0) continue
+      const existing = map.get(destId)
+      if (existing == null || price < existing) map.set(destId, price)
+    }
+    return map
+  }, [trips])
 
   return (
     <section className="py-12 lg:py-16">
@@ -30,9 +56,18 @@ export function TrendingDestinations() {
 
         <div className="mt-8">
           {isLoading ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="aspect-[4/5] animate-pulse rounded-xl bg-muted" />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="skeleton relative overflow-hidden rounded-[16px] aspect-[3/4]"
+                  aria-hidden="true"
+                >
+                  <div className="absolute inset-x-0 bottom-0 p-4">
+                    <div className="skeleton h-4 w-3/4 rounded bg-white/40" />
+                    <div className="mt-2 skeleton h-3 w-1/2 rounded bg-white/30" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : isError ? (
@@ -44,10 +79,11 @@ export function TrendingDestinations() {
               No destinations available yet.
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {destinations.map((d) => (
-                <TrendingDestinationCard key={d.id} destination={d} />
-              ))}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+              {destinations.map((d) => {
+                const cheapest = priceMap.get(d.id)
+                return <TrendingDestinationCard key={d.id} destination={d} cheapestPrice={cheapest} />
+              })}
             </div>
           )}
         </div>
@@ -56,36 +92,42 @@ export function TrendingDestinations() {
   )
 }
 
-export function TrendingDestinationCard({ destination }) {
-  const hasPrice = destination.startingPrice !== null && destination.startingPrice !== undefined
-  const imgSrc = destination.heroImage?.url || destination.homepageImage?.url || destination.heroImage?.secureUrl || destination.homepageImage?.secureUrl
+export function TrendingDestinationCard({ destination, cheapestPrice }) {
+  const imgSrc = destination.homepageImage?.url || destination.homepageImage?.secureUrl || null
+  const imgAlt = destination.homepageImage?.alt || destination.name
+  const hasPrice = cheapestPrice != null && cheapestPrice > 0
 
   return (
     <Link
       to={`/destination/${destination.slug}`}
-      className="group block overflow-hidden rounded-xl shadow-card transition-shadow hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="group relative block overflow-hidden rounded-[16px] bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      aria-label={`${destination.name} — view destination`}
     >
-      <DestinationImage
-        src={imgSrc}
-        alt={destination.heroImage?.alt || destination.homepageImage?.alt || destination.name}
-        className="aspect-[4/5] w-full"
-      />
-      <div className="bg-card p-3">
-        <h3 className="truncate text-sm font-semibold group-hover:text-primary">
-          {destination.name}
-        </h3>
-        {hasPrice ? (
-          <p className="mt-0.5 flex items-center text-sm text-muted-foreground">
-            <span className="mr-1 text-xs">Starting</span>
-            <IndianRupee className="h-3.5 w-3.5" />
-            {destination.startingPrice.toLocaleString('en-IN')}
-          </p>
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[16px]">
+        {imgSrc ? (
+          <DestinationImage
+            src={imgSrc}
+            alt={imgAlt}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
         ) : (
-          <p className="mt-0.5 flex items-center text-sm text-muted-foreground">
-            View destination
-            <ArrowRight className="ml-1 h-3.5 w-3.5" />
-          </p>
+          <div className="flex h-full w-full items-center justify-center bg-slate-100 text-sm text-muted-foreground">
+            No image
+          </div>
         )}
+        {/* Dark gradient for text readability */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" aria-hidden="true" />
+        {/* Text overlay bottom-left */}
+        <div className="absolute inset-x-0 bottom-0 p-[14px] sm:p-4">
+          <h3 className="truncate text-[15px] font-semibold leading-tight text-white drop-shadow-sm sm:text-[16px]">
+            {destination.name}
+          </h3>
+          {hasPrice ? (
+            <p className="mt-1 text-[13px] font-medium leading-none text-white/95 drop-shadow-sm sm:text-[13px]">
+              Starting ₹{Number(cheapestPrice).toLocaleString('en-IN')}
+            </p>
+          ) : null}
+        </div>
       </div>
     </Link>
   )

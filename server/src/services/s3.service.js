@@ -84,6 +84,49 @@ export async function uploadBuffer(buffer, { folder, originalName, mimeType } = 
   }
 }
 
+export async function uploadFile(file, { folder, originalName, mimeType } = {}) {
+  assertConfigured()
+  const key = makeKey(folder, originalName || file?.originalname || '', mimeType || file?.mimetype || '')
+  const contentType = mimeType || file?.mimetype || 'application/octet-stream'
+  let body
+  let bytes = null
+  if (file?.buffer) {
+    body = file.buffer
+    bytes = file.buffer.byteLength
+  } else if (file?.path) {
+    const { createReadStream } = await import('node:fs')
+    const { stat } = await import('node:fs/promises')
+    try {
+      const s = await stat(file.path)
+      bytes = s.size
+    } catch {}
+    body = createReadStream(file.path)
+  } else {
+    throw new Error('No file buffer or path provided')
+  }
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: s3Config.bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+      CacheControl: 'public, max-age=31536000, immutable',
+    })
+  )
+  const url = s3Config.getUrl(key)
+  const proxy = s3Config.getProxyUrl(key)
+  return {
+    publicId: key,
+    secureUrl: proxy || url,
+    url: proxy || url,
+    width: null,
+    height: null,
+    format: path.extname(key).replace('.', '') || 'jpg',
+    bytes,
+    resourceType: mimeType?.startsWith('video/') || file?.mimetype?.startsWith('video/') ? 'video' : 'image',
+  }
+}
+
 // Delete an S3 object. Only keys under the app prefix are allowed.
 export async function destroy(key) {
   assertConfigured()
