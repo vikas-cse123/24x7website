@@ -36,8 +36,8 @@ export function PromoBanner() {
   }
 
   return (
-    <div className="bg-primary text-primary-foreground" style={style}>
-
+    <div className="relative overflow-hidden bg-primary text-primary-foreground" style={style}>
+      {(banner.shimmerEnabled ?? banner.shimmer) && <div className="banner-shimmer" aria-hidden="true" />}
       <div className="relative z-10 mx-auto flex min-h-10 w-full items-center justify-center gap-2 px-10 py-1.5 text-center text-xs font-medium sm:px-12 sm:text-sm">
         <span className="min-w-0 truncate">{banner.message}</span>
         {showCta &&

@@ -45,18 +45,7 @@ function Stars() {
 
 export function ReviewsFromTravellers() {
   const [active, setActive] = React.useState(null)
-  const [expanded, setExpanded] = React.useState(() => REVIEWS.map(() => false))
   const [current, setCurrent] = React.useState(0)
-  const trackRef = React.useRef(null)
-
-  const onSelect = (idx) => {
-    setCurrent(idx)
-    const el = trackRef.current
-    if (el) {
-      const card = el.children[idx]
-      card?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
-    }
-  }
 
   return (
     <section id="reviews" aria-label="Reviews from our travellers" className="bg-background py-12 lg:py-16 scroll-mt-24">
@@ -70,11 +59,14 @@ export function ReviewsFromTravellers() {
           <HorizontalCarousel
             aria-label="Traveller reviews"
             itemClassName="w-[88vw] max-w-[380px]"
+            activeIndex={current}
+            onActiveChange={setCurrent}
+            loop
           >
             {REVIEWS.map((review, i) => (
               <article
                 key={review.name}
-                className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm touch-pan-y"
               >
                 <button
                   type="button"
@@ -92,29 +84,9 @@ export function ReviewsFromTravellers() {
                 </button>
                 <div className="flex flex-1 flex-col p-5">
                   <Stars />
-                  <p
-                    className={`mt-3 text-center text-[14px] leading-[1.7] text-slate-600 ${!expanded[i] ? 'line-clamp-4' : ''}`}
-                  >
+                  <p className="mt-3 line-clamp-4 text-center text-[14px] leading-[1.7] text-slate-600">
                     {review.text}
                   </p>
-                  {!expanded[i] && review.text.length > 180 && (
-                    <button
-                      type="button"
-                      onClick={() => setExpanded((prev) => prev.map((v, j) => (j === i ? true : v)))}
-                      className="mx-auto mt-1 text-sm font-medium text-sky-600 hover:underline"
-                    >
-                      Read more...
-                    </button>
-                  )}
-                  {expanded[i] && (
-                    <button
-                      type="button"
-                      onClick={() => setExpanded((prev) => prev.map((v, j) => (j === i ? false : v)))}
-                      className="mx-auto mt-1 text-sm font-medium text-sky-600 hover:underline"
-                    >
-                      Read less
-                    </button>
-                  )}
                   <p className="mt-4 text-center text-[14px] font-bold tracking-tight text-slate-900">
                     {review.name}
                   </p>
@@ -127,7 +99,7 @@ export function ReviewsFromTravellers() {
               <button
                 key={i}
                 type="button"
-                onClick={() => onSelect(i)}
+                onClick={() => setCurrent(i)}
                 aria-label={`Go to review ${i + 1}`}
                 aria-current={current === i}
                 className={`h-2 w-2 rounded-full transition-colors ${current === i ? 'bg-slate-900' : 'bg-slate-300'}`}

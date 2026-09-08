@@ -1,9 +1,98 @@
 import { Router } from 'express'
 import { GetObjectCommand } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { s3Client, s3Config } from '../config/s3.js'
 import { isAppKey } from '../utils/imageFolders.js'
 
 const router = Router()
+
+// Presigned URL for homepage hero video — private bucket, direct S3 delivery.
+// Whitelisted to a single key; do NOT make generic. Bucket stays private,
+// no public policy, no CloudFront, no proxy streaming for this hero video.
+// Browser flow: GET /api/media/presign -> { url } -> browser GETs S3 directly (supports Range).
+const HERO_VIDEO_KEY = 'website/home/video_web/home-video.mp4'
+const HERO_PRESIGN_EXPIRES = 3600 // 1 hour
+
+router.get('/presign', async (req, res, next) => {
+  try {
+    const raw = req.query.key
+    const requestedKey = raw != null && String(raw).length > 0 ? String(raw) : HERO_VIDEO_KEY
+    if (requestedKey !== HERO_VIDEO_KEY) {
+      return res.status(403).json({ success: false, message: 'Forbidden: only hero video may be presigned' })
+    }
+    if (!s3Client || !s3Config.bucket) {
+      return res.status(503).json({ success: false, message: 'S3 not configured' })
+    }
+    const command = new GetObjectCommand({ Bucket: s3Config.bucket, Key: HERO_VIDEO_KEY })
+    const url = await getSignedUrl(s3Client, command, { expiresIn: HERO_PRESIGN_EXPIRES })
+    return res.json({ success: true, url, key: HERO_VIDEO_KEY, expiresIn: HERO_PRESIGN_EXPIRES })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// Presigned URL for Vibe With Us reels — private bucket, direct S3 bytes.
+// Whitelisted strictly to vibe-videos/ prefix; do NOT allow arbitrary keys.
+// Browser flow: GET /api/media/presign-vibe?key=vibe-videos/... -> { url } -> browser GETs S3 directly (Range).
+const VIBE_PREFIX = 'vibe-videos/'
+const VIBE_PRESIGN_EXPIRES = 3600 // 1 hour, consistent with hero
+
+router.get('/presign-vibe', async (req, res, next) => {
+  try {
+    const raw = req.query.key
+    if (typeof raw !== 'string' || raw.trim().length === 0) {
+      return res.status(400).json({ success: false, message: 'Missing key' })
+    }
+    const key = decodeURIComponent(String(raw).trim())
+    // Strict whitelist: must be vibe-videos/ and pass isAppKey and not contain traversal
+    if (!key.startsWith(VIBE_PREFIX) || !isAppKey(key) || key.includes('..') || key.includes('//')) {
+      return res.status(403).json({ success: false, message: 'Forbidden: only vibe-videos may be presigned' })
+    }
+    // Enforce mp4 within vibe-videos (prevent signing images or other objects if mixed)
+    if (!key.endsWith('.mp4') || key.includes('\\')) {
+      return res.status(403).json({ success: false, message: 'Forbidden: only vibe mp4 may be presigned' })
+    }
+    if (!s3Client || !s3Config.bucket) {
+      return res.status(503).json({ success: false, message: 'S3 not configured' })
+    }
+    const command = new GetObjectCommand({ Bucket: s3Config.bucket, Key: key })
+    const url = await getSignedUrl(s3Client, command, { expiresIn: VIBE_PRESIGN_EXPIRES })
+    return res.json({ success: true, url, key, expiresIn: VIBE_PRESIGN_EXPIRES })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// Presigned URL for images — private bucket, direct S3 bytes.
+// Validates against isAppKey + image extension whitelist; bucket stays private.
+// Browser flow: GET /api/media/presign-image?key=destinations/... -> { url } -> browser GETs S3 directly.
+const IMAGE_PRESIGN_EXPIRES = 3600 // 1 hour, consistent with hero/vibe
+const IMAGE_EXT_RE = /\.(jpg|jpeg|png|webp|avif|gif|svg)$/i
+
+router.get('/presign-image', async (req, res, next) => {
+  try {
+    const raw = req.query.key
+    if (typeof raw !== 'string' || raw.trim().length === 0) {
+      return res.status(400).json({ success: false, message: 'Missing key' })
+    }
+    const key = decodeURIComponent(String(raw).trim())
+    // Validate: app key, no traversal, image extension, no backslashes
+    if (!isAppKey(key) || key.includes('..') || key.includes('//') || key.includes('\\')) {
+      return res.status(403).json({ success: false, message: 'Forbidden: invalid image key' })
+    }
+    if (!IMAGE_EXT_RE.test(key)) {
+      return res.status(403).json({ success: false, message: 'Forbidden: only image extensions may be presigned' })
+    }
+    if (!s3Client || !s3Config.bucket) {
+      return res.status(503).json({ success: false, message: 'S3 not configured' })
+    }
+    const command = new GetObjectCommand({ Bucket: s3Config.bucket, Key: key })
+    const url = await getSignedUrl(s3Client, command, { expiresIn: IMAGE_PRESIGN_EXPIRES })
+    return res.json({ success: true, url, key, expiresIn: IMAGE_PRESIGN_EXPIRES })
+  } catch (err) {
+    next(err)
+  }
+})
 
 // Public S3 proxy — streams private S3 objects through the backend so the
 // browser never needs direct S3 public-read. Works for both legacy

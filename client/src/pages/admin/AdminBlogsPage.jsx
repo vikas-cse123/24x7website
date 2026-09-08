@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Plus, Pencil, Trash2, Globe, Ban, Star, Search, MoreVertical } from 'lucide-react'
+import { Plus, Pencil, Trash2, Globe, Ban, Search, MoreVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
@@ -50,7 +50,7 @@ function ConfirmDialog({ open, onOpenChange, title, body, confirmLabel, danger =
   )
 }
 
-function RowMenu({ blog, onFeature, onPublish, onDelete }) {
+function RowMenu({ blog, onPublish, onDelete }) {
   const [open, setOpen] = React.useState(false)
   const ref = React.useRef(null)
   React.useEffect(()=>{ const h=e=>{ if(ref.current && !ref.current.contains(e.target)) setOpen(false)}; document.addEventListener('mousedown',h); return ()=>document.removeEventListener('mousedown',h)},[])
@@ -61,7 +61,6 @@ function RowMenu({ blog, onFeature, onPublish, onDelete }) {
       </button>
       {open && (
         <div className="absolute right-0 top-8 z-20 w-44 rounded-lg border border-slate-200 bg-white py-1 shadow-lg text-xs">
-          <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-slate-50" onClick={()=>{ setOpen(false); onFeature()}}>{blog.featured ? 'Remove Featured' : 'Mark Featured'}</button>
           <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-slate-50" onClick={()=>{ setOpen(false); onPublish()}}>{blog.published ? 'Unpublish' : 'Publish'}</button>
           <Link to={`/admin/blogs/${blog.id}/edit`} className="flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50" onClick={()=>setOpen(false)}>Edit</Link>
           <div className="my-1 border-t border-slate-100" />
@@ -141,7 +140,7 @@ export function AdminBlogsPage() {
         <span className="font-medium text-slate-700">Blogs</span>
       </div>
 
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:px-5">
+      <div className="flex flex-wrap items-start justify-between gap-4 rounded-lg border border-slate-200 bg-white px-4 py-4 sm:px-5">
         <div>
           <h1 className="text-xl font-bold tracking-tight sm:text-[22px]">Blogs</h1>
           <p className="mt-1 text-xs text-slate-500 sm:text-[13px]">Write, publish and feature travel stories.</p>
@@ -188,7 +187,6 @@ export function AdminBlogsPage() {
               <table className="w-full text-xs">
                 <thead className="sticky top-0 z-10 bg-slate-50">
                   <tr className="border-b border-slate-200 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    <th className="w-8 px-2 py-2"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="h-3.5 w-3.5 rounded border-slate-300" /></th>
                     <th className="px-2 py-2 min-w-[240px]">Title</th>
                     <th className="px-2 py-2">Category</th>
                     <th className="px-2 py-2">Destination</th>
@@ -200,8 +198,7 @@ export function AdminBlogsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {items.map(b=>(
-                    <tr key={b.id} className={`h-[52px] hover:bg-slate-50 ${selected.has(b.id) ? 'bg-amber-50/40' : ''}`}>
-                      <td className="px-2 py-2"><input type="checkbox" checked={selected.has(b.id)} onChange={()=>toggleOne(b.id)} className="h-3.5 w-3.5 rounded border-slate-300" /></td>
+                    <tr key={b.id} className="h-[52px] hover:bg-slate-50">
                       <td className="px-2 py-2">
                         <div className="flex items-center gap-2">
                           <DestinationImage src={b.coverImage?.url || b.coverImage?.secureUrl} alt={b.title} className="h-9 w-14 shrink-0 rounded border border-slate-200 object-cover" />
@@ -220,13 +217,10 @@ export function AdminBlogsPage() {
                       <td className="px-2 py-2 whitespace-nowrap text-xs text-slate-700">{b.author || '—'}</td>
                       <td className="px-2 py-2 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button type="button" onClick={()=> setFeatureTarget(b)} className={`grid h-7 w-7 place-items-center rounded-md ${b.featured ? 'text-amber-500' : 'text-slate-400 hover:bg-slate-100'}`} title={b.featured ? 'Featured' : 'Not featured'}>
-                            <Star className={`h-3.5 w-3.5 ${b.featured ? 'fill-amber-400' : ''}`} />
-                          </button>
                           <button type="button" onClick={()=> publishMutation.mutate({ id:b.id, published:b.published })} className="grid h-7 w-7 place-items-center rounded-md text-slate-500 hover:bg-slate-100" title={b.published ? 'Unpublish' : 'Publish'}>
                             {b.published ? <Ban className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
                           </button>
-                          <RowMenu blog={b} onFeature={()=> setFeatureTarget(b)} onPublish={()=> publishMutation.mutate({ id:b.id, published:b.published })} onDelete={()=> setDeleteTarget(b)} />
+                          <RowMenu blog={b} onPublish={()=> publishMutation.mutate({ id:b.id, published:b.published })} onDelete={()=> setDeleteTarget(b)} />
                         </div>
                       </td>
                     </tr>

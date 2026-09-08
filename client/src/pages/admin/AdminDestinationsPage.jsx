@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Plus, Pencil, Trash2, ExternalLink, Globe, Ban, Search, MoreVertical, Copy } from 'lucide-react'
+import { Plus, Pencil, Trash2, ExternalLink, Globe, Ban, Search, MoreVertical, Copy, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -150,13 +150,14 @@ export function AdminDestinationsPage() {
   }, [statusFilter, categoryFilter])
 
   const { data, isLoading, isError, error, isFetching } = useQuery({
-    queryKey: ['admin', 'destinations', { page, limit: PAGE_SIZE, search: search || undefined, status: statusFilter }],
+    queryKey: ['admin', 'destinations', { page, limit: PAGE_SIZE, search: search || undefined, status: statusFilter, category: categoryFilter }],
     queryFn: () =>
       adminDestinationApi.list({
         page,
         limit: PAGE_SIZE,
         ...(search ? { search } : {}),
         ...(statusFilter !== 'all' ? { published: statusFilter === 'published' ? 'true' : 'false' } : {}),
+        ...(categoryFilter !== 'all' ? { category: categoryFilter } : {}),
       }),
     placeholderData: (prev) => prev,
   })
@@ -186,17 +187,7 @@ export function AdminDestinationsPage() {
     onError: (err) => toast.error(err.message || 'Delete failed'),
   })
 
-  const filtered = React.useMemo(() => {
-    if (!list?.items) return []
-    // search and status are server-side; only category is client-side (handles array for Domestic & Weekend)
-    return list.items.filter((d) => {
-      if (categoryFilter !== 'all') {
-        const cats = Array.isArray(d.category) ? d.category : d.category ? [d.category] : []
-        if (!cats.includes(categoryFilter)) return false
-      }
-      return true
-    })
-  }, [list, categoryFilter])
+  const filtered = list?.items || []
 
   const allSelected = filtered.length > 0 && filtered.every((d) => selected.has(d.id))
   const toggleAll = () => {
@@ -245,7 +236,7 @@ export function AdminDestinationsPage() {
         <span className="font-medium text-slate-700">Destinations</span>
       </div>
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:px-5">
+      <div className="flex flex-wrap items-start justify-between gap-4 rounded-lg border border-slate-200 bg-white px-4 py-4 sm:px-5">
         <div className="flex items-center gap-3">
           <div>
             <h1 className="text-xl font-bold tracking-tight sm:text-[22px]">Destinations</h1>
@@ -266,26 +257,7 @@ export function AdminDestinationsPage() {
       </div>
 
       {/* Search + Filters — single horizontal toolbar on desktop */}
-      {selected.size > 0 ? (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-amber-50 px-3 py-2 text-xs">
-          <span className="font-semibold text-slate-900">{selected.size} selected</span>
-          <div className="ml-2 flex gap-1.5">
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={bulkPublish}>
-              Publish
-            </Button>
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={bulkUnpublish}>
-              Unpublish
-            </Button>
-            <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={bulkDelete}>
-              Delete
-            </Button>
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelected(new Set())}>
-              Clear
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <div className="relative flex-1 min-w-[240px]">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
             <Input
@@ -316,7 +288,6 @@ export function AdminDestinationsPage() {
             <option value="other">Other</option>
           </Select>
         </div>
-      )}
 
       {isError && data && (
         <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
@@ -352,9 +323,6 @@ export function AdminDestinationsPage() {
               <table className="w-full text-xs">
                 <thead className="sticky top-0 bg-slate-50">
                   <tr className="border-b border-slate-200 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    <th className="w-8 px-2 py-2">
-                      <input type="checkbox" checked={allSelected} onChange={toggleAll} className="h-3.5 w-3.5 rounded border-slate-300" />
-                    </th>
                     <th className="w-10 px-2 py-2"></th>
                     <th className="px-2 py-2">Destination</th>
                     <th className="px-2 py-2">Country</th>
@@ -367,10 +335,7 @@ export function AdminDestinationsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filtered.map((d) => (
-                    <tr key={d.id} className={`hover:bg-slate-50 ${selected.has(d.id) ? 'bg-amber-50/60' : ''}`}>
-                      <td className="px-2 py-2">
-                        <input type="checkbox" checked={selected.has(d.id)} onChange={() => toggleOne(d.id)} className="h-3.5 w-3.5 rounded border-slate-300" />
-                      </td>
+                    <tr key={d.id} className="hover:bg-slate-50">
                       <td className="px-2 py-2">
                         <DestinationImage src={d.homepageImage?.url || d.heroImage?.url} alt={d.name} className="h-8 w-12 shrink-0 rounded border border-slate-200" />
                       </td>
@@ -416,20 +381,46 @@ export function AdminDestinationsPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-            <span>
-              Showing {filtered.length} of {list.total} {search || statusFilter !== 'all' || categoryFilter !== 'all' ? '(filtered)' : ''} {list.totalPages > 1 ? `• Page ${list.page}/${list.totalPages}` : ''}
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+            {(() => {
+              const isFiltered = search || statusFilter !== 'all' || categoryFilter !== 'all'
+              const start = (list.page - 1) * PAGE_SIZE + 1
+              const end = Math.min(list.page * PAGE_SIZE, list.total)
+              return <span className="text-slate-600">Showing {start}–{end} of {list.total}{isFiltered ? ' filtered' : ''}</span>
+            })()}
             {list.totalPages > 1 && (
               <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" className="h-7 text-xs" disabled={list.page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-                  Previous
+                <Button variant="outline" size="icon" className="h-7 w-7" disabled={list.page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} aria-label="Previous page">
+                  <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="px-2 text-xs">
-                  {list.page} / {list.totalPages}
-                </span>
-                <Button variant="outline" size="sm" className="h-7 text-xs" disabled={list.page >= list.totalPages} onClick={() => setPage((p) => Math.min(list.totalPages, p + 1))}>
-                  Next
+                {(() => {
+                  const pages = []
+                  const total = list.totalPages
+                  const current = list.page
+                  const btn = (p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`grid h-7 min-w-7 place-items-center rounded px-2 text-xs ${p === current ? 'bg-slate-900 text-white' : 'border border-slate-200 bg-white hover:bg-slate-50'}`}
+                    >
+                      {p}
+                    </button>
+                  )
+                  if (total <= 7) {
+                    for (let p = 1; p <= total; p++) pages.push(btn(p))
+                  } else {
+                    pages.push(btn(1))
+                    if (current > 3) pages.push(<span key="e1" className="px-1 text-slate-400">…</span>)
+                    const start = Math.max(2, Math.min(current - 1, total - 4))
+                    const end = Math.min(total - 1, Math.max(current + 1, 4))
+                    for (let p = start; p <= end; p++) pages.push(btn(p))
+                    if (current < total - 2) pages.push(<span key="e2" className="px-1 text-slate-400">…</span>)
+                    pages.push(btn(total))
+                  }
+                  return pages
+                })()}
+                <Button variant="outline" size="icon" className="h-7 w-7" disabled={list.page >= list.totalPages} onClick={() => setPage((p) => Math.min(list.totalPages, p + 1))} aria-label="Next page">
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             )}

@@ -87,7 +87,7 @@ function DestinationSection({ title, columns, category, first }) {
         </div>
       </section>
       {/* Mobile: accordion */}
-      <section className={`sm:hidden ${first ? '' : 'mt-2'}`}>
+      <section className="sm:hidden">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}

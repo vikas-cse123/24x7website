@@ -173,7 +173,7 @@ export function AdminTripFormPage({ mode }) {
         <Link to="/admin/trips" className="hover:text-slate-700">Trips</Link>
         {isEdit && trip?.name && (<><span className="text-slate-400">›</span><span className="truncate font-medium text-slate-700">{trip.name}</span></>)}
       </div>
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-white px-3 py-3 sm:px-4">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3 sm:px-4">
         <div className="flex min-w-0 gap-3">
           <div className="hidden h-9 w-9 shrink-0 place-items-center rounded-md border border-amber-200 bg-amber-50 text-amber-700 sm:grid">
             <span className="text-xs font-bold">T</span>

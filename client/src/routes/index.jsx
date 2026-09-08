@@ -41,20 +41,11 @@ const AdminDestinationsPage = React.lazy(() => import('@/pages/admin/AdminDestin
 const AdminDestinationFormPage = React.lazy(() => import('@/pages/admin/AdminDestinationFormPage').then(m => ({ default: m.AdminDestinationFormPage })))
 const AdminTripsPage = React.lazy(() => import('@/pages/admin/AdminTripsPage').then(m => ({ default: m.AdminTripsPage })))
 const AdminTripFormPage = React.lazy(() => import('@/pages/admin/AdminTripFormPage').then(m => ({ default: m.AdminTripFormPage })))
-const AdminTripBatchesPage = React.lazy(() => import('@/pages/admin/AdminTripBatchesPage').then(m => ({ default: m.AdminTripBatchesPage })))
-const AdminTripBatchFormPage = React.lazy(() => import('@/pages/admin/AdminTripBatchFormPage').then(m => ({ default: m.AdminTripBatchFormPage })))
-const AdminBookingsPage = React.lazy(() => import('@/pages/admin/AdminBookingsPage').then(m => ({ default: m.AdminBookingsPage })))
-const AdminBookingDetailPage = React.lazy(() => import('@/pages/admin/AdminBookingDetailPage').then(m => ({ default: m.AdminBookingDetailPage })))
-const AdminReviewsPage = React.lazy(() => import('@/pages/admin/AdminReviewsPage').then(m => ({ default: m.AdminReviewsPage })))
 const AdminBlogsPage = React.lazy(() => import('@/pages/admin/AdminBlogsPage').then(m => ({ default: m.AdminBlogsPage })))
 const AdminBlogFormPage = React.lazy(() => import('@/pages/admin/AdminBlogFormPage').then(m => ({ default: m.AdminBlogFormPage })))
-const AdminMediaPage = React.lazy(() => import('@/pages/admin/AdminMediaPage').then(m => ({ default: m.AdminMediaPage })))
-const AdminFaqsPage = React.lazy(() => import('@/pages/admin/AdminFaqsPage').then(m => ({ default: m.AdminFaqsPage })))
-const AdminFaqFormPage = React.lazy(() => import('@/pages/admin/AdminFaqFormPage').then(m => ({ default: m.AdminFaqFormPage })))
 const AdminEnquiriesPage = React.lazy(() => import('@/pages/admin/AdminEnquiriesPage').then(m => ({ default: m.AdminEnquiriesPage })))
 const AdminSettingsPage = React.lazy(() => import('@/pages/admin/AdminSettingsPage').then(m => ({ default: m.AdminSettingsPage })))
 const AdminUsersPage = React.lazy(() => import('@/pages/admin/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })))
-const AdminUserDetailPage = React.lazy(() => import('@/pages/admin/AdminUserDetailPage').then(m => ({ default: m.AdminUserDetailPage })))
 
 function RouteFallback() {
   return (
@@ -210,24 +201,11 @@ export function AppRoutes() {
           <Route path="trips" element={<AdminTripsPage />} />
           <Route path="trips/new" element={<AdminTripFormPage mode="create" />} />
           <Route path="trips/:id/edit" element={<AdminTripFormPage mode="edit" />} />
-          <Route path="trip-batches" element={<AdminTripBatchesPage />} />
-          <Route path="trip-batches/new" element={<AdminTripBatchFormPage mode="create" />} />
-          <Route path="trip-batches/:id/edit" element={<AdminTripBatchFormPage mode="edit" />} />
-          <Route path="bookings" element={<AdminBookingsPage />} />
-          <Route path="bookings/:id" element={<AdminBookingDetailPage />} />
           <Route path="customers" element={<AdminUsersPage />} />
           <Route path="enquiries" element={<AdminEnquiriesPage />} />
-          <Route path="reviews" element={<AdminReviewsPage />} />
           <Route path="blogs" element={<AdminBlogsPage />} />
           <Route path="blogs/new" element={<AdminBlogFormPage mode="create" />} />
           <Route path="blogs/:id/edit" element={<AdminBlogFormPage mode="edit" />} />
-          <Route path="faqs" element={<AdminFaqsPage />} />
-          <Route path="faqs/new" element={<AdminFaqFormPage mode="create" />} />
-          <Route path="faqs/:id/edit" element={<AdminFaqFormPage mode="edit" />} />
-          <Route path="coupons" element={adminPlaceholder('Coupons')} />
-          <Route path="media" element={<AdminMediaPage />} />
-          <Route path="users" element={<AdminUsersPage />} />
-          <Route path="users/:id" element={<AdminUserDetailPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
           <Route path="*" element={adminPlaceholder('Not found')} />
         </Route>

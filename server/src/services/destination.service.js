@@ -38,9 +38,10 @@ export async function getPublicBySlug(slug) {
 
 // --- Admin ----------------------------------------------------------------
 
-export async function listAdmin({ page = 1, limit = 20, search, published }) {
+export async function listAdmin({ page = 1, limit = 20, search, published, category }) {
   const filter = {}
   if (published !== undefined) filter.published = published
+  if (category) filter.category = category
   if (search) {
     const rx = new RegExp(escapeRegex(search), 'i')
     filter.$or = [{ name: rx }, { country: rx }]

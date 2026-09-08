@@ -2,6 +2,7 @@ import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { StarRating } from '@/components/reviews/StarRating'
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock'
 
 const PREVIEW_CHARS = 200
 
@@ -25,11 +26,10 @@ function ReviewModal({ review, onClose }) {
       if (e.key === 'Escape') onClose()
     }
     document.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    lockBodyScroll()
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
+      unlockBodyScroll()
     }
   }, [review, onClose])
 

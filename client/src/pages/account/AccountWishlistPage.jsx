@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Heart, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { wishlistApi } from '@/services/account'
@@ -18,9 +18,8 @@ export function AccountWishlistPage(){
   if(isError) return <Card className="p-6 text-sm text-destructive">Could not load wishlist</Card>
   if(!items.length) return (
     <Card className="p-12 text-center">
-      <Heart className="mx-auto h-10 w-10 text-muted-foreground/30" />
       <p className="mt-3 font-medium">Your wishlist is empty</p>
-      <p className="text-sm text-muted-foreground">Tap the heart on any trip or destination to save it here.</p>
+      <p className="text-sm text-muted-foreground">No saved trips or destinations yet.</p>
       <div className="mt-4 flex justify-center gap-3"><Link to="/trips"><Button>Explore Trips</Button></Link><Link to="/destinations"><Button variant="outline">Destinations</Button></Link></div>
     </Card>
   )

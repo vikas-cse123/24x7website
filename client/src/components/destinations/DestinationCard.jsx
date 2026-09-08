@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { MapPin, IndianRupee, ArrowRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
-import { WishlistButton } from '@/components/wishlist/WishlistButton'
 
 // Reusable public destination card.
 export function DestinationCard({ destination }) {
@@ -16,7 +15,6 @@ export function DestinationCard({ destination }) {
           alt={destination.heroImage?.alt || destination.homepageImage?.alt || destination.name}
           className="h-full w-full"
         />
-        <WishlistButton type="destination" id={destination.id || destination._id} className="absolute right-2 top-2" size={28} />
         {destination.featured && (
           <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground">
             Featured

@@ -33,6 +33,24 @@ export function formatDateLong(iso) {
   return `${p.d} ${MONTHS_SHORT[p.m]} ${p.y}`
 }
 
+export function formatDateTime(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) {
+    const fallback = formatDateLong(iso)
+    return fallback || ''
+  }
+  const day = d.getDate()
+  const month = MONTHS_SHORT[d.getMonth()]
+  const year = d.getFullYear()
+  let hours = d.getHours()
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  const ampm = hours >= 12 ? 'PM' : 'AM'
+  hours = hours % 12 || 12
+  const hoursStr = String(hours).padStart(2, '0')
+  return `${hoursStr}:${minutes} ${ampm}, ${day} ${month} ${year}`
+}
+
 // Whole nights between two date-only values (return - departure).
 export function nightsBetween(fromIso, toIso) {
   const a = parseParts(toDateOnly(fromIso))

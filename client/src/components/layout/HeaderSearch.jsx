@@ -6,9 +6,18 @@ import { cn } from '@/lib/utils'
 // Travel search input wired to the shared trip discovery system: submitting
 // navigates to /trips?search=… (same as the hero search). `onSearch` may be
 // provided by a caller to override the default navigation.
-export function HeaderSearch({ onSearch, className, inputClassName }) {
+export function HeaderSearch({ onSearch, className, inputClassName, autoFocus }) {
   const [query, setQuery] = React.useState('')
+  const inputRef = React.useRef(null)
   const navigate = useNavigate()
+
+  React.useEffect(() => {
+    if (!autoFocus) return
+    const id = requestAnimationFrame(() => {
+      inputRef.current?.focus()
+    })
+    return () => cancelAnimationFrame(id)
+  }, [autoFocus])
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -31,6 +40,7 @@ export function HeaderSearch({ onSearch, className, inputClassName }) {
         className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-600"
       />
       <input
+        ref={inputRef}
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}

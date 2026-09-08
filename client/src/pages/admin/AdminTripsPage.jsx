@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Plus, Pencil, Trash2, ExternalLink, Globe, Ban } from 'lucide-react'
+import { Plus, Pencil, Trash2, ExternalLink, Globe, Ban, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -106,7 +106,7 @@ export function AdminTripsPage() {
         <span className="text-slate-400">›</span>
         <span className="font-medium text-slate-700">Trips</span>
       </div>
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:px-5">
+      <div className="flex flex-wrap items-start justify-between gap-4 rounded-lg border border-slate-200 bg-white px-4 py-4 sm:px-5">
         <div className="flex items-center gap-3">
           <div>
             <h1 className="text-xl font-bold tracking-tight sm:text-[22px]">Trips</h1>
@@ -207,20 +207,46 @@ export function AdminTripsPage() {
               </table>
             </div>
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-            <span>
-              Showing {list.items.length} of {list.total} {search ? `(filtered)` : ''} {list.totalPages > 1 ? `• Page ${list.page}/${list.totalPages}` : ''}
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+            {(() => {
+              const isFiltered = !!search
+              const start = (list.page - 1) * PAGE_SIZE + 1
+              const end = Math.min(list.page * PAGE_SIZE, list.total)
+              return <span className="text-slate-600">Showing {start}–{end} of {list.total}{isFiltered ? ' filtered' : ''}</span>
+            })()}
             {list.totalPages > 1 && (
               <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" className="h-7 text-xs" disabled={list.page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-                  Previous
+                <Button variant="outline" size="icon" className="h-7 w-7" disabled={list.page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} aria-label="Previous page">
+                  <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="px-2 text-xs">
-                  {list.page} / {list.totalPages}
-                </span>
-                <Button variant="outline" size="sm" className="h-7 text-xs" disabled={list.page >= list.totalPages} onClick={() => setPage((p) => Math.min(list.totalPages, p + 1))}>
-                  Next
+                {(() => {
+                  const pages = []
+                  const total = list.totalPages
+                  const current = list.page
+                  const btn = (p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`grid h-7 min-w-7 place-items-center rounded px-2 text-xs ${p === current ? 'bg-slate-900 text-white' : 'border border-slate-200 bg-white hover:bg-slate-50'}`}
+                    >
+                      {p}
+                    </button>
+                  )
+                  if (total <= 7) {
+                    for (let p = 1; p <= total; p++) pages.push(btn(p))
+                  } else {
+                    pages.push(btn(1))
+                    if (current > 3) pages.push(<span key="e1" className="px-1 text-slate-400">…</span>)
+                    const start = Math.max(2, Math.min(current - 1, total - 4))
+                    const end = Math.min(total - 1, Math.max(current + 1, 4))
+                    for (let p = start; p <= end; p++) pages.push(btn(p))
+                    if (current < total - 2) pages.push(<span key="e2" className="px-1 text-slate-400">…</span>)
+                    pages.push(btn(total))
+                  }
+                  return pages
+                })()}
+                <Button variant="outline" size="icon" className="h-7 w-7" disabled={list.page >= list.totalPages} onClick={() => setPage((p) => Math.min(list.totalPages, p + 1))} aria-label="Next page">
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             )}

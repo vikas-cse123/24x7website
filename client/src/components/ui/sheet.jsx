@@ -2,6 +2,7 @@ import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock'
 
 // Accessible slide-in panel (used for the mobile navigation drawer).
 // Mirrors the Dialog primitive's behaviour: backdrop, Esc-to-close, scroll lock,
@@ -15,11 +16,10 @@ export function Sheet({ open, onOpenChange, side = 'right', children }) {
     }
     document.addEventListener('keydown', onKeyDown)
 
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    lockBodyScroll()
     return () => {
       document.removeEventListener('keydown', onKeyDown)
-      document.body.style.overflow = prevOverflow
+      unlockBodyScroll()
     }
   }, [open, onOpenChange])
 

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Menu, LogOut, User as UserIcon, ChevronRight } from 'lucide-react'
+import { Menu, LogOut, UserRound, Phone, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import { ADMIN_NAV } from '@/lib/adminNav'
@@ -48,19 +48,31 @@ export function AdminHeader({ onMenuClick }) {
         <span className="truncate text-sm font-semibold tracking-tight">{pageLabel}</span>
       </div>
 
-      <div className="ml-auto flex items-center gap-2">
-        <div className="hidden items-center gap-2 sm:flex">
-          <div className="text-right leading-none">
-            <p className="text-xs font-semibold">{formatPhone(user?.mobile, user?.countryCode)}</p>
-            <p className="text-[11px] capitalize text-slate-500">{user?.role}</p>
-          </div>
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-white">
-            <UserIcon className="h-3.5 w-3.5" />
+      <div className="ml-auto flex items-center gap-3 sm:gap-4">
+        <a
+          href={`tel:${(user?.mobile || '').replace(/\D/g, '')}`}
+          className="hidden items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 sm:inline-flex"
+        >
+          <Phone className="h-3.5 w-3.5 text-slate-400" />
+          <span>{formatPhone(user?.mobile, user?.countryCode) || '—'}</span>
+        </a>
+        <div className="hidden items-center gap-2.5 sm:flex">
+          <span className="grid h-8 w-8 place-items-center rounded-full border border-slate-200 bg-slate-50 text-slate-600">
+            <UserRound className="h-4 w-4" />
           </span>
+          <div className="leading-none">
+            <p className="text-xs font-semibold capitalize text-slate-900">{user?.role || 'Admin'}</p>
+            <p className="text-[11px] text-slate-500">Admin</p>
+          </div>
         </div>
-        <Button variant="outline" size="sm" onClick={handleLogout} className="h-8 rounded-lg text-xs">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleLogout}
+          className="h-8 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+        >
           <LogOut className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Logout</span>
+          Logout
         </Button>
       </div>
     </header>

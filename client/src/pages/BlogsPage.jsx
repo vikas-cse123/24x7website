@@ -131,7 +131,7 @@ export function BlogsListing({ destinationSlug = null, heading, intro }) {
       <div
         role="group"
         aria-label="Filter blogs by category"
-        className="mt-5 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="mt-5 -mx-1 flex gap-2 overflow-x-auto overscroll-x-contain px-1 pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         <button
           type="button"

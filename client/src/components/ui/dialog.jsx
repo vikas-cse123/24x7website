@@ -2,6 +2,7 @@ import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock'
 
 export function Dialog({ open, onOpenChange, children }) {
   React.useEffect(() => {
@@ -12,11 +13,10 @@ export function Dialog({ open, onOpenChange, children }) {
     }
     document.addEventListener('keydown', onKeyDown)
 
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    lockBodyScroll()
     return () => {
       document.removeEventListener('keydown', onKeyDown)
-      document.body.style.overflow = prevOverflow
+      unlockBodyScroll()
     }
   }, [open, onOpenChange])
 

@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { resolveImageSrc } from '@/lib/media'
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock'
 
 // Shared fullscreen image lightbox. Keyboard accessible (Esc/arrow keys),
 // scroll-locks the page, shows a position counter. Used by the trip gallery
@@ -14,11 +15,10 @@ export function Lightbox({ images, index, onClose, onPrev, onNext }) {
       if (e.key === 'ArrowRight') onNext()
     }
     document.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    lockBodyScroll()
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
+      unlockBodyScroll()
     }
   }, [onClose, onPrev, onNext])
 

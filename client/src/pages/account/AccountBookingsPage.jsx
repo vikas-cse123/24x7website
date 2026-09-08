@@ -114,7 +114,7 @@ export function AccountBookingsPage() {
       <div
         role="group"
         aria-label="Filter bookings by status"
-        className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="-mx-1 flex gap-2 overflow-x-auto overscroll-x-contain px-1 pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {STATUS_FILTERS.map((f) => (
           <button

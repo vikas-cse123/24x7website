@@ -26,6 +26,7 @@ export function PromoBannerCarousel() {
   const [dragX, setDragX] = React.useState(null) // px offset while dragging
   const [paused, setPaused] = React.useState(false)
   const pointerStart = React.useRef(null)
+  const gestureLock = React.useRef(null) // null | 'h' | 'v'
 
   const [hidden, setHidden] = React.useState(() =>
     typeof document !== 'undefined' ? document.hidden : false
@@ -45,23 +46,39 @@ export function PromoBannerCarousel() {
   }, [paused, dragX, count, hidden])
 
   function onPointerDown(e) {
-    pointerStart.current = e.clientX
-    e.currentTarget.setPointerCapture(e.pointerId)
+    pointerStart.current = { x: e.clientX, y: e.clientY, id: e.pointerId }
+    gestureLock.current = null
   }
 
   function onPointerMove(e) {
-    if (pointerStart.current === null) return
-    setDragX(e.clientX - pointerStart.current)
+    if (!pointerStart.current) return
+    const dx = e.clientX - pointerStart.current.x
+    const dy = e.clientY - pointerStart.current.y
+    if (!gestureLock.current) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return
+      gestureLock.current = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v'
+      if (gestureLock.current === 'h') {
+        try { e.currentTarget.setPointerCapture(pointerStart.current.id) } catch {}
+      } else {
+        return
+      }
+    }
+    if (gestureLock.current === 'v') return
+    setDragX(dx)
   }
 
   function onPointerUp(e) {
-    if (pointerStart.current === null) return
-    const dx = e.clientX - pointerStart.current
+    if (!pointerStart.current) return
+    const dx = e.clientX - pointerStart.current.x
+    const wasHorizontal = gestureLock.current === 'h'
+    const pid = pointerStart.current.id
     pointerStart.current = null
+    gestureLock.current = null
     setDragX(null)
+    try { e.currentTarget.releasePointerCapture(pid) } catch {}
+    if (!wasHorizontal) return
     const threshold = Math.max(60, e.currentTarget.clientWidth * 0.08)
     if (Math.abs(dx) >= threshold) {
-      // Manual navigation stays within the first/last banner (clamps).
       const next = dx < 0 ? index + 1 : index - 1
       setIndex(Math.min(count - 1, Math.max(0, next)))
     }

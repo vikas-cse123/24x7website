@@ -11,22 +11,38 @@ export function TripDestinationTabs({ destinations = [], value = 'all', onChange
   const hasDraggedRef = React.useRef(false)
   const [dragging, setDragging] = React.useState(false)
 
+  const startYRef = React.useRef(0)
+  const lockRef = React.useRef(null)
+
   function onPointerDown(e) {
-    if (e.pointerType !== 'mouse' || e.button !== 0) return
+    if (e.button !== 0) return
     hasDraggedRef.current = false
+    lockRef.current = null
+    startYRef.current = e.clientY
     dragRef.current = { startX: e.clientX, startScrollLeft: scrollRef.current?.scrollLeft ?? 0 }
-    setDragging(true)
-    try { e.currentTarget.setPointerCapture(e.pointerId) } catch {}
   }
   function onPointerMove(e) {
     if (!dragRef.current || !scrollRef.current) return
+    const walkX = e.clientX - dragRef.current.startX
+    const walkY = e.clientY - startYRef.current
+    if (!lockRef.current) {
+      if (Math.abs(walkX) < 6 && Math.abs(walkY) < 6) return
+      lockRef.current = Math.abs(walkX) > Math.abs(walkY) ? 'h' : 'v'
+      if (lockRef.current === 'h') {
+        setDragging(true)
+        try { e.currentTarget.setPointerCapture(e.pointerId) } catch {}
+      } else {
+        return
+      }
+    }
+    if (lockRef.current === 'v') return
     if (e.cancelable) e.preventDefault()
-    const walk = e.clientX - dragRef.current.startX
-    if (Math.abs(walk) > 5) hasDraggedRef.current = true
-    scrollRef.current.scrollLeft = dragRef.current.startScrollLeft - walk
+    if (Math.abs(walkX) > 5) hasDraggedRef.current = true
+    scrollRef.current.scrollLeft = dragRef.current.startScrollLeft - walkX
   }
   function onPointerUp(e) {
     dragRef.current = null
+    lockRef.current = null
     setDragging(false)
     try { e.currentTarget?.releasePointerCapture?.(e.pointerId) } catch {}
     if (hasDraggedRef.current) setTimeout(() => { hasDraggedRef.current = false }, 0)
@@ -45,9 +61,9 @@ export function TripDestinationTabs({ destinations = [], value = 'all', onChange
         if (hasDraggedRef.current) { e.preventDefault(); e.stopPropagation() }
       }}
       className={cn(
-        '-mx-1 flex flex-nowrap gap-2 overflow-x-auto overflow-y-hidden scroll-smooth px-1 pb-1.5 touch-pan-x overscroll-x-contain',
+        '-mx-1 flex flex-nowrap gap-2 overflow-x-auto overflow-y-hidden scroll-smooth px-1 pb-1.5 touch-pan-y overscroll-x-contain',
         '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
-        dragging ? 'cursor-grabbing select-none' : 'cursor-grab select-none'
+        dragging ? 'cursor-grabbing select-none' : 'cursor-grab'
       )}
     >
       {items.map((d) => {

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Logo } from '@/components/brand/Logo'
@@ -19,6 +19,8 @@ function NavIcon({ icon }) {
 
 function MobileNavItem({ item, onNavigate }) {
   const [expanded, setExpanded] = React.useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
 
   if (item.children) {
     return (
@@ -41,21 +43,34 @@ function MobileNavItem({ item, onNavigate }) {
         </button>
         {expanded && (
           <div className="ml-3 border-l border-border pl-3">
-            {item.children.map((child) => (
-              <Link
-                key={child.href}
-                to={child.href}
-                onClick={onNavigate}
-                className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                {child.icon && (
-                  <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center text-[15px] leading-none">
-                    <NavIcon icon={child.icon} />
-                  </span>
-                )}
-                {child.label}
-              </Link>
-            ))}
+            {item.children.map((child) => {
+              const isReviews = child.href === '/#reviews'
+              const handleClick = (e) => {
+                if (isReviews) {
+                  e.preventDefault()
+                  onNavigate()
+                  useUIStore.getState().bumpReviewsNavTick()
+                  navigate('/#reviews', { state: { reviewsNavTick: Date.now() } })
+                  return
+                }
+                onNavigate()
+              }
+              return (
+                <Link
+                  key={child.href}
+                  to={child.href}
+                  onClick={handleClick}
+                  className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {child.icon && (
+                    <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center text-[15px] leading-none">
+                      <NavIcon icon={child.icon} />
+                    </span>
+                  )}
+                  {child.label}
+                </Link>
+              )
+            })}
           </div>
         )}
       </div>

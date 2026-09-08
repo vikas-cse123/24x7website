@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Container } from '@/components/ui/container'
 import { Volume2, VolumeX, X, Send } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock'
 
 // "Vibe with Us" — horizontal strip of muted, autoplaying traveller videos,
 // shown directly below "Book with Confidence". Order follows the numbered
@@ -10,7 +11,10 @@ import { cn } from '@/lib/utils'
 // (hold + move horizontally); touch devices scroll natively. Each video has
 // its own mute/unmute toggle. Clicking a video opens the story-style
 // lightbox player (mute, share, tour-package CTA) like the reference design.
-import { VIDEOS } from '@/lib/vibeVideos'
+// S3 bucket remains private — Node only signs (GET /api/media/presign-vibe), browser fetches S3 directly (Range 206).
+// Lazy: presign only when card near visible or lightbox opened; no spinner, no layout shift, fallback to /api/media proxy.
+import { VIDEOS, vibeKeyForIndex, vibeFallbackForIndex } from '@/lib/vibeVideos'
+import { fetchVibePresignedUrl, getCachedVibeUrl } from '@/lib/vibePresign'
 
 // Per-video tour CTA shown at the bottom of the lightbox. Edit titles,
 // prices and destination slugs here (link goes to /trips?destination=<slug>).
@@ -29,11 +33,38 @@ export function VibeWithUs() {
   const sectionRef = React.useRef(null)
   const trackRef = React.useRef(null)
   const videoRefs = React.useRef([])
+  const cardRefs = React.useRef([])
   const dragRef = React.useRef(null)
   const hasDraggedRef = React.useRef(false)
   const [dragging, setDragging] = React.useState(false)
   const [muted, setMuted] = React.useState(() => VIDEOS.map(() => true))
   const [visible, setVisible] = React.useState(false)
+  // Lazy presigned S3 URLs per index — null = not yet fetched; string = presigned or fallback (only on failure)
+  const [vibeSrcs, setVibeSrcs] = React.useState(() => VIDEOS.map(() => null))
+
+  const ensureVibeSrc = React.useCallback((i) => {
+    if (i == null || i < 0 || i >= VIDEOS.length) return
+    const key = vibeKeyForIndex(i)
+    const fallback = vibeFallbackForIndex(i)
+    const cached = getCachedVibeUrl(key)
+    if (cached) {
+      setVibeSrcs((prev) => {
+        if (prev[i]) return prev
+        const next = [...prev]
+        next[i] = cached
+        return next
+      })
+      return
+    }
+    void fetchVibePresignedUrl(key, fallback).then((url) => {
+      setVibeSrcs((prev) => {
+        if (prev[i]) return prev
+        const next = [...prev]
+        next[i] = url
+        return next
+      })
+    })
+  }, [])
 
   React.useEffect(() => {
     const el = sectionRef.current
@@ -49,9 +80,34 @@ export function VibeWithUs() {
     return () => io.disconnect()
   }, [])
 
+  // Lazy presign: fetch only when card near visible (existing carousel visibility mechanism extended)
   React.useEffect(() => {
-    videoRefs.current.forEach((v) => {
+    const root = trackRef.current
+    if (!root || cardRefs.current.length === 0) return undefined
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const idx = Number(entry.target.dataset.vibeIndex)
+            if (!Number.isNaN(idx)) {
+              ensureVibeSrc(idx)
+              io.unobserve(entry.target)
+            }
+          }
+        })
+      },
+      { root, rootMargin: '300px' }
+    )
+    cardRefs.current.forEach((el) => {
+      if (el) io.observe(el)
+    })
+    return () => io.disconnect()
+  }, [ensureVibeSrc])
+
+  React.useEffect(() => {
+    videoRefs.current.forEach((v, idx) => {
       if (!v) return
+      if (!vibeSrcs[idx]) return
       if (visible) {
         const p = v.play()
         if (p && typeof p.catch === 'function') p.catch(() => {})
@@ -59,7 +115,20 @@ export function VibeWithUs() {
         v.pause()
       }
     })
-  }, [visible])
+  }, [visible, vibeSrcs])
+
+  // Also attempt play when a newly presigned src becomes available while visible
+  React.useEffect(() => {
+    if (!visible) return
+    vibeSrcs.forEach((src, idx) => {
+      if (!src) return
+      const v = videoRefs.current[idx]
+      if (v && v.paused) {
+        const p = v.play()
+        if (p && typeof p.catch === 'function') p.catch(() => {})
+      }
+    })
+  }, [vibeSrcs, visible])
 
   // Lightbox state: index of the open video (null = closed) + its mute state
   const [active, setActive] = React.useState(null)
@@ -68,31 +137,45 @@ export function VibeWithUs() {
   const lightboxRef = React.useRef(null)
   const lbVideoRef = React.useRef(null)
 
+  const startYRef = React.useRef(0)
+  const lockRef = React.useRef(null)
+
   function onPointerDown(e) {
-    // Touch scrolls natively; mouse drag handled here for whole card
-    if (e.pointerType !== 'mouse') return
     if (e.button !== 0) return
     hasDraggedRef.current = false
+    lockRef.current = null
+    startYRef.current = e.clientY
     dragRef.current = { startX: e.clientX, startScrollLeft: trackRef.current.scrollLeft }
-    setDragging(true)
-    e.currentTarget.setPointerCapture(e.pointerId)
+    // Don't capture yet — wait for horizontal lock
   }
 
   function onPointerMove(e) {
     if (!dragRef.current) return
+    const walkX = e.clientX - dragRef.current.startX
+    const walkY = e.clientY - startYRef.current
+    if (!lockRef.current) {
+      if (Math.abs(walkX) < 6 && Math.abs(walkY) < 6) return
+      lockRef.current = Math.abs(walkX) > Math.abs(walkY) ? 'h' : 'v'
+      if (lockRef.current === 'h') {
+        setDragging(true)
+        try { e.currentTarget.setPointerCapture(e.pointerId) } catch {}
+      } else {
+        return
+      }
+    }
+    if (lockRef.current === 'v') return
     if (e.cancelable) e.preventDefault()
-    const walk = e.clientX - dragRef.current.startX
-    if (Math.abs(walk) > 10) hasDraggedRef.current = true
-    trackRef.current.scrollLeft = dragRef.current.startScrollLeft - walk
+    if (Math.abs(walkX) > 10) hasDraggedRef.current = true
+    trackRef.current.scrollLeft = dragRef.current.startScrollLeft - walkX
   }
 
   function onPointerUp(e) {
     dragRef.current = null
+    lockRef.current = null
     setDragging(false)
     try {
       e.currentTarget?.releasePointerCapture?.(e.pointerId)
     } catch {}
-    // keep hasDragged true for one tick to suppress click that follows drag
     if (hasDraggedRef.current) {
       setTimeout(() => {
         hasDraggedRef.current = false
@@ -108,6 +191,7 @@ export function VibeWithUs() {
   }
 
   function openLightbox(i) {
+    ensureVibeSrc(i)
     setActive(i)
     setLbMuted(false)
     setShareLabel(false)
@@ -118,10 +202,20 @@ export function VibeWithUs() {
   }
 
   function stepLightbox(dir) {
-    setActive((prev) => (prev == null ? prev : (prev + dir + VIDEOS.length) % VIDEOS.length))
+    setActive((prev) => {
+      if (prev == null) return prev
+      const next = (prev + dir + VIDEOS.length) % VIDEOS.length
+      ensureVibeSrc(next)
+      return next
+    })
     setLbMuted(false)
     setShareLabel(false)
   }
+
+  // Ensure lightbox video has presigned src when active changes
+  React.useEffect(() => {
+    if (active != null) ensureVibeSrc(active)
+  }, [active, ensureVibeSrc])
 
   async function shareActive() {
     if (active == null) return
@@ -156,12 +250,11 @@ export function VibeWithUs() {
       else if (e.key === 'ArrowLeft') stepLightbox(-1)
     }
     window.addEventListener('keydown', onKey)
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    lockBodyScroll()
     lightboxRef.current?.focus()
     return () => {
       window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevOverflow
+      unlockBodyScroll()
     }
   }, [active])
 
@@ -172,6 +265,15 @@ export function VibeWithUs() {
     video.muted = lbMuted
     video.play().catch(() => {})
   }, [lbMuted, active])
+
+  // Lightbox src — presigned if available, fallback only if presign failed (cached fallback)
+  const lbSrc = active != null ? vibeSrcs[active] || null : null
+  // Effect: when lbSrc becomes available, play lightbox video
+  React.useEffect(() => {
+    if (active == null || !lbSrc) return
+    const v = lbVideoRef.current
+    if (v) v.play().catch(() => {})
+  }, [lbSrc, active])
 
   const circleBtn =
     'grid h-9 w-9 place-items-center rounded-full bg-white/15 text-white backdrop-blur-sm transition-colors hover:bg-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white'
@@ -199,13 +301,15 @@ export function VibeWithUs() {
           }
         }}
         className={cn(
-          'mt-8 flex select-none gap-12 overflow-x-auto px-5 pb-2 [scrollbar-width:none] sm:px-6 lg:px-[90px] [&::-webkit-scrollbar]:hidden overscroll-x-contain touch-pan-x scroll-smooth',
-          dragging ? 'cursor-grabbing' : 'cursor-grab'
+          'mt-8 flex gap-12 overflow-x-auto px-5 pb-2 [scrollbar-width:none] sm:px-6 lg:px-[90px] [&::-webkit-scrollbar]:hidden overscroll-x-contain touch-pan-y scroll-smooth',
+          dragging ? 'cursor-grabbing select-none' : 'cursor-grab'
         )}
       >
         {VIDEOS.map((src, i) => (
           <div
             key={src}
+            ref={(el) => (cardRefs.current[i] = el)}
+            data-vibe-index={i}
             className="relative h-[550px] w-[320px] shrink-0 overflow-hidden rounded-xl"
             style={{ width: '320px', height: '550px', flex: '0 0 320px' }}
           >
@@ -215,7 +319,6 @@ export function VibeWithUs() {
                 if (hasDraggedRef.current) return
                 openLightbox(i)
               }}
-              onPointerDown={(e) => e.stopPropagation()}
               aria-label={`Play traveller video ${i + 1} in fullscreen`}
               className="block h-full w-full cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               draggable={false}
@@ -223,7 +326,7 @@ export function VibeWithUs() {
             >
               <video
                 ref={(el) => (videoRefs.current[i] = el)}
-                src={src}
+                src={vibeSrcs[i] || undefined}
                 autoPlay
                 muted
                 loop
@@ -269,9 +372,9 @@ export function VibeWithUs() {
             className="relative aspect-[9/16] h-[94vh] max-w-[94vw] overflow-hidden rounded-2xl bg-black shadow-2xl"
           >
             <video
-              key={VIDEOS[active]}
+              key={lbSrc || `lb-${active}`}
               ref={lbVideoRef}
-              src={VIDEOS[active]}
+              src={lbSrc || undefined}
               autoPlay
               loop
               playsInline
@@ -325,7 +428,7 @@ export function VibeWithUs() {
             >
               <span className="h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-black/40">
                 <video
-                  src={`${VIDEOS[active]}#t=0.2`}
+                  src={lbSrc ? `${lbSrc}#t=0.2` : undefined}
                   muted
                   playsInline
                   preload="metadata"

@@ -1,9 +1,10 @@
 import * as React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Search, Play } from 'lucide-react'
+import { House, Search, Play } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { publicWhatsappApi } from '@/services/settings'
 import { DEFAULT_WHATSAPP } from '@/lib/settings'
+import { useUIStore } from '@/stores/ui'
 
 function buildWhatsappUrl(phoneNumber, prefilledMessage) {
   const digits = String(phoneNumber || '').replace(/\D/g, '')
@@ -23,16 +24,25 @@ function normalizeWhatsapp(data) {
 }
 
 const NAV_ITEMS = [
-  { label: 'Home', icon: Home, to: '/' },
+  { label: 'Home', icon: House, to: '/' },
   { label: 'Search', icon: Search, to: '/trips?search=' },
   { label: 'TRIPS', to: '/trips', isText: true },
 ]
 
 export function BottomNav({ onOpenPlay, isPlayOpen }) {
   const { pathname } = useLocation()
+  const mobileSearchOpen = useUIStore((s) => s.mobileSearchOpen)
+  const toggleMobileSearch = useUIStore((s) => s.toggleMobileSearch)
+  const closeMobileSearch = useUIStore((s) => s.closeMobileSearch)
+  // Exclusive active state: only one item active at a time. Overlay takes precedence.
+  // Trips section includes list (/trips) and detail (/trip/:slug) routes.
+  const isHomeActive = pathname === '/' && !mobileSearchOpen
+  const isSearchActive = mobileSearchOpen
+  const isTripsActive = pathname.startsWith('/trip') && !mobileSearchOpen
   const isActive = (to) => {
-    if (to === '/') return pathname === '/'
-    return pathname.startsWith(to)
+    if (to === '/') return isHomeActive
+    if (to === '/trips') return isTripsActive
+    return pathname.startsWith(to) && !mobileSearchOpen
   }
 
   const { data } = useQuery({
@@ -55,19 +65,36 @@ export function BottomNav({ onOpenPlay, isPlayOpen }) {
     [settings.enabled, settings.phoneNumber, settings.prefilledMessage]
   )
 
+   if (pathname.startsWith('/trip/')) return null
   if (isPlayOpen) return null
 
   return (
     <nav
       aria-label="Primary mobile"
-      className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-slate-200 bg-white px-2 pb-[env(safe-area-inset-bottom)] pt-2 sm:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-slate-200 bg-emerald-50 px-2 pb-[env(safe-area-inset-bottom)] pt-2 sm:hidden"
       style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
     >
-      {NAV_ITEMS.map(({ label, icon: Icon, to, isText }) =>
-        isText ? (
+      {NAV_ITEMS.map(({ label, icon: Icon, to, isText }) => {
+        if (label === 'Search') {
+          return (
+            <button
+              key={label}
+              type="button"
+              onClick={toggleMobileSearch}
+              aria-label={label}
+              aria-expanded={mobileSearchOpen}
+              className={`flex flex-col items-center justify-center p-2 transition-colors ${mobileSearchOpen ? 'text-primary' : 'text-slate-600 hover:text-primary'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+            >
+              <Icon className={`h-5 w-5 ${mobileSearchOpen ? 'text-primary' : ''}`} />
+              <span className="mt-1 text-[10px] font-medium leading-none">{label}</span>
+            </button>
+          )
+        }
+        return isText ? (
           <Link
             key={label}
             to={to}
+            onClick={closeMobileSearch}
             className={`flex flex-col items-center justify-center px-3 py-1 text-[11px] font-bold tracking-widest transition-colors ${isActive(to) ? 'text-primary' : 'text-slate-700'}`}
           >
             {label}
@@ -77,13 +104,14 @@ export function BottomNav({ onOpenPlay, isPlayOpen }) {
             key={label}
             to={to}
             aria-label={label}
+            onClick={closeMobileSearch}
             className={`flex flex-col items-center justify-center p-2 transition-colors ${isActive(to) ? 'text-primary' : 'text-slate-600 hover:text-primary'}`}
           >
-            <Icon className={`h-5 w-5 ${isActive(to) ? 'fill-primary text-primary' : ''}`} />
+            <Icon className={`h-5 w-5 ${isActive(to) ? 'text-primary' : ''}`} />
             <span className="mt-1 text-[10px] font-medium leading-none">{label}</span>
           </Link>
         )
-      )}
+      })}
       {/* Play — opens full-screen vertical viewer on mobile, not navigation */}
       <button
         type="button"

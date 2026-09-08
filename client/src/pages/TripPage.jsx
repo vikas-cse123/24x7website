@@ -13,12 +13,13 @@ import { publicWhatsappApi } from '@/services/settings'
 import { DEFAULT_WHATSAPP } from '@/lib/settings'
 import { tripBatchApi } from '@/services/tripBatches'
 import { TripDepartures } from '@/components/trips/TripDepartures'
-import { WishlistButton } from '@/components/wishlist/WishlistButton'
 import { PlanTripTrigger } from '@/components/enquiry/PlanTripTrigger'
 import { faqApi } from '@/services/faqs'
 import { useSeo, tripSeoTitle } from '@/lib/seo'
 import { TRIP_TYPE_LABELS } from '@/schemas/trip'
 import { formatDateShort } from '@/lib/dates'
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock'
+import { useUIStore } from '@/stores/ui'
 
 // "What's in the Package?" editorial list: items ending in ":" render as bold
 // group headings, everything else as spaced bullet rows. Data untouched.
@@ -77,11 +78,10 @@ function DescriptionModal({ open, onClose, title, description }) {
       if (e.key === 'Escape') onClose()
     }
     document.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    lockBodyScroll()
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
+      unlockBodyScroll()
     }
   }, [open, onClose])
 
@@ -221,6 +221,8 @@ export function TripPage() {
     selectedOption?.batch?.availableSeats > 0 ? Number(selectedOption.batch.availableSeats) : 10
 
   // Sticky section nav — Itinerary / Inclusions / Costing / Notes (matches screenshot)
+  const mobileSearchOpen = useUIStore((s) => s.mobileSearchOpen)
+  const openPlanTrip = useUIStore((s) => s.openPlanTrip)
   const [activeSticky, setActiveSticky] = React.useState('itinerary')
   const scrollToSection = React.useCallback((id) => {
     const el = document.getElementById(id)
@@ -492,7 +494,7 @@ export function TripPage() {
   const contentHeading = trip.pageHeading || trip.name
 
   return (
-    <div>
+    <div className="pb-24 lg:pb-0">
       {/* Full-bleed hero — same sizing/behavior as the destination hero */}
       <div className="relative w-full overflow-hidden">
         {heroVideoSrc ? (
@@ -516,19 +518,25 @@ export function TripPage() {
             className="aspect-[0.7/1] w-full md:aspect-[3.17/1]"
           />
         )}
-        <WishlistButton type="trip" id={trip.id} className="absolute right-3 top-3" size={40} />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent px-4 pb-6 pt-16 text-center sm:pb-8">
-          <p className="text-2xl font-bold tracking-tight text-white drop-shadow-md sm:text-3xl lg:text-4xl">
+          <p
+            style={{ fontFamily: "'Bree Serif', serif" }}
+            className="text-2xl font-bold tracking-tight text-white drop-shadow-md sm:text-3xl lg:text-4xl"
+          >
             {overlayName}
           </p>
         </div>
       </div>
 
-      <div className="w-full px-5 py-8 sm:px-8 lg:px-[84px] lg:py-10">
-      <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
-        <div className="min-w-0">
+      <div className="w-full px-5 py-8 sm:px-8 lg:px-[84px] lg:py-10 overflow-visible">
+      <div className="grid items-start gap-8 lg:grid-cols-[1fr_320px]">
+        <div className="min-w-0 self-start overflow-visible">
+          {/* Trip content wrapper — bounds sticky tabs to main content (title→notes); RelatedTrips/footer outside so sticky stops naturally */}
+          <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{contentHeading}</h1>
+            <h1 style={{ fontFamily: "'Bree Serif', serif" }} className="text-3xl font-bold tracking-tight sm:text-4xl">
+              {contentHeading}
+            </h1>
             {trip.featured && (
               <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground">
                 Featured
@@ -596,9 +604,11 @@ export function TripPage() {
           </div>
 
           {/* Sticky section pills — Itinerary / Inclusions / Costing / Notes */}
-          <div className="sticky top-[104px] z-10 mt-6 bg-white/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/80 lg:top-[148px]">
+          <div
+            className={`sticky z-10 mt-6 bg-white/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/80 lg:top-[148px] ${mobileSearchOpen ? 'top-[125px]' : 'top-[56px]'}`}
+          >
             <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
-              <div className="flex gap-2 overflow-x-auto">
+              <div className="flex gap-2 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {[
                   { id: 'itinerary', label: 'Itinerary' },
                   { id: 'inclusions', label: 'Inclusions' },
@@ -777,6 +787,7 @@ export function TripPage() {
               />
             </div>
           )}
+          </div>
 
           {/* Things to Carry — compact pills directly below Notes */}
           {Array.isArray(trip.thingsToCarry) && trip.thingsToCarry.filter((t) => t && (t.name || '').trim()).length > 0 && (
@@ -809,9 +820,8 @@ export function TripPage() {
           <RelatedTrips trip={trip} />
         </div>
 
-        {/* Booking card — reference hierarchy: price header, trip dates,
-            travellers, Book Now, WhatsApp. All values from real trip data. */}
-        <aside className="h-fit overflow-visible rounded-xl border border-border bg-card p-5 shadow-card sm:p-6 lg:sticky lg:top-24">
+        {/* Booking card — desktop only; mobile uses compact fixed bottom bar */}
+        <aside className="hidden h-fit overflow-visible rounded-xl border border-border bg-card p-5 shadow-card sm:p-6 lg:sticky lg:top-24 lg:block">
           <p className="text-[13px] font-medium text-muted-foreground">Trip Starts From</p>
           {sellingPrice != null ? (
             <>
@@ -969,6 +979,52 @@ export function TripPage() {
         </aside>
       </div>
       </div>
+
+      {/* Mobile compact fixed bottom enquiry bar — replaces large price card on mobile */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.08)] lg:hidden"
+        style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+      >
+        {/* Left: date + price */}
+        <div className="min-w-0 flex-1">
+          {trip.datesOnRequest ? (
+            <p className="flex items-center gap-1 text-[11px] font-medium text-slate-700">
+              <span aria-hidden="true">📅</span> All dates available
+            </p>
+          ) : dateOptions.length > 0 && selectedOption ? (
+            <p className="flex items-center gap-1 text-[11px] font-medium text-slate-700">
+              <span aria-hidden="true">📅</span> {formatDateShort(selectedOption.date).replace(/(\w+) (\d+)/, '$2 $1')} {String(selectedOption.date).slice(0, 4)}
+            </p>
+          ) : dateOptions.length > 0 ? (
+            <p className="flex items-center gap-1 text-[11px] font-medium text-slate-700">
+              <span aria-hidden="true">📅</span> {formatDateShort(dateOptions[0].date).replace(/(\w+) (\d+)/, '$2 $1')} {String(dateOptions[0].date).slice(0, 4)}
+            </p>
+          ) : null}
+          {sellingPrice != null ? (
+            <>
+              <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 text-[15px] font-bold leading-none text-slate-900">
+                ₹{Number(sellingPrice).toLocaleString('en-IN')}<span className="text-[11px] font-medium text-slate-500">/Person</span>
+                {headerOriginal != null && (
+                  <span className="text-[11px] font-normal text-slate-400 line-through">₹{Number(headerOriginal).toLocaleString('en-IN')}</span>
+                )}
+                {headerDiscount != null && (
+                  <span className="text-[11px] font-semibold text-red-600">₹{Number(headerDiscount).toLocaleString('en-IN')} Off</span>
+                )}
+              </p>
+            </>
+          ) : (
+            <p className="mt-0.5 text-[12px] font-medium text-slate-500">Price on request</p>
+          )}
+        </div>
+        {/* Right: Enquiry Now */}
+        <button
+          type="button"
+          onClick={() => openPlanTrip(trip.destination?.id || null)}
+          className="shrink-0 rounded-full bg-primary px-6 py-2.5 text-[13px] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring whitespace-nowrap"
+        >
+          Enquiry Now
+        </button>
+      </div>
     </div>
   )
 }
@@ -989,7 +1045,7 @@ function RelatedTrips({ trip }) {
         <h2 className="text-xl font-semibold">More trips in {trip.destination?.name}</h2>
         <Link to="/trips" className="text-sm font-medium text-primary hover:underline">View all trips</Link>
       </div>
-      <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 flex flex-wrap gap-8">
         {related.map(t => <TripCard key={t.id} trip={t} />)}
       </div>
     </div>

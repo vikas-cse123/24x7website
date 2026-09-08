@@ -7,6 +7,7 @@ import { destinationApi } from '@/services/destinations'
 import { enquiryApi } from '@/services/enquiries'
 import { useUIStore } from '@/stores/ui'
 import { Label } from '@/components/ui/label'
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock'
 
 // Capture A Trip-style lead-capture modal (own implementation):
 // dark overlay + compact centered white card + single-column form.
@@ -182,13 +183,12 @@ export function PlanTripModal() {
     wasOpen.current = open
   }, [open])
 
-  // Body scroll lock + Escape close while open.
+  // Body scroll lock while open.
   React.useEffect(() => {
     if (!open) return undefined
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    lockBodyScroll()
     return () => {
-      document.body.style.overflow = prevOverflow
+      unlockBodyScroll()
     }
   }, [open])
 

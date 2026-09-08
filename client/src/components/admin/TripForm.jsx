@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -173,6 +174,7 @@ function TripGalleryManager({ tripId }) {
 export function TripForm({ initialValues, destinations, tripCode, tripId, isSubmitting, submitLabel, onSubmit }) {
   const { register, handleSubmit, control, setValue, watch, reset, formState: { errors, isDirty }, trigger } = useForm({ mode: 'onChange', resolver: zodResolver(tripSchema), defaultValues: initialValues || tripFormDefault })
   const [activeTab, setActiveTab] = React.useState('basic')
+  const navigate = useNavigate()
   React.useEffect(() => { if (initialValues) reset(initialValues) }, [initialValues, reset])
   const featured = watch('featured'); const published = watch('published')
   const tabOrder = TRIP_TABS.map(t=>t.id)
@@ -197,16 +199,16 @@ export function TripForm({ initialValues, destinations, tripCode, tripId, isSubm
   const onInvalid = React.useCallback(()=>{ setTimeout(()=>{ const el=document.querySelector('[aria-invalid="true"]'); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}) },80)},[])
   return (
     <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate className="pb-10">
-      <div className="sticky top-12 z-10 mb-4 -mx-4 border-y border-slate-200 bg-white px-4 sm:mx-0 sm:px-0">
+      <div className="sticky top-12 z-10 mb-4 rounded-lg border border-slate-200 bg-white px-4">
         <div className="-mb-px flex gap-5 overflow-x-auto">
           {TRIP_TABS.map(t=>(
             <button key={t.id} type="button" onClick={()=>setActiveTab(t.id)} className={`shrink-0 border-b-2 px-1 py-2.5 text-xs font-semibold tracking-wide transition-colors ${activeTab===t.id?'border-slate-900 text-slate-900':'border-transparent text-slate-500 hover:text-slate-700'}`}>{t.label}</button>
           ))}
         </div>
       </div>
-      <div className="w-full min-w-0 max-w-full bg-white overflow-hidden">
+      <div className="w-full min-w-0 max-w-full overflow-hidden rounded-lg border border-slate-200 bg-white">
         {activeTab==='basic' && (
-          <div className="space-y-0 divide-y divide-slate-200 border border-slate-200 bg-white min-w-0 max-w-full overflow-hidden">
+          <div className="space-y-0 divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 bg-white min-w-0 max-w-full">
             <div className="p-4"><RecordSection title="Basic Information"><div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:gap-4">
               <DenseField label="Destination" required error={errors.destinationId?.message}><Select {...register('destinationId')} defaultValue=""><option value="">Select a destination</option>{destinations.map(d=>(<option key={d.id} value={d.id}>{d.name}</option>))}</Select></DenseField>
               <DenseField label="Trip type" required error={errors.tripType?.message} hint="Select one or more types"><div className="grid grid-cols-1 gap-2 rounded-md border border-input p-3 sm:grid-cols-2">{TRIP_TYPES.filter((t) => t !== 'match_maker').map((t) => { const selected = Array.isArray(watch('tripType')) ? watch('tripType').includes(t) : false; return (<label key={t} className="flex items-center gap-2 text-sm"><Checkbox checked={selected} onCheckedChange={(checked) => { const curr = Array.isArray(watch('tripType')) ? watch('tripType') : []; const next = checked ? [...curr, t] : curr.filter((v) => v !== t); setValue('tripType', next, { shouldValidate: true, shouldDirty: true }); }} />{TRIP_TYPE_LABELS[t]}</label>); })}</div></DenseField>
@@ -222,7 +224,7 @@ export function TripForm({ initialValues, destinations, tripCode, tripId, isSubm
           </div>
         )}
         {activeTab==='itinerary' && (
-          <div className="space-y-0 divide-y divide-slate-200 border border-slate-200 bg-white">
+          <div className="space-y-0 divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 bg-white">
             <div className="p-4"><RecordSection title="Itinerary"><TripItineraryBuilder control={control} register={register} watch={watch} setValue={setValue} errors={errors} /></RecordSection></div>
             <div className="p-4"><RecordSection title="Inclusions"><ListItemEditor control={control} name="inclusions" label="Inclusions" placeholder="e.g. Airport transfers" /></RecordSection></div>
             <div className="p-4"><RecordSection title="Exclusions"><ListItemEditor control={control} name="exclusions" label="Exclusions" placeholder="e.g. International flights" /></RecordSection></div>
@@ -231,33 +233,33 @@ export function TripForm({ initialValues, destinations, tripCode, tripId, isSubm
           </div>
         )}
         {activeTab==='media' && (
-          <div className="space-y-0 divide-y divide-slate-200 border border-slate-200 bg-white">
+          <div className="space-y-0 divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 bg-white">
             <div className="p-4"><RecordSection title="Trip Card Image"><div className="space-y-1"><Label className="text-xs font-semibold">Image shown on trip cards across the website.</Label><div className="mt-1.5"><ImageUploader value={watch('cardImage')} onChange={(v)=> setValue('cardImage', {...(watch('cardImage')||{}), ...v, alt: v.alt || watch('cardImage.alt')}, {shouldValidate:true, shouldDirty:true})} folder="trip-media" /></div><div className="mt-2"><Input placeholder="Alt text" {...register('cardImage.alt')} className="h-8 text-sm" /></div></div></RecordSection></div>
             <div className="p-4"><RecordSection title="Gallery"><TripGalleryManager tripId={tripId} /></RecordSection></div>
           </div>
         )}
         {activeTab==='pricing' && (
-          <div className="space-y-0 divide-y divide-slate-200 border border-slate-200 bg-white">
+          <div className="space-y-0 divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 bg-white">
             <div className="p-4"><RecordSection title="Pricing"><div className="grid gap-3 sm:grid-cols-3"><DenseField label="Starting price" required error={errors.startingPrice?.message} hint="Base package price only. Departure-specific pricing comes later."><Input type="number" min={0} placeholder="51999" {...register('startingPrice')} className="h-8 text-sm" /></DenseField><DenseField label="Original price (MRP)" error={errors.originalPrice?.message} hint="Optional. When above the starting price, the card shows it struck through with the derived discount."><Input type="number" min={0} placeholder="59999" {...register('originalPrice')} className="h-8 text-sm" /></DenseField><DenseField label="Currency" required error={errors.currency?.message}><Input placeholder="INR" {...register('currency')} className="h-8 text-sm" /></DenseField></div></RecordSection></div>
             <div className="p-4"><RecordSection title="Departures"><div className="space-y-4"><label className="flex items-center gap-2.5 text-sm"><Checkbox checked={!!watch('datesOnRequest')} onCheckedChange={(v)=> setValue('datesOnRequest', v, { shouldValidate: true, shouldDirty: true })} /><span>All dates available<span className="ml-1 text-xs text-muted-foreground">(card shows exactly “All dates available”, no dates required)</span></span></label><DeparturesEditor dates={watch('departures')||[]} disabled={!!watch('datesOnRequest')} error={errors.departures?.message} onChange={(next)=> setValue('departures', next, { shouldValidate: true, shouldDirty: true })} /></div></RecordSection></div>
             <div className="p-4"><RecordSection title="Costing"><CostingEditor rows={watch('costing')||[]} error={errors.costing?.message} onChange={(next)=> setValue('costing', next, { shouldValidate: true, shouldDirty: true })} /></RecordSection></div>
           </div>
         )}
         {activeTab==='content' && (
-          <div className="space-y-0 divide-y divide-slate-200 border border-slate-200 bg-white">
+          <div className="space-y-0 divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 bg-white">
             <div className="p-4"><RecordSection title="FAQs"><FaqListEditor control={control} /></RecordSection></div>
           </div>
         )}
         {activeTab==='publish' && (
-          <div className="space-y-0 divide-y divide-slate-200 border border-slate-200 bg-white">
+          <div className="space-y-0 divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 bg-white">
             <div className="p-4"><RecordSection title="Discovery"><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><label className="flex items-center gap-2.5 text-sm"><Checkbox checked={featured} onCheckedChange={(v)=> setValue('featured', v, { shouldValidate: true })} /><span>Featured<span className="ml-1 text-xs text-muted-foreground">(highlight on listings)</span></span></label><div className="w-full sm:max-w-[200px]"><DenseField label="Display order" error={errors.displayOrder?.message}><Input type="number" min={0} {...register('displayOrder')} className="h-8 text-sm" /></DenseField></div></div></RecordSection></div>
             <div className="p-4"><RecordSection title="SEO"><div className="space-y-3"><DenseField label="SEO title" error={errors.seoTitle?.message}><div><Input placeholder="Vietnam 8 Days Tour Package" {...register('seoTitle')} className="h-8 text-sm" maxLength={60} /><p className="mt-1 text-right text-xs text-slate-500">{(watch('seoTitle')||'').length} / 60</p></div></DenseField><DenseField label="SEO description" error={errors.seoDescription?.message}><div><Textarea rows={2} {...register('seoDescription')} className="text-sm" maxLength={160} /><p className="mt-1 text-right text-xs text-slate-500">{(watch('seoDescription')||'').length} / 160</p></div></DenseField><DenseField label="SEO keywords" error={errors.seoKeywords?.message}><Input placeholder="vietnam, hanoi, ho chi minh" {...register('seoKeywords')} className="h-8 text-sm" /></DenseField></div></RecordSection></div>
             <div className="p-4"><RecordSection title="Publishing"><label className="flex items-center gap-2.5 text-sm"><Checkbox checked={published} onCheckedChange={(v)=> setValue('published', v, { shouldValidate: true })} /><span>Published<span className="ml-1 text-xs text-muted-foreground">(visible on the public site)</span></span></label></RecordSection></div>
           </div>
         )}
       </div>
-      <div className="sticky bottom-0 z-20 mt-6 flex items-center justify-between gap-3 border bg-white px-3 py-2 shadow-sm">
-        <Button type="button" variant="ghost" size="sm" className="h-8 text-xs" onClick={goPrev} disabled={currentIndex===0}>Back</Button>
+      <div className="sticky bottom-0 z-20 mt-6 flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
+        <Button type="button" variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { if (currentIndex === 0) navigate('/admin/trips'); else goPrev(); }}>Back</Button>
         <div className="flex items-center gap-2">
           <span className="hidden text-xs text-slate-500 sm:inline">Step {currentIndex+1} of {TRIP_TABS.length}</span>
           {currentIndex < TRIP_TABS.length -1 ? (

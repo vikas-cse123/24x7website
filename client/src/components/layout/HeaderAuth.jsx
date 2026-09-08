@@ -1,9 +1,8 @@
 import * as React from 'react'
 import { Link } from 'react-router-dom'
-import { User as UserIcon, LogOut, ChevronDown, UserCog, CalendarRange, Users, Heart } from 'lucide-react'
+import { User as UserIcon, LogOut, ChevronDown, UserCog, CalendarRange, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
-import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { useUIStore } from '@/stores/ui'
 import { cn } from '@/lib/utils'
 import { formatPhone } from '@/lib/phone'
@@ -12,7 +11,6 @@ const MENU_LINKS = [
   { to: '/account', label: 'My Account', icon: UserCog },
   { to: '/account/bookings', label: 'My Bookings', icon: CalendarRange },
   { to: '/account/travellers', label: 'Travellers', icon: Users },
-  { to: '/account/wishlist', label: 'Wishlist', icon: Heart },
 ]
 
 function AuthenticatedMenu() {
@@ -102,7 +100,6 @@ export function HeaderAuth({ className }) {
   if (isAuthenticated) {
     return (
       <div className={cn('flex items-center gap-2', className)}>
-        <NotificationBell />
         <AuthenticatedMenu />
       </div>
     )

@@ -63,7 +63,7 @@ export function TripCard({ trip }) {
     .filter(Boolean)
 
   return (
-    <Card className="group relative flex h-full w-full flex-col overflow-hidden rounded-xl border border-border bg-white transition-transform duration-200 hover:scale-[1.03] hover:z-10 hover:shadow-md focus-within:ring-2 focus-within:ring-ring lg:max-w-[300px]">
+    <Card className="group relative flex h-full w-full flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm transition-all duration-300 lg:hover:scale-[1.02] lg:hover:shadow-md hover:z-10 focus-within:ring-2 focus-within:ring-ring lg:max-w-[300px]">
       <Link
         to={`/trip/${trip.slug}`}
         aria-label={`${cardName} — view trip details`}
@@ -75,7 +75,7 @@ export function TripCard({ trip }) {
           <DestinationImage
             src={cardImage?.url}
             alt={cardImage?.alt || cardName}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-300 lg:group-hover:scale-[1.03]"
             draggable={false}
           />
           {pricing?.discountAmount != null && (
@@ -90,7 +90,7 @@ export function TripCard({ trip }) {
             <span aria-hidden="true" className="shrink-0 text-[13px] leading-none">⌛</span>
             <span>{trip.durationNights} nights / {trip.durationDays} days</span>
           </div>
-          <h3 className="line-clamp-2 min-h-[2.75rem] text-[14px] font-semibold leading-snug text-gray-900">
+          <h3 className="mt-1 line-clamp-2 min-h-[2.2rem] text-[14px] font-bold leading-tight tracking-tight text-gray-900">
             {cardName}
           </h3>
 
@@ -107,8 +107,8 @@ export function TripCard({ trip }) {
           <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             {pricing ? (
               <>
-                <span className="inline-flex items-center text-[15px] font-bold leading-none text-gray-900">
-                  <IndianRupee className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span className="inline-flex items-center text-[16px] font-extrabold leading-none tracking-tight text-gray-900">
+                  <IndianRupee className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                   {pricing.price.toLocaleString('en-IN')}
                 </span>
                 {pricing.originalPrice != null && (
@@ -124,8 +124,8 @@ export function TripCard({ trip }) {
               </>
               ) : hasStartingPrice ? (
               <>
-                <span className="inline-flex items-center text-[15px] font-bold leading-none text-gray-900">
-                  <IndianRupee className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span className="inline-flex items-center text-[16px] font-extrabold leading-none tracking-tight text-gray-900">
+                  <IndianRupee className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                   {trip.startingPrice.toLocaleString('en-IN')}
                 </span>
                 {tripOriginalPrice != null && tripDiscount != null && (
@@ -144,7 +144,7 @@ export function TripCard({ trip }) {
             )}
           </div>
 
-          <div className="mt-3 flex items-center gap-1.5 border-t border-gray-100 pt-2.5">
+          <div className="mt-4 flex items-center gap-1.5 border-t border-slate-100 pt-3">
             <span aria-hidden="true" className="shrink-0 text-[13px] leading-none">📅</span>
             <p className="min-w-0 flex-1 truncate text-xs leading-none text-gray-500">
               {trip.datesOnRequest

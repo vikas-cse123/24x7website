@@ -1,6 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: 'Bree Serif';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/breeserif/v18/4UaHrEJCrhhnVA3DgluAx60.ttf) format('truetype');
+}
 
 @layer base {
   :root {
@@ -76,10 +86,10 @@
     transition: background-color 9999s ease-out;
   }
 
-  /* Prevent horizontal overflow on small screens. */
+  /* Prevent horizontal overflow on small screens without breaking sticky. */
   html,
   body {
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 }
 
@@ -340,8 +350,8 @@
   }
 }
 
-/* Subtle shimmer for page skeletons — very light gray + faint 24x7 green tint,
-   slow left→right sweep, never flashing. Respects reduced motion. */
+/* Subtle shimmer for page skeletons — neutral light gray/white only,
+   slow left→right sweep, never flashing. No green/teal tint. Respects reduced motion. */
 .skeleton {
   position: relative;
   overflow: hidden;
@@ -355,9 +365,9 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.62) 42%,
-    hsla(142, 76%, 36%, 0.07) 50%,
-    rgba(255, 255, 255, 0.62) 58%,
+    rgba(255, 255, 255, 0.6) 42%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(255, 255, 255, 0.6) 58%,
     transparent 100%
   );
   animation: skeleton-shimmer 1.75s ease-in-out infinite;

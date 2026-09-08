@@ -14,6 +14,7 @@ import { faqApi } from '@/services/faqs'
 import { useSeo, destinationSeoTitle } from '@/lib/seo'
 import { createPortal } from 'react-dom'
 import { sanitizeHtml, markdownToHtml } from '@/lib/sanitize'
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock'
 
 function stripHtml(html) {
   if (!html) return ''
@@ -52,11 +53,10 @@ function DescriptionModal({ open, onClose, title, description }) {
       if (e.key === 'Escape') onClose()
     }
     document.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    lockBodyScroll()
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
+      unlockBodyScroll()
     }
   }, [open, onClose])
 
@@ -186,11 +186,11 @@ export function DestinationPage() {
               <div className="skeleton h-8 w-24 rounded-full" />
               <div className="skeleton h-8 w-20 rounded-full" />
             </div>
-            <div className="mt-4 grid gap-7 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="mt-4 flex flex-wrap gap-8">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
-                  className="overflow-hidden rounded-xl border border-slate-200 bg-white"
+                  className="w-full max-w-[300px] overflow-hidden rounded-xl border border-slate-200 bg-white"
                 >
                   <div className="skeleton aspect-[1.377/1] w-full lg:aspect-[3/2]" />
                   <div className="p-4">
@@ -317,7 +317,10 @@ export function DestinationPage() {
         )}
         {(heroVideoSrc || heroMedia) && (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent px-4 pb-6 pt-16 text-center sm:pb-8">
-            <p className="text-2xl font-bold tracking-tight text-white drop-shadow-md sm:text-3xl lg:text-4xl">
+            <p
+              style={{ fontFamily: "'Bree Serif', serif" }}
+              className="text-2xl font-bold tracking-tight text-white drop-shadow-md sm:text-3xl lg:text-4xl"
+            >
               {destination.name}
             </p>
           </div>
@@ -328,26 +331,12 @@ export function DestinationPage() {
       <div className="w-full px-5 pb-8 pt-[60px] sm:px-8 lg:px-[84px] lg:pb-10">
       <div>
         <div>
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Reference heading: semantic H2, Norsy, 30px, #1E3133, 16px bottom
-                margin. Norsy is not bundled with the project yet — the family
-                is declared first with system fallbacks so it applies exactly
-                once the font files are added. */}
-            <h2
-              style={{
-                fontFamily:
-                  "'Norsy', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-              }}
-              className="mb-4 text-[30px] font-bold leading-[1.2] tracking-tight text-[#1E3133]"
-            >
-              {destination.name}
-            </h2>
-            {destination.featured && (
-              <span className="mb-4 rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground">
-                Featured
-              </span>
-            )}
-          </div>
+          <h2
+            style={{ fontFamily: "'Bree Serif', serif" }}
+            className="mb-4 text-[30px] font-bold leading-[1.2] tracking-tight text-[#1E3133]"
+          >
+            {destination.name}
+          </h2>
 
           {/* Description preview */}
           {description ? (
@@ -377,50 +366,12 @@ export function DestinationPage() {
         description={description}
       />
 
-      {/* Trips for this destination — style pills replace the former heading */}
+      {/* Trips for this destination */}
       <div className="mt-12">
-        {availableStyles.length > 0 && (
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Filter trips by travel style">
-              {availableStyles.length > 1 && (
-                <button
-                  key="all"
-                  type="button"
-                  onClick={() => setStyleFilter(null)}
-                  aria-pressed={styleFilter === null}
-                  className={`inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                    styleFilter === null
-                      ? 'border border-emerald-500 bg-emerald-50 text-emerald-700'
-                      : 'border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 hover:border-gray-300'
-                  }`}
-                >
-                  All
-                </button>
-              )}
-              {availableStyles.map((t) => {
-                const active = styleFilter === t
-                return (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setStyleFilter(active ? null : t)}
-                    aria-pressed={active}
-                    className={`inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                      active
-                        ? 'border border-emerald-500 bg-emerald-50 text-emerald-700'
-                        : 'border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 hover:border-gray-300'
-                    }`}
-                  >
-                    {TRIP_TYPE_LABELS[t] || t}
-                  </button>
-                )
-              })}
-          </div>
-        )}
-
         {tripsQuery.isLoading ? (
-          <div className="mt-4 grid gap-7 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-4 flex flex-wrap gap-8">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-72 animate-pulse rounded-xl bg-muted" />
+              <div key={i} className="h-72 w-full max-w-[300px] animate-pulse rounded-xl bg-muted" />
             ))}
           </div>
         ) : trips.length === 0 ? (
@@ -428,7 +379,7 @@ export function DestinationPage() {
             No trips available for this destination yet.
           </p>
         ) : (
-          <div className="mt-4 grid gap-7 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-4 flex flex-wrap gap-8">
             {visibleTrips.map((trip) => (
               <TripCard key={trip.id} trip={trip} />
             ))}

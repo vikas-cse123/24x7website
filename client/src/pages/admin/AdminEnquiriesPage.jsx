@@ -9,7 +9,7 @@ import { Select } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { adminEnquiryApi } from '@/services/enquiries'
-import { formatDateLong } from '@/lib/dates'
+import { formatDateLong, formatDateTime } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 import { formatPhone } from '@/lib/phone'
 
@@ -45,7 +45,6 @@ export function AdminEnquiriesPage() {
   const queryClient = useQueryClient()
   const [page, setPage] = React.useState(1)
   const [status, setStatus] = React.useState('')
-  const [source, setSource] = React.useState('')
   const [search, setSearch] = React.useState('')
   const [searchInput, setSearchInput] = React.useState('')
   const [deleteTarget, setDeleteTarget] = React.useState(null)
@@ -56,13 +55,12 @@ export function AdminEnquiriesPage() {
   }, [searchInput])
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['admin', 'enquiries', { page, limit: PAGE_SIZE, status: status || undefined, source: source || undefined, search: search || undefined }],
+    queryKey: ['admin', 'enquiries', { page, limit: PAGE_SIZE, status: status || undefined, search: search || undefined }],
     queryFn: () =>
       adminEnquiryApi.list({
         page,
         limit: PAGE_SIZE,
         ...(status ? { status } : {}),
-        ...(source ? { source } : {}),
         ...(search ? { search } : {}),
       }),
     placeholderData: (prev) => prev,
@@ -94,21 +92,13 @@ export function AdminEnquiriesPage() {
       {/* Filters */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="relative max-w-xs flex-1">
-          <Input placeholder="Search name, email, phone…" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
+          <Input placeholder="Search name, ₹phone…" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
         </div>
         <Select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1) }} className="h-10 w-auto" aria-label="Filter by status">
           <option value="">All statuses</option>
           <option value="new">New</option>
           <option value="in-progress">In progress</option>
           <option value="resolved">Resolved</option>
-        </Select>
-        <Select value={source} onChange={(e) => { setSource(e.target.value); setPage(1) }} className="h-10 w-auto" aria-label="Filter by source">
-          <option value="">All sources</option>
-          <option value="custom_trip">Custom trip</option>
-          <option value="website">Website</option>
-          <option value="contact_form">Contact form</option>
-          <option value="trip_page">Trip page</option>
-          <option value="destination_page">Destination page</option>
         </Select>
       </div>
 
@@ -121,7 +111,7 @@ export function AdminEnquiriesPage() {
           <MessageSquare className="mx-auto h-10 w-10 text-muted-foreground/30" aria-hidden="true" />
           <p className="mt-3 text-lg font-medium">No enquiries yet</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Custom-trip leads submitted through the website will appear here.
+            
           </p>
         </Card>
       ) : (
@@ -146,7 +136,7 @@ export function AdminEnquiriesPage() {
                       )}
                       <span>{formatPhone(e.phone, e.countryCode)}</span>
                       <span>{e.email}</span>
-                      <span>· {formatDateLong(e.createdAt)}</span>
+                      <span>· {formatDateTime(e.createdAt) || formatDateLong(e.createdAt)}</span>
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { UserCog, CalendarRange, Users, Star, Heart, Bell, LogIn, LogOut } from 'lucide-react'
+import { UserCog, CalendarRange, Users, Star, Bell, LogIn, LogOut } from 'lucide-react'
 import { toast } from 'sonner'
 import { Container } from '@/components/ui/container'
 import { Button } from '@/components/ui/button'
@@ -14,7 +14,6 @@ const NAV = [
   { to: '/account/bookings', label: 'My Bookings', icon: CalendarRange },
   { to: '/account/travellers', label: 'Travellers', icon: Users },
   { to: '/account/reviews', label: 'My Reviews', icon: Star },
-  { to: '/account/wishlist', label: 'Wishlist', icon: Heart },
   { to: '/account/notifications', label: 'Notifications', icon: Bell },
 ]
 
@@ -80,7 +79,7 @@ export function AccountLayoutPage() {
       <div className="mt-6 grid gap-8 lg:grid-cols-[220px_1fr]">
         {/* Sidebar nav (desktop) / pill tabs (mobile) */}
         <nav aria-label="Account sections" className="lg:h-fit lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-2 lg:shadow-card">
-          <ul className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:flex-col lg:gap-1 lg:overflow-visible lg:px-0 lg:pb-0">
+          <ul className="-mx-1 flex gap-2 overflow-x-auto overscroll-x-contain px-1 pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:flex-col lg:gap-1 lg:overflow-visible lg:px-0 lg:pb-0">
             {NAV.map(({ to, label, icon: Icon, end }) => (
               <li key={to} className="shrink-0 lg:shrink">
                 <NavLink

@@ -1,9 +1,10 @@
 import * as React from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { NAV_ITEMS } from '@/lib/nav'
 import { IndianFlagIcon } from '@/components/icons/IndianFlagIcon'
 import { cn } from '@/lib/utils'
+import { useUIStore } from '@/stores/ui'
 
 // Nav icons are emoji strings, except the 'indian-flag' marker which renders
 // the bundled SVG asset at the same visual size (~15px).
@@ -16,6 +17,8 @@ function NavIcon({ icon }) {
 function Dropdown({ item }) {
   const [open, setOpen] = React.useState(false)
   const ref = React.useRef(null)
+  const navigate = useNavigate()
+  const location = useLocation()
 
   React.useEffect(() => {
     if (!open) return undefined
@@ -55,21 +58,34 @@ function Dropdown({ item }) {
       </button>
       {open && (
         <div className="absolute left-0 top-full z-50 mt-1.5 w-64 rounded-xl border border-border bg-popover p-1.5 shadow-card">
-          {item.children.map((child) => (
-            <Link
-              key={child.label}
-              to={child.href}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {child.icon && (
-                <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center text-[15px] leading-none">
-                  <NavIcon icon={child.icon} />
-                </span>
-              )}
-              <span>{child.label}</span>
-            </Link>
-          ))}
+          {item.children.map((child) => {
+            const isReviews = child.href === '/#reviews'
+            const handleClick = (e) => {
+              if (isReviews) {
+                e.preventDefault()
+                setOpen(false)
+                useUIStore.getState().bumpReviewsNavTick()
+                navigate('/#reviews', { state: { reviewsNavTick: Date.now() } })
+                return
+              }
+              setOpen(false)
+            }
+            return (
+              <Link
+                key={child.label}
+                to={child.href}
+                onClick={handleClick}
+                className="flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {child.icon && (
+                  <span aria-hidden="true" className="grid h-5 w-5 shrink-0 place-items-center text-[15px] leading-none">
+                    <NavIcon icon={child.icon} />
+                  </span>
+                )}
+                <span>{child.label}</span>
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>

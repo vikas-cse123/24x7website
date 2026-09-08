@@ -101,29 +101,33 @@ export function DestinationExplorer() {
   const trackRef = React.useRef(null)
   const isDraggingRef = React.useRef(false)
   const startXRef = React.useRef(0)
+  const startYRef = React.useRef(0)
   const scrollLeftRef = React.useRef(0)
   const hasDraggedRef = React.useRef(false)
+  const lockRef = React.useRef(null)
   const [isDragging, setIsDragging] = React.useState(false)
 
   const onPointerDown = React.useCallback((e) => {
-    if (e.pointerType !== 'mouse') return
     if (e.button !== 0) return
     const el = trackRef.current
     if (!el) return
     hasDraggedRef.current = false
+    lockRef.current = null
     startXRef.current = e.clientX
+    startYRef.current = e.clientY
     scrollLeftRef.current = el.scrollLeft
-    // Don't enter dragging yet — wait for threshold to avoid suppressing clicks
   }, [])
 
   const onPointerMove = React.useCallback((e) => {
-    if (e.pointerType !== 'mouse') return
     const el = trackRef.current
     if (!el) return
-    const walk = e.clientX - startXRef.current
-    // Enter dragging only after threshold
+    const walkX = e.clientX - startXRef.current
+    const walkY = e.clientY - startYRef.current
     if (!isDraggingRef.current) {
-      if (Math.abs(walk) <= 6) return
+      if (Math.abs(walkX) < 6 && Math.abs(walkY) < 6) return
+      if (!lockRef.current) lockRef.current = Math.abs(walkX) > Math.abs(walkY) ? 'h' : 'v'
+      if (lockRef.current === 'v') return
+      if (Math.abs(walkX) <= 6) return
       isDraggingRef.current = true
       hasDraggedRef.current = true
       setIsDragging(true)
@@ -133,12 +137,14 @@ export function DestinationExplorer() {
         el.setPointerCapture(e.pointerId)
       } catch {}
     }
+    if (lockRef.current === 'v') return
     if (e.cancelable) e.preventDefault()
-    el.scrollLeft = scrollLeftRef.current - walk
+    el.scrollLeft = scrollLeftRef.current - walkX
   }, [])
 
   const endDrag = React.useCallback(
     (e) => {
+      lockRef.current = null
       if (!isDraggingRef.current) return
       isDraggingRef.current = false
       setIsDragging(false)
@@ -147,7 +153,6 @@ export function DestinationExplorer() {
       try {
         if (e && e.pointerId != null) trackRef.current?.releasePointerCapture(e.pointerId)
       } catch {}
-      // Keep native smooth for wheel/trackpad, but restore for any programmatic scrolls
       if (el) el.style.scrollBehavior = 'smooth'
       if (hasDraggedRef.current) {
         setTimeout(() => {
@@ -221,7 +226,7 @@ export function DestinationExplorer() {
             onPointerCancel={endDrag}
             onClickCapture={onClickCapture}
             className={cn(
-              'grid grid-flow-col grid-rows-2 gap-4 overflow-x-auto overscroll-x-contain px-5 pb-2 [scrollbar-width:none] sm:gap-6 sm:px-6 lg:gap-8 lg:px-[90px] [&::-webkit-scrollbar]:hidden touch-pan-x scroll-smooth',
+              'grid grid-flow-col grid-rows-2 gap-4 overflow-x-auto overscroll-x-contain px-5 pb-2 [scrollbar-width:none] sm:gap-6 sm:px-6 lg:gap-8 lg:px-[90px] [&::-webkit-scrollbar]:hidden touch-pan-y scroll-smooth',
               isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'
             )}
             style={{ gridAutoColumns: 'max-content' }}

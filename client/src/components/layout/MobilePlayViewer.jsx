@@ -1,32 +1,59 @@
 import * as React from 'react'
 import { X, Volume2, VolumeX } from 'lucide-react'
-import { VIDEOS } from '@/lib/vibeVideos'
+import { VIDEOS, vibeKeyForIndex, vibeFallbackForIndex } from '@/lib/vibeVideos'
+import { fetchVibePresignedUrl, getCachedVibeUrl } from '@/lib/vibePresign'
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock'
 
 export function MobilePlayViewer({ open, onClose }) {
   const containerRef = React.useRef(null)
   const videoRefs = React.useRef([])
-  const [muted, setMuted] = React.useState(true)
+  const [muted, setMuted] = React.useState(false)
   const [activeIndex, setActiveIndex] = React.useState(0)
   const scrollYRef = React.useRef(0)
+  // Lazy presigned S3 URLs per reel — null = not yet fetched; string = presigned or fallback (only on failure)
+  const [vibeSrcs, setVibeSrcs] = React.useState(() => VIDEOS.map(() => null))
+
+  const ensureVibeSrc = React.useCallback((i) => {
+    if (i == null || i < 0 || i >= VIDEOS.length) return
+    const key = vibeKeyForIndex(i)
+    const fallback = vibeFallbackForIndex(i)
+    const cached = getCachedVibeUrl(key)
+    if (cached) {
+      setVibeSrcs((prev) => {
+        if (prev[i]) return prev
+        const next = [...prev]
+        next[i] = cached
+        return next
+      })
+      return
+    }
+    void fetchVibePresignedUrl(key, fallback).then((url) => {
+      setVibeSrcs((prev) => {
+        if (prev[i]) return prev
+        const next = [...prev]
+        next[i] = url
+        return next
+      })
+    })
+  }, [])
 
   // Lock body scroll and save position when open
   React.useEffect(() => {
     if (!open) return undefined
     scrollYRef.current = window.scrollY
-    const prevOverflow = document.body.style.overflow
     const prevPosition = document.body.style.position
     const prevTop = document.body.style.top
     const prevWidth = document.body.style.width
-    document.body.style.overflow = 'hidden'
+    lockBodyScroll()
     // prevent underlying scroll on iOS
     document.body.style.position = 'fixed'
     document.body.style.top = `-${scrollYRef.current}px`
     document.body.style.width = '100%'
     return () => {
-      document.body.style.overflow = prevOverflow
       document.body.style.position = prevPosition
       document.body.style.top = prevTop
       document.body.style.width = prevWidth
+      unlockBodyScroll()
       window.scrollTo(0, scrollYRef.current)
     }
   }, [open])
@@ -41,21 +68,52 @@ export function MobilePlayViewer({ open, onClose }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  // Autoplay first video when opened
+  // Autoplay first video when opened — start with sound (user tap is gesture)
+  // Lazy: ensure presigned for index 0 before play; fallback handled via cache
   React.useEffect(() => {
     if (!open) return
-    const v = videoRefs.current[0]
-    if (v) {
+    ensureVibeSrc(0)
+    // reset scroll to top
+    if (containerRef.current) containerRef.current.scrollTop = 0
+    setActiveIndex(0)
+  }, [open, ensureVibeSrc])
+
+  // When activeIndex's src becomes available, attempt play (if that reel is visible)
+  React.useEffect(() => {
+    if (!open) return
+    const src = vibeSrcs[activeIndex]
+    if (!src) return
+    const v = videoRefs.current[activeIndex]
+    if (!v) return
+    v.muted = muted
+    if (!muted) v.volume = 1
+    // Only autoplay if that video's container is intersecting (avoid background play)
+    v.play().catch(() => {
       v.muted = true
       setMuted(true)
       v.play().catch(() => {})
-    }
-    setActiveIndex(0)
-    // reset scroll to top
-    if (containerRef.current) containerRef.current.scrollTop = 0
-  }, [open])
+    })
+  }, [vibeSrcs, activeIndex, muted, open])
 
-  // IntersectionObserver to play visible video and track active index
+  // Fallback autoplay for first reel once its src resolves (covers initial gesture case)
+  React.useEffect(() => {
+    if (!open) return
+    if (activeIndex !== 0) return
+    const src = vibeSrcs[0]
+    if (!src) return
+    const v = videoRefs.current[0]
+    if (!v) return
+    v.muted = false
+    v.volume = 1
+    setMuted(false)
+    v.play().catch(() => {
+      v.muted = true
+      setMuted(true)
+      v.play().catch(() => {})
+    })
+  }, [open, vibeSrcs])
+
+  // IntersectionObserver to play visible video and track active index — lazy presign when near visible
   React.useEffect(() => {
     if (!open) return undefined
     const root = containerRef.current
@@ -68,8 +126,13 @@ export function MobilePlayViewer({ open, onClose }) {
           if (!video) return
           if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
             setActiveIndex(idx)
-            video.muted = muted
-            video.play().catch(() => {})
+            ensureVibeSrc(idx)
+            // If src already available, play with current mute state; else play will trigger via vibeSrcs effect
+            if (vibeSrcs[idx] || getCachedVibeUrl(vibeKeyForIndex(idx))) {
+              video.muted = muted
+              if (!muted) video.volume = 1
+              video.play().catch(() => {})
+            }
           } else {
             video.pause()
           }
@@ -80,16 +143,17 @@ export function MobilePlayViewer({ open, onClose }) {
     const items = root.querySelectorAll('[data-index]')
     items.forEach((el) => observer.observe(el))
     return () => observer.disconnect()
-  }, [open, muted])
+  }, [open, muted, ensureVibeSrc, vibeSrcs])
 
   // Keep current video muted state in sync
   React.useEffect(() => {
     const v = videoRefs.current[activeIndex]
     if (v) {
       v.muted = muted
-      if (!v.paused) v.play().catch(() => {})
+      if (!muted) v.volume = 1
+      if (!v.paused && vibeSrcs[activeIndex]) v.play().catch(() => {})
     }
-  }, [muted, activeIndex])
+  }, [muted, activeIndex, vibeSrcs])
 
   const toggleMute = React.useCallback(() => {
     setMuted((m) => !m)
@@ -136,11 +200,10 @@ export function MobilePlayViewer({ open, onClose }) {
           >
             <video
               ref={(el) => (videoRefs.current[i] = el)}
-              src={src}
-              muted
+              src={vibeSrcs[i] || undefined}
               loop
               playsInline
-              preload="metadata"
+              preload="none"
               className="h-full w-full object-cover"
               onClick={(e) => e.stopPropagation()}
             />

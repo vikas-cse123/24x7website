@@ -1,19 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
-import { MapPin, Plane, CalendarRange, BookOpen, MessageSquare } from 'lucide-react'
+import { MapPin, Plane, Newspaper, Users } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { adminApi } from '@/services/admin'
 
 const METRIC_CARDS = [
   { key: 'destinations', label: 'Destinations', icon: MapPin },
   { key: 'trips', label: 'Trips', icon: Plane },
-  { key: 'upcomingBatches', label: 'Upcoming Batches', icon: CalendarRange },
-  { key: 'openBatches', label: 'Open Batches', icon: CalendarRange },
-  { key: 'fullBatches', label: 'Full Batches', icon: CalendarRange },
-  { key: 'bookings', label: 'Total Bookings', icon: BookOpen },
-  { key: 'pendingBookings', label: 'Pending Bookings', icon: BookOpen },
-  { key: 'confirmedBookings', label: 'Confirmed Bookings', icon: BookOpen },
-  { key: 'paymentPendingBookings', label: 'Payment Pending', icon: BookOpen },
-  { key: 'enquiries', label: 'Enquiries', icon: MessageSquare },
+  { key: 'blogs', label: 'Blogs', icon: Newspaper },
+  { key: 'users', label: 'Users', icon: Users },
 ]
 
 export function AdminDashboard() {
@@ -29,7 +23,7 @@ export function AdminDashboard() {
     <div className="space-y-4">
       <div>
         <h1 className="text-lg font-bold tracking-tight">Dashboard</h1>
-        <p className="text-xs text-slate-500">Overview — metrics populate as data is added.</p>
+        <p className="text-xs text-slate-500"></p>
       </div>
 
       {isLoading ? (

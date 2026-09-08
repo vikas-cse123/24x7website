@@ -273,6 +273,14 @@ export function AdminSettingsPage() {
     onError: (err) => toast.error(err.message || 'Reset failed'),
   })
 
+  const SETTINGS_TABS = [
+    { id: 'branding', label: 'Branding' },
+    { id: 'contact', label: 'Contact Information' },
+    { id: 'banner', label: 'Promotional Banner' },
+    { id: 'whatsapp', label: 'WhatsApp' },
+  ]
+  const [activeTab, setActiveTab] = React.useState('branding')
+
   return (
     <div>
       <h1 className="mb-1 text-2xl font-bold tracking-tight">Settings</h1>
@@ -287,8 +295,28 @@ export function AdminSettingsPage() {
           Could not load settings. {error?.message || 'Please try again.'}
         </Card>
       ) : (
-        <div className="space-y-6">
-          {/* Branding */}
+        <div>
+          {/* Tabs — rounded bordered pattern matching Destination/Trips */}
+          <div className="sticky top-12 z-10 mb-4 rounded-lg border border-slate-200 bg-white p-1">
+            <div className="flex gap-1 overflow-x-auto">
+              {SETTINGS_TABS.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setActiveTab(t.id)}
+                  className={`shrink-0 rounded-md px-3 py-2 text-xs font-semibold tracking-wide transition-colors ${
+                    activeTab === t.id
+                      ? 'bg-slate-900 text-white shadow-sm'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {activeTab === 'branding' && (
           <Card>
             <CardHeader>
               <CardTitle>Branding</CardTitle>
@@ -392,8 +420,9 @@ export function AdminSettingsPage() {
               </div>
             </CardContent>
           </Card>
+          )}
 
-          {/* Contact Information */}
+          {activeTab === 'contact' && (
           <Card>
             <CardHeader>
               <CardTitle>Contact Information</CardTitle>
@@ -429,8 +458,9 @@ export function AdminSettingsPage() {
               </div>
             </CardContent>
           </Card>
+          )}
 
-          {/* Promotional Banner */}
+          {activeTab === 'banner' && (
           <Card>
             <CardHeader>
               <CardTitle>Promotional Banner</CardTitle>
@@ -511,8 +541,9 @@ export function AdminSettingsPage() {
               </div>
             </CardContent>
           </Card>
+          )}
 
-          {/* WhatsApp Floating Button */}
+          {activeTab === 'whatsapp' && (
           <Card>
             <CardHeader>
               <CardTitle>WhatsApp</CardTitle>
@@ -558,40 +589,6 @@ export function AdminSettingsPage() {
                 />
               </div>
 
-              <div className="space-y-3">
-                <Label>WhatsApp Icon</Label>
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-muted/50 p-2" style={{ backgroundColor: whatsappForm.backgroundColor }}>
-                    {whatsappPreviewUrl ? (
-                      <img src={whatsappPreviewUrl} alt="Preview" className="h-8 w-8 rounded-full object-cover" />
-                    ) : whatsappForm.iconUrl ? (
-                      <img src={whatsappForm.iconUrl} alt="Current WhatsApp icon" className="h-8 w-8 rounded-full object-cover" />
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 text-white"><path d="M19.05 4.91A9.89 9.89 0 0 0 12.02 2C6.57 2 2.14 6.42 2.14 11.88c0 1.74.46 3.44 1.32 4.94L2 22l5.33-1.4a9.86 9.86 0 0 0 4.69 1.19h.01c5.45 0 9.88-4.42 9.88-9.88 0-2.64-1.03-5.12-2.86-6.98Zm-7.03 14.88h-.01a8.13 8.13 0 0 1-4.15-1.14l-.3-.18-3.16.83.84-3.09-.2-.32a8.11 8.11 0 0 1-1.26-4.33c0-4.49 3.66-8.14 8.14-8.14 2.18 0 4.22.85 5.76 2.38a8.09 8.09 0 0 1 2.38 5.76c0 4.49-3.66 8.13-8.14 8.13Zm6.78-5.92c-.37-.19-2.2-1.09-2.54-1.21-.34-.12-.59-.19-.84.19-.25.37-.97 1.21-1.19 1.46-.22.25-.44.28-.81.09-.37-.19-1.57-.58-2.99-1.85-.91-.81-1.52-1.81-1.7-2.12-.18-.31-.02-.48.13-.63.13-.13.28-.34.42-.5.14-.17.19-.28.28-.47.09-.19.05-.35-.02-.5-.07-.15-.84-2.03-1.15-2.78-.3-.72-.61-.62-.84-.63l-.72-.01c-.25 0-.5.07-.76.34-.25.28-.97.95-.97 2.31s.99 2.68 1.13 2.87c.14.19 1.95 2.98 4.73 4.18.66.28 1.17.45 1.57.58.66.21 1.26.18 1.74.11.53-.08 2.2-.9 2.51-1.77.31-.87.31-1.62.22-1.77-.09-.15-.34-.22-.71-.41Z" /></svg>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <label className="inline-flex cursor-pointer items-center rounded-md border border-input bg-background px-3 py-1.5 text-sm hover:bg-accent">
-                      <input ref={whatsappInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleWhatsappFileChange} />
-                      Upload New Icon
-                    </label>
-                    {whatsappPreviewUrl ? (
-                      <Button type="button" variant="outline" size="sm" onClick={clearWhatsappSelection}>Cancel</Button>
-                    ) : whatsappForm.iconUrl ? (
-                      <Button type="button" variant="outline" size="sm" onClick={() => whatsappIconClearMutation.mutate()} disabled={whatsappIconClearMutation.isPending}>
-                        {whatsappIconClearMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Remove Custom Icon
-                      </Button>
-                    ) : null}
-                    {whatsappSelectedFile && (
-                      <Button type="button" size="sm" onClick={() => whatsappIconUploadMutation.mutate()} disabled={whatsappIconUploadMutation.isPending}>
-                        {whatsappIconUploadMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />} Upload
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                {whatsappSelectedFile && <p className="text-xs text-muted-foreground">{whatsappSelectedFile.name} · {(whatsappSelectedFile.size / 1024).toFixed(1)} KB — click Upload to save</p>}
-              </div>
-
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Button Position</Label>
@@ -608,29 +605,6 @@ export function AdminSettingsPage() {
                     <option value="large">Large</option>
                   </select>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="whatsapp-bg">Background Color</Label>
-                  <div className="flex gap-2">
-                    <input id="whatsapp-bg" type="color" value={/^#[0-9a-fA-F]{3,8}$/.test(whatsappForm.backgroundColor) ? whatsappForm.backgroundColor : '#25D366'} onChange={(e) => setWhatsappForm((f) => ({ ...f, backgroundColor: e.target.value }))} className="h-9 w-12 rounded border border-input p-1" />
-                    <Input value={whatsappForm.backgroundColor} onChange={(e) => setWhatsappForm((f) => ({ ...f, backgroundColor: e.target.value }))} placeholder="#25D366" className="flex-1" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t border-border pt-4">
-                <p className="mb-2 text-xs font-medium text-muted-foreground">Preview</p>
-                <div className="relative h-28 overflow-hidden rounded-lg border border-border bg-muted/30">
-                  <div className={`absolute bottom-3 flex h-14 w-14 items-center justify-center rounded-full shadow-lg ${whatsappForm.position === 'bottom-left' ? 'left-3' : 'right-3'}`} style={{ backgroundColor: whatsappForm.backgroundColor }}>
-                    {whatsappPreviewUrl ? (
-                      <img src={whatsappPreviewUrl} alt="preview" className="h-7 w-7 rounded-full object-cover" />
-                    ) : whatsappForm.iconUrl ? (
-                      <img src={whatsappForm.iconUrl} alt="preview" className="h-7 w-7 rounded-full object-cover" />
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7 text-white"><path d="M19.05 4.91A9.89 9.89 0 0 0 12.02 2C6.57 2 2.14 6.42 2.14 11.88c0 1.74.46 3.44 1.32 4.94L2 22l5.33-1.4a9.86 9.86 0 0 0 4.69 1.19h.01c5.45 0 9.88-4.42 9.88-9.88 0-2.64-1.03-5.12-2.86-6.98Z" /></svg>
-                    )}
-                  </div>
-                  <div className="absolute inset-x-0 bottom-0 bg-background/80 px-3 py-1 text-center text-[11px] text-muted-foreground">wa.me/{String(whatsappForm.phoneNumber || '').replace(/\D/g, '')}{whatsappForm.prefilledMessage ? `?text=${encodeURIComponent(whatsappForm.prefilledMessage).slice(0, 40)}…` : ''}</div>
-                </div>
               </div>
 
               <div className="flex items-center gap-3 border-t border-border pt-4">
@@ -640,6 +614,7 @@ export function AdminSettingsPage() {
               </div>
             </CardContent>
           </Card>
+          )}
         </div>
       )}
 

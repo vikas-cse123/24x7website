@@ -7,6 +7,7 @@ import { SiteNav } from '@/components/layout/SiteNav'
 import { HeaderAuth } from '@/components/layout/HeaderAuth'
 import { HeaderPhone } from '@/components/layout/HeaderPhone'
 import { MobileNav } from '@/components/layout/MobileNav'
+import { useUIStore } from '@/stores/ui'
 
 // Mobile-first header: promo bar (above) + compact white header
 // Mobile: hamburger (left) | centered 24x7Chhutti logo | phone icon (right)
@@ -14,6 +15,7 @@ import { MobileNav } from '@/components/layout/MobileNav'
 // Search moves to full-width pill directly below header on mobile.
 export function Header() {
   const [mobileOpen, setMobileOpen] = React.useState(false)
+  const mobileSearchOpen = useUIStore((s) => s.mobileSearchOpen)
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background shadow-header">
@@ -59,9 +61,11 @@ export function Header() {
       </div>
 
       {/* Mobile search row — full-width pill directly below header */}
-      <div className="border-t border-border bg-white px-5 py-3 sm:px-6 md:hidden">
-        <HeaderSearch />
-      </div>
+      {mobileSearchOpen && (
+        <div id="mobile-search" className="border-t border-border bg-white px-5 py-3 sm:px-6 md:hidden">
+          <HeaderSearch autoFocus />
+        </div>
+      )}
 
       {/* Desktop navigation row — no separator line above it (seamless with
           the top header row, like the reference site). */}

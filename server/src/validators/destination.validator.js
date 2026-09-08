@@ -110,4 +110,5 @@ export const adminListDestinationsQuerySchema = z.object({
     .enum(['true', 'false'])
     .transform((v) => v === 'true')
     .optional(),
+  category: z.enum(['international', 'domestic', 'weekend', 'other']).optional(),
 })

@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Mail, Phone, Shield, User, Clock, Heart, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, Shield, User, Clock, ExternalLink } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -59,12 +59,12 @@ export function AdminUserDetailPage() {
       <div className="rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700">Customer</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700">User</p>
             <h1 className="mt-1 text-xl font-bold tracking-tight sm:text-[22px]">{user.name || '—'}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600">
               <span className="inline-flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-slate-400" />{user.email || '—'}</span>
               <span className="inline-flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-slate-400" />{user.mobile ? formatPhone(user.mobile, user.countryCode) : '—'}</span>
-              <Badge variant={user.role==='admin' ? 'default' : 'secondary'} className="capitalize text-xs">{user.role==='user' ? 'Customer' : user.role}</Badge>
+              <Badge variant={user.role==='admin' ? 'default' : 'secondary'} className="capitalize text-xs">{user.role==='user' ? 'User' : user.role}</Badge>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -120,9 +120,8 @@ export function AdminUserDetailPage() {
                 <Card className="border-red-200 bg-red-50 p-3 text-xs text-red-700">Could not load wishlist. {wishlistQuery.error?.message}</Card>
               ) : wishlistItems.length===0 ? (
                 <Card className="flex min-h-[140px] flex-col items-center justify-center border-dashed p-8 text-center">
-                  <Heart className="h-6 w-6 text-slate-300" />
                   <p className="mt-2 text-sm font-medium">No wishlist items</p>
-                  <p className="text-xs text-slate-500">When this customer saves a trip, it will appear here with date added.</p>
+                  <p className="text-xs text-slate-500">When this user saves a trip, it will appear here with date added.</p>
                 </Card>
               ) : (
                 <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">

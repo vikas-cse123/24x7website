@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Eye, Trash2 } from 'lucide-react'
@@ -64,6 +65,7 @@ export function DestinationForm({ initialValues, isSubmitting, submitLabel, onSu
   })
 
   const [activeTab, setActiveTab] = React.useState('details')
+  const navigate = useNavigate()
   const [editorExpanded, setEditorExpanded] = React.useState(false)
 
   const prevInitialIdRef = React.useRef(null)
@@ -358,11 +360,7 @@ export function DestinationForm({ initialValues, isSubmitting, submitLabel, onSu
             variant="ghost"
             size="sm"
             className="h-8 text-xs"
-            onClick={() => {
-              reset(initialValues || destinationFormDefault)
-              setActiveTab('details')
-              window.scrollTo({ top: 0, behavior: 'smooth' })
-            }}
+            onClick={() => navigate('/admin/destinations')}
             disabled={isSubmitting}
           >
             Cancel

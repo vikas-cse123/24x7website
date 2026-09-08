@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, CalendarDays, Clock3, HelpCircle, MapPin, User } from 'lucide-react'
+import { ArrowLeft, CalendarDays, Clock3, HelpCircle, MapPin } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -95,10 +95,6 @@ export function BlogDetailPage() {
         <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{blog.title}</h1>
 
         <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5">
-            <User className="h-4 w-4 shrink-0" aria-hidden="true" />
-            {blog.author}
-          </span>
           <span className="inline-flex items-center gap-1.5">
             <CalendarDays className="h-4 w-4 shrink-0" aria-hidden="true" />
             {formatDateLong(blog.publishedAt || blog.createdAt)}

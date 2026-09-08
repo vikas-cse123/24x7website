@@ -85,7 +85,7 @@ function AddressBlock({ company, address, children }) {
 function FooterAccordion({ title, children, defaultOpen = false }) {
   const [open, setOpen] = React.useState(defaultOpen)
   return (
-    <div className="border-t border-[#1b4332]/15 first:border-t-0 sm:border-t-0 sm:py-0">
+    <div className="border-t border-[#1b4332]/15 sm:border-t-0 sm:py-0">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
