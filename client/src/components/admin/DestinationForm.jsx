@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { destinationSchema, DESTINATION_TYPES, DESTINATION_CATEGORIES, destinationFormDefault } from '@/schemas/destination'
+import { destinationSchema, DESTINATION_CATEGORIES, destinationFormDefault } from '@/schemas/destination'
 import { ImageUploader } from '@/components/ui/ImageUploader'
 import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import httpClient from '@/services/http'
@@ -171,15 +171,6 @@ export function DestinationForm({ initialValues, isSubmitting, submitLabel, onSu
                   <DenseField label="Region" error={errors.region?.message}>
                     <Input placeholder="Asia" {...register('region')} className="h-8 text-sm" />
                   </DenseField>
-                  {initialValues && (
-                    <DenseField label="Type" error={errors.type?.message}>
-                      <Select {...register('type')} className="h-8 text-sm">
-                        {DESTINATION_TYPES.map((t) => (
-                          <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1).replace('-', ' ')}</option>
-                        ))}
-                      </Select>
-                    </DenseField>
-                  )}
                   <DenseField label="Market Category" error={errors.category?.message}>
                     <Select
                       value={Array.isArray(watch('category')) ? (watch('category').includes('domestic') && watch('category').includes('weekend') ? 'domestic & weekend' : watch('category')[0] || 'other') : watch('category') || 'other'}
@@ -190,7 +181,7 @@ export function DestinationForm({ initialValues, isSubmitting, submitLabel, onSu
                       }}
                       className="h-8 text-sm"
                     >
-                      {DESTINATION_CATEGORIES.map((c) => (
+                      {(initialValues ? DESTINATION_CATEGORIES : DESTINATION_CATEGORIES.filter((c) => c !== 'other')).map((c) => (
                         <option key={c} value={c}>
                           {c === 'domestic & weekend' ? 'Domestic & Weekend' : c.charAt(0).toUpperCase() + c.slice(1)}
                         </option>
@@ -298,10 +289,13 @@ export function DestinationForm({ initialValues, isSubmitting, submitLabel, onSu
                     </label>
                   </div>
                 </div>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={!!featured} onChange={(e) => setValue('featured', e.target.checked, { shouldDirty: true })} className="h-3.5 w-3.5" />
-                  Featured
-                </label>
+                <div>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={!!featured} onChange={(e) => setValue('featured', e.target.checked, { shouldDirty: true })} className="h-3.5 w-3.5" />
+                    Show in Trending Destinations
+                  </label>
+                  <p className="mt-1 text-xs text-slate-500">When on, this destination can appear in the homepage Trending Destinations section.</p>
+                </div>
                 <DenseField label="Display Order" error={errors.displayOrder?.message}>
                   <Input type="number" min={0} {...register('displayOrder')} className="h-8 w-24 text-sm" />
                 </DenseField>
@@ -317,7 +311,7 @@ export function DestinationForm({ initialValues, isSubmitting, submitLabel, onSu
               <p className="text-xs font-semibold text-slate-700">Record Information</p>
               <div className="mt-2 space-y-1 text-xs">
                 <div className="flex justify-between"><span className="text-slate-500">Status</span><span className="font-medium">{published ? 'Published' : 'Draft'}</span></div>
-                <div className="flex justify-between"><span className="text-slate-500">Featured</span><span className="font-medium">{featured ? 'Yes' : 'No'}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Show in Trending Destinations</span><span className="font-medium">{featured ? 'Yes' : 'No'}</span></div>
                 <div className="flex justify-between"><span className="text-slate-500">Slug</span><span className="font-mono text-xs">/{watch('slug') || '—'}</span></div>
               </div>
             </div>
@@ -459,7 +453,7 @@ function HeroMediaField({ heroImage, heroVideo, onChangeImage, onChangeVideo, on
             {hasImage ? (
               <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
                 <div className="p-2">
-                  <img src={heroImage.secureUrl || heroImage.url} alt={heroImage.alt || ''} className="max-h-60 w-full object-contain rounded-md border border-slate-100 bg-slate-50" />
+                  <img src={heroImage.secureUrl || heroImage.url} alt={heroImage.alt || ''} className="h-44 w-full rounded-md border border-slate-100 bg-slate-50 object-contain" />
                   <div className="mt-2 flex items-center justify-between gap-2 text-xs">
                     <div className="min-w-0">
                       <p className="truncate font-medium text-slate-700">{heroImage.publicId ? heroImage.publicId.split('/').pop() : (heroImage.url || '').split('/').pop() || 'hero image'}</p>
@@ -492,7 +486,7 @@ function HeroMediaField({ heroImage, heroVideo, onChangeImage, onChangeVideo, on
               <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
                 <div className="p-2">
                   <div className="relative">
-                    <video src={heroVideo.secureUrl || heroVideo.url} controls muted playsInline preload="metadata" className="max-h-60 w-full rounded-md border border-slate-100 bg-black object-contain" />
+                    <video src={heroVideo.secureUrl || heroVideo.url} controls muted playsInline preload="metadata" className="h-44 w-full rounded-md border border-slate-100 bg-black object-contain" />
                     <span className="absolute left-2 top-2 rounded bg-black/60 px-1.5 py-0.5 text-xs font-medium text-white">Video</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-2 text-xs">
@@ -603,10 +597,10 @@ function CompactMediaBlock({ value, onChange, onUploaded, large, error }) {
     <div className={`overflow-hidden rounded-md border bg-white ${has ? 'border-slate-200' : 'border-dashed border-slate-300'}`}>
       {has ? (
         <div className="p-2">
-          <img src={src} alt={value.alt || ''} className={`${large ? 'aspect-[16/7]' : 'aspect-[4/3] max-h-[180px]'} w-full object-cover rounded-md border border-slate-100`} />
+          <img src={src} alt={value.alt || ''} className={`${large ? 'aspect-[16/7]' : 'h-44'} w-full rounded-md border border-slate-100 bg-slate-50 object-contain`} />
           <div className="mt-2 flex gap-1.5">
-            <div className="flex-1">
-              <ImageUploader value={value} onChange={onChange} folder="destination-media" onUploaded={onUploaded} />
+            <div className="flex-1 [&_img]:max-h-44">
+              <ImageUploader value={value} onChange={onChange} folder="destination-media" onUploaded={onUploaded} showPreview={false} />
             </div>
           </div>
           <div className="mt-1 flex gap-1.5">

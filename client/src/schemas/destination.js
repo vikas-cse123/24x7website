@@ -71,7 +71,7 @@ export const destinationFormDefault = {
   country: '',
   region: '',
   type: 'other',
-  category: 'other',
+  category: 'international',
   description: '',
   homepageImage: { url: '', alt: '' },
   homepageName: '',

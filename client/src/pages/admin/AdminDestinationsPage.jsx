@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Plus, Pencil, Trash2, ExternalLink, Globe, Ban, Search, MoreVertical, Copy, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Pencil, Trash2, ExternalLink, Globe, Ban, Search, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -75,17 +75,6 @@ function ActionMenu({ destination, onDelete, onPublish, onUnpublish }) {
           >
             <ExternalLink className="h-3.5 w-3.5" /> Preview
           </a>
-          <button
-            type="button"
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-xs hover:bg-slate-50"
-            onClick={() => {
-              navigator.clipboard.writeText(destination.slug)
-              toast.success('Slug copied')
-              setOpen(false)
-            }}
-          >
-            <Copy className="h-3.5 w-3.5" /> Duplicate
-          </button>
           {destination.published ? (
             <button
               type="button"
@@ -285,7 +274,6 @@ export function AdminDestinationsPage() {
             <option value="international">International</option>
             <option value="domestic">Domestic</option>
             <option value="weekend">Weekend</option>
-            <option value="other">Other</option>
           </Select>
         </div>
 
@@ -328,7 +316,7 @@ export function AdminDestinationsPage() {
                     <th className="px-2 py-2">Country</th>
                     <th className="px-2 py-2">Category</th>
                     <th className="px-2 py-2">Status</th>
-                    <th className="px-2 py-2">Featured</th>
+                    <th className="px-2 py-2">Show in Trending Destinations</th>
                     <th className="px-2 py-2 text-right">Updated</th>
                     <th className="px-2 py-2 text-right"></th>
                   </tr>
@@ -363,7 +351,7 @@ export function AdminDestinationsPage() {
                         )}
                       </td>
                       <td className="px-2 py-2 text-center">
-                        {d.featured ? <span className="text-amber-600">★</span> : <span className="text-slate-300">—</span>}
+                        {d.featured ? <span className="text-amber-600" title="Shown in Trending Destinations">★</span> : <span className="text-slate-300" title="Not shown in Trending Destinations">—</span>}
                       </td>
                       <td className="px-2 py-2 text-right text-slate-500">{new Date(d.updatedAt).toLocaleDateString()}</td>
                       <td className="px-2 py-2 text-right">

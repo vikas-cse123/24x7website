@@ -28,15 +28,10 @@ export function AdminDestinationFormPage({ mode }) {
 
   const createMutation = useMutation({
     mutationFn: (values) => adminDestinationApi.create(values),
-    onSuccess: (res) => {
+    onSuccess: () => {
       toast.success('Destination created')
       queryClient.invalidateQueries({ queryKey: ['admin', 'destinations'] })
-      const created = res?.data?.data
-      if (created?.id) {
-        navigate(`/admin/destinations/${created.id}/edit`)
-      } else {
-        navigate('/admin/destinations')
-      }
+      navigate('/admin/destinations')
     },
     onError: (err) => toast.error(err.response?.data?.message || err.message || 'Create failed'),
   })
@@ -92,16 +87,6 @@ export function AdminDestinationFormPage({ mode }) {
     onError: (err) => toast.error(err.message || 'Delete failed'),
   })
 
-  const [moreOpen, setMoreOpen] = React.useState(false)
-  const moreRef = React.useRef(null)
-  React.useEffect(() => {
-    const h = (e) => {
-      if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false)
-    }
-    document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
-  }, [])
-
   if (isEdit && loadingEdit) {
     return (
       <div className="space-y-4">
@@ -144,9 +129,6 @@ export function AdminDestinationFormPage({ mode }) {
       {/* Record Header */}
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-white px-3 py-3 sm:px-4">
         <div className="flex min-w-0 gap-3">
-          <div className="hidden h-9 w-9 shrink-0 place-items-center rounded-md border border-amber-200 bg-amber-50 text-amber-700 sm:grid">
-            <span className="text-xs font-bold">D</span>
-          </div>
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Destination</p>
             <h1 className="truncate text-base font-bold tracking-tight sm:text-lg">
@@ -169,39 +151,6 @@ export function AdminDestinationFormPage({ mode }) {
               Preview
             </a>
           )}
-          <div className="relative" ref={moreRef}>
-            <button
-              type="button"
-              onClick={() => setMoreOpen((v) => !v)}
-              className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-            >
-              More <span className="text-xs">▼</span>
-            </button>
-            {moreOpen && (
-              <div className="absolute right-0 top-8 z-20 w-44 rounded-md border border-slate-200 bg-white py-1 shadow-lg">
-                {isEdit && destination?.slug && (
-                  <a href={`/destination/${destination.slug}`} target="_blank" rel="noopener noreferrer" className="flex px-3 py-1.5 text-xs hover:bg-slate-50" onClick={() => setMoreOpen(false)}>
-                    Preview
-                  </a>
-                )}
-                <button type="button" className="flex w-full px-3 py-1.5 text-left text-xs hover:bg-slate-50" onClick={() => { navigator.clipboard.writeText(destination?.slug || ''); setMoreOpen(false)}}>
-                  Duplicate
-                </button>
-                {isEdit && (
-                  <button
-                    type="button"
-                    className="flex w-full px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50"
-                    onClick={() => {
-                      setMoreOpen(false)
-                      if (window.confirm(`Delete "${destination.name}"? This will remove the destination and its unreferenced media.`)) deleteMutation.mutate()
-                    }}
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
@@ -212,7 +161,11 @@ export function AdminDestinationFormPage({ mode }) {
         submitLabel={isEdit ? 'Save changes' : 'Create destination'}
         onSubmit={(values) => {
           const payload = preparePayload(values)
-          if (isEdit) updateMutation.mutate(payload)
+          if (isEdit) {
+            // Type is not editable in the UI — never send/overwrite the stored value.
+            delete payload.type
+            updateMutation.mutate(payload)
+          }
           else createMutation.mutate(payload)
         }}
         onDelete={

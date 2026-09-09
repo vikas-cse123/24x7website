@@ -18,6 +18,7 @@ export function ImageUploader({
   maxFiles = 10,
   className,
   onUploaded, // optional: called with each successfully uploaded media object
+  showPreview = true, // set false when the parent already previews `value` (avoids rendering the same image twice)
 }) {
   const isArray = Array.isArray(value)
   const [dragOver, setDragOver] = React.useState(false)
@@ -150,7 +151,7 @@ export function ImageUploader({
             </div>
           ))}
         </div>
-      ) : hasImage && (
+      ) : showPreview && hasImage && (
         <div className="relative overflow-hidden rounded-lg border border-border">
           <img src={items[0].secureUrl||items[0].url} alt={items[0].alt||'preview'} className="max-h-96 w-full object-contain" />
           <Button type="button" size="icon" variant="destructive" className="absolute right-2 top-2 h-7 w-7" onClick={()=>remove(0)}><X className="h-4 w-4" /></Button>

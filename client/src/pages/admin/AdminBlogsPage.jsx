@@ -192,7 +192,6 @@ export function AdminBlogsPage() {
                     <th className="px-2 py-2">Destination</th>
                     <th className="px-2 py-2">Status</th>
                     <th className="px-2 py-2 min-w-[140px]">Updated</th>
-                    <th className="px-2 py-2">Author</th>
                     <th className="px-2 py-2 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -214,7 +213,6 @@ export function AdminBlogsPage() {
                         {b.published ? <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Published</span> : <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600">Draft</span>}
                       </td>
                       <td className="px-2 py-2 whitespace-nowrap text-xs text-slate-600">{formatDateTime(b.updatedAt)}</td>
-                      <td className="px-2 py-2 whitespace-nowrap text-xs text-slate-700">{b.author || '—'}</td>
                       <td className="px-2 py-2 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button type="button" onClick={()=> publishMutation.mutate({ id:b.id, published:b.published })} className="grid h-7 w-7 place-items-center rounded-md text-slate-500 hover:bg-slate-100" title={b.published ? 'Unpublish' : 'Publish'}>

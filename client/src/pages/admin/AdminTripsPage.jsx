@@ -165,7 +165,6 @@ export function AdminTripsPage() {
                   <tr className="border-b border-slate-200 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <th className="w-10 px-2 py-2"></th>
                     <th className="px-2 py-2">Trip</th>
-                    <th className="px-2 py-2">Code</th>
                     <th className="px-2 py-2">Destination</th>
                     <th className="px-2 py-2">Duration</th>
                     <th className="px-2 py-2">Price</th>
@@ -185,7 +184,6 @@ export function AdminTripsPage() {
                         </Link>
                         <p className="font-mono text-xs text-slate-500">/{t.slug}</p>
                       </td>
-                      <td className="px-2 py-1.5 font-mono text-xs text-slate-500">{t.tripCode}</td>
                       <td className="px-2 py-1.5 text-slate-600">{t.destination?.name || '—'}</td>
                       <td className="px-2 py-1.5 text-slate-600">
                         {t.durationDays}D/{t.durationNights}N

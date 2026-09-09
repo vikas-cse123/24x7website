@@ -5,7 +5,6 @@ import { Container } from '@/components/ui/container'
 import { destinationApi } from '@/services/destinations'
 import { cn } from '@/lib/utils'
 import { IndianFlagIcon } from '@/components/icons/IndianFlagIcon'
-import { sortDestinationsForAll } from '@/lib/destinationImages'
 
 const LIMIT = 50
 
@@ -88,13 +87,10 @@ export function DestinationExplorer() {
 
   let destinations = data?.data?.data?.items || []
 
-  // Deduplicate by normalized name (slug is unique but name duplicated for Bali/Almaty/Spiti/Kashmir)
+  // Deduplicate by normalized name (slug is unique but name duplicated for Bali/Almaty/Spiti/Kashmir).
+  // Ordering comes from the API (displayOrder ASC, then name): filtering and
+  // sorting both happen server-side so every filter shares one global ranking.
   destinations = dedupeByName(destinations)
-
-  // For "All", use deliberate spec order; otherwise keep API order (displayOrder)
-  if (category === 'all' && destinations.length > 0) {
-    destinations = sortDestinationsForAll(destinations)
-  }
 
   // Native-feeling horizontal scroll: overflow-x-auto + 1:1 pointer drag
   // No momentum RAF, no velocity, no wheel hijack, no snap.

@@ -176,12 +176,12 @@ export function TripForm({ initialValues, destinations, tripCode, tripId, isSubm
   const [activeTab, setActiveTab] = React.useState('basic')
   const navigate = useNavigate()
   React.useEffect(() => { if (initialValues) reset(initialValues) }, [initialValues, reset])
-  const featured = watch('featured'); const published = watch('published')
+  const published = watch('published')
   const tabOrder = TRIP_TABS.map(t=>t.id)
   const currentIndex = tabOrder.indexOf(activeTab)
   const goNext = async () => {
     const fieldsByTab = {
-      basic: ['destinationId','cardName','pageHeading','slug','tripType','durationDays','durationNights','maxGroupSize','shortDescription','description'],
+      basic: ['destinationId','cardName','pageHeading','slug','tripType','durationDays','durationNights','shortDescription','description'],
       itinerary: ['itinerary','inclusions','exclusions','importantInformation','thingsToCarry'],
       media: ['cardImage'],
       pricing: ['startingPrice','originalPrice','currency','datesOnRequest','departures','costing'],
@@ -198,7 +198,7 @@ export function TripForm({ initialValues, destinations, tripCode, tripId, isSubm
   React.useEffect(()=>{ const h=(e)=>{ if(!hasDirty) return; e.preventDefault(); e.returnValue=''}; window.addEventListener('beforeunload',h); return()=>window.removeEventListener('beforeunload',h)},[hasDirty])
   const onInvalid = React.useCallback(()=>{ setTimeout(()=>{ const el=document.querySelector('[aria-invalid="true"]'); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}) },80)},[])
   return (
-    <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate className="pb-10">
+    <form onSubmit={handleSubmit((values) => onSubmit({ ...values, maxGroupSize: 10 }), onInvalid)} noValidate className="pb-10">
       <div className="sticky top-12 z-10 mb-4 rounded-lg border border-slate-200 bg-white px-4">
         <div className="-mb-px flex gap-5 overflow-x-auto">
           {TRIP_TABS.map(t=>(
@@ -218,7 +218,6 @@ export function TripForm({ initialValues, destinations, tripCode, tripId, isSubm
               {tripCode && (<DenseField label="Trip code" hint="Generated server-side and not editable."><Input value={tripCode} readOnly disabled className="h-8 text-sm" /></DenseField>)}
               <DenseField label="Duration Days" required error={errors.durationDays?.message}><Input type="number" min={1} placeholder="8" {...register('durationDays')} className="h-8 text-sm" /></DenseField>
               <DenseField label="Duration Nights" required error={errors.durationNights?.message}><Input type="number" min={0} placeholder="7" {...register('durationNights')} className="h-8 text-sm" /></DenseField>
-              <DenseField label="Max Group Size" required error={errors.maxGroupSize?.message}><Input type="number" min={1} placeholder="10" {...register('maxGroupSize')} className="h-8 text-sm" /></DenseField>
               <DenseField label="Short Description" error={errors.shortDescription?.message}><Textarea rows={2} placeholder="Short description for listings" {...register('shortDescription')} className="text-sm" /></DenseField>
             </div><div className="mt-4"><DenseField label="Description" required error={errors.description?.message}><RichTextEditor value={watch('description')||''} onChange={(html)=>setValue('description',html,{shouldValidate:true,shouldDirty:true})} placeholder="Full description of the trip" error={!!errors.description} /></DenseField></div></RecordSection></div>
           </div>
@@ -252,7 +251,6 @@ export function TripForm({ initialValues, destinations, tripCode, tripId, isSubm
         )}
         {activeTab==='publish' && (
           <div className="space-y-0 divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 bg-white">
-            <div className="p-4"><RecordSection title="Discovery"><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><label className="flex items-center gap-2.5 text-sm"><Checkbox checked={featured} onCheckedChange={(v)=> setValue('featured', v, { shouldValidate: true })} /><span>Featured<span className="ml-1 text-xs text-muted-foreground">(highlight on listings)</span></span></label><div className="w-full sm:max-w-[200px]"><DenseField label="Display order" error={errors.displayOrder?.message}><Input type="number" min={0} {...register('displayOrder')} className="h-8 text-sm" /></DenseField></div></div></RecordSection></div>
             <div className="p-4"><RecordSection title="SEO"><div className="space-y-3"><DenseField label="SEO title" error={errors.seoTitle?.message}><div><Input placeholder="Vietnam 8 Days Tour Package" {...register('seoTitle')} className="h-8 text-sm" maxLength={60} /><p className="mt-1 text-right text-xs text-slate-500">{(watch('seoTitle')||'').length} / 60</p></div></DenseField><DenseField label="SEO description" error={errors.seoDescription?.message}><div><Textarea rows={2} {...register('seoDescription')} className="text-sm" maxLength={160} /><p className="mt-1 text-right text-xs text-slate-500">{(watch('seoDescription')||'').length} / 160</p></div></DenseField><DenseField label="SEO keywords" error={errors.seoKeywords?.message}><Input placeholder="vietnam, hanoi, ho chi minh" {...register('seoKeywords')} className="h-8 text-sm" /></DenseField></div></RecordSection></div>
             <div className="p-4"><RecordSection title="Publishing"><label className="flex items-center gap-2.5 text-sm"><Checkbox checked={published} onCheckedChange={(v)=> setValue('published', v, { shouldValidate: true })} /><span>Published<span className="ml-1 text-xs text-muted-foreground">(visible on the public site)</span></span></label></RecordSection></div>
           </div>
@@ -262,14 +260,13 @@ export function TripForm({ initialValues, destinations, tripCode, tripId, isSubm
         <Button type="button" variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { if (currentIndex === 0) navigate('/admin/trips'); else goPrev(); }}>Back</Button>
         <div className="flex items-center gap-2">
           <span className="hidden text-xs text-slate-500 sm:inline">Step {currentIndex+1} of {TRIP_TABS.length}</span>
-          {currentIndex < TRIP_TABS.length -1 ? (
+          {currentIndex < TRIP_TABS.length -1 && (
             <Button type="button" size="sm" className="h-8 bg-slate-900 text-white hover:bg-slate-800 text-xs" onClick={goNext}>Next</Button>
-          ) : (
-            <Button type="submit" size="sm" disabled={isSubmitting} className="h-8 bg-slate-900 text-white hover:bg-slate-800 text-xs">
-              {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-              {isSubmitting ? 'Saving…' : submitLabel}
-            </Button>
           )}
+          <Button type="submit" size="sm" disabled={isSubmitting} className="h-8 bg-slate-900 text-white hover:bg-slate-800 text-xs">
+            {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+            {isSubmitting ? 'Saving…' : submitLabel}
+          </Button>
         </div>
       </div>
     </form>

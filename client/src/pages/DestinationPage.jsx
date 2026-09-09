@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useParams, Link } from 'react-router-dom'
 import * as React from 'react'
-import { ArrowLeft, HelpCircle, X } from 'lucide-react'
+import { ArrowLeft, HelpCircle, X, Volume2, VolumeX } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { DestinationImage } from '@/components/destinations/DestinationImage'
 import { DestinationCard } from '@/components/destinations/DestinationCard'
@@ -116,6 +116,18 @@ export function DestinationPage() {
   const { slug } = useParams()
   const [showDescriptionModal, setShowDescriptionModal] = React.useState(false)
   const [styleFilter, setStyleFilter] = React.useState(null)
+  // Hero video starts muted (autoplay requirement); the overlay button toggles sound.
+  const [heroMuted, setHeroMuted] = React.useState(true)
+  const heroVideoRef = React.useRef(null)
+  const toggleHeroMuted = React.useCallback(() => {
+    const next = !heroMuted
+    const el = heroVideoRef.current
+    if (el) {
+      el.muted = next
+      if (!next) el.play().catch(() => {})
+    }
+    setHeroMuted(next)
+  }, [heroMuted])
 
   // Reset the style filter when navigating between destinations.
   React.useEffect(() => {
@@ -294,7 +306,8 @@ export function DestinationPage() {
           <video
             key={heroVideoSrc}
             ref={(el) => {
-              if (el) el.muted = true
+              heroVideoRef.current = el
+              if (el) el.muted = heroMuted
             }}
             src={heroVideoSrc}
             autoPlay
@@ -325,6 +338,17 @@ export function DestinationPage() {
             </p>
           </div>
         )}
+        {heroVideoSrc ? (
+          <button
+            type="button"
+            onClick={toggleHeroMuted}
+            aria-label={heroMuted ? 'Unmute hero video' : 'Mute hero video'}
+            aria-pressed={!heroMuted}
+            className="absolute bottom-4 right-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-colors hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            {heroMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+          </button>
+        ) : null}
       </div>
 
       {/* Full-width content — 60px gap below the hero, 84px desktop gutters */}

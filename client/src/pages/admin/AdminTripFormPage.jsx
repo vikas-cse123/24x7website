@@ -90,7 +90,7 @@ export function AdminTripFormPage({ mode }) {
       tripType: Array.isArray(trip.tripType) ? trip.tripType : trip.tripType ? [trip.tripType] : ['group'],
       durationDays: trip.durationDays || 1,
       durationNights: trip.durationNights || 0,
-      maxGroupSize: trip.maxGroupSize || 10,
+      maxGroupSize: 10,
       startingPrice: trip.startingPrice ?? null,
       originalPrice: trip.originalPrice ?? null,
       datesOnRequest: !!trip.datesOnRequest,
@@ -128,23 +128,6 @@ export function AdminTripFormPage({ mode }) {
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending
 
-  const deleteMutation = useMutation({
-    mutationFn: () => adminTripApi.remove(id),
-    onSuccess: () => {
-      toast.success('Trip deleted')
-      queryClient.invalidateQueries({ queryKey: ['admin', 'trips'] })
-      navigate('/admin/trips')
-    },
-    onError: (err) => toast.error(err.message || 'Delete failed'),
-  })
-  const [moreOpen, setMoreOpen] = React.useState(false)
-  const moreRef = React.useRef(null)
-  React.useEffect(() => {
-    const h = (e) => { if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false) }
-    document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
-  }, [])
-
   if (isEdit && loadingEdit) {
     return (
       <div className="space-y-4">
@@ -175,9 +158,6 @@ export function AdminTripFormPage({ mode }) {
       </div>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3 sm:px-4">
         <div className="flex min-w-0 gap-3">
-          <div className="hidden h-9 w-9 shrink-0 place-items-center rounded-md border border-amber-200 bg-amber-50 text-amber-700 sm:grid">
-            <span className="text-xs font-bold">T</span>
-          </div>
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Trip</p>
             <h1 className="truncate text-base font-bold tracking-tight sm:text-lg">{isEdit ? trip?.name || 'Edit Trip' : 'Create Trip'}</h1>
@@ -187,16 +167,6 @@ export function AdminTripFormPage({ mode }) {
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           {isEdit && trip?.slug && (<a href={`/trip/${trip.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50">Preview</a>)}
-          <div className="relative" ref={moreRef}>
-            <button type="button" onClick={() => setMoreOpen((v) => !v)} className="inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50">More <span className="text-xs">▼</span></button>
-            {moreOpen && (
-              <div className="absolute right-0 top-8 z-20 w-44 rounded-md border border-slate-200 bg-white py-1 shadow-lg">
-                {isEdit && trip?.slug && (<a href={`/trip/${trip.slug}`} target="_blank" rel="noopener noreferrer" className="flex px-3 py-1.5 text-xs hover:bg-slate-50" onClick={() => setMoreOpen(false)}>Preview</a>)}
-                <button type="button" className="flex w-full px-3 py-1.5 text-left text-xs hover:bg-slate-50" onClick={() => { navigator.clipboard.writeText(trip?.slug || ''); setMoreOpen(false)}}>Duplicate</button>
-                {isEdit && (<button type="button" className="flex w-full px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50" onClick={() => { setMoreOpen(false); if (window.confirm(`Delete "${trip.name}"?`)) deleteMutation.mutate() }}>Delete</button>)}
-              </div>
-            )}
-          </div>
         </div>
       </div>
       <TripForm

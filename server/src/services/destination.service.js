@@ -16,11 +16,32 @@ export async function listPublic({ page = 1, limit = 12, country, category, feat
   const totalPages = Math.max(1, Math.ceil(total / limit))
   const safePage = Math.min(page, totalPages)
 
-  const items = await Destination.find(filter, PUBLIC_PROJECTION)
-    .sort({ featured: -1, displayOrder: 1, name: 1 })
-    .skip((safePage - 1) * limit)
-    .limit(limit)
-    .lean()
+  // Ordering is computed in the database so every consumer (homepage
+  // Explore Destinations, Trending Destinations, /destinations page) sees
+  // the same sequence: numeric displayOrder ascending ONLY, where 1 means
+  // first, 2 means second, etc. displayOrder is normalized with $convert so
+  // legacy string values sort numerically; 0 is treated as "unordered" (the
+  // schema default, same as missing/null) and trails explicit values; name
+  // then _id keep the order deterministic when displayOrder ties.
+  const items = await Destination.aggregate([
+    { $match: filter },
+    {
+      $addFields: {
+        __displayOrder: {
+          $let: {
+            vars: {
+              v: { $convert: { input: '$displayOrder', to: 'double', onError: Infinity, onNull: Infinity } },
+            },
+            in: { $cond: [{ $eq: ['$$v', 0] }, Infinity, '$$v'] },
+          },
+        },
+      },
+    },
+    { $sort: { __displayOrder: 1, name: 1, _id: 1 } },
+    { $skip: (safePage - 1) * limit },
+    { $limit: limit },
+    { $project: { __displayOrder: 0, createdBy: 0, updatedBy: 0, __v: 0 } },
+  ])
 
   return {
     items: items.map(toPublicDestination),
