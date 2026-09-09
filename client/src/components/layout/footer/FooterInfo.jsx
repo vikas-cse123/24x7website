@@ -1,10 +1,8 @@
 import * as React from 'react'
-import { Link } from 'react-router-dom'
 import { Phone, Mail, Map } from 'lucide-react'
 import { FaWhatsapp, FaInstagram, FaFacebookF } from 'react-icons/fa'
 import { Container } from '@/components/ui/container'
 import {
-  FOOTER_QUICK_LINKS,
   FOOTER_CONTACT,
   FOOTER_SOCIALS,
 } from '@/lib/footerData'
@@ -132,20 +130,6 @@ export function FooterInfo() {
             </a>
           </AddressBlock>
         </FooterAccordion>
-        <FooterAccordion title="Quick Links">
-          <ul className="space-y-2">
-            {FOOTER_QUICK_LINKS.map((link) => (
-              <li key={link.label}>
-                <Link
-                  to={link.href}
-                  className="text-[13px] leading-[1.4] text-[#374151] transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </FooterAccordion>
         <FooterAccordion title="Talk To Us">
           <ul className="space-y-2.5 text-[13px] leading-[1.4] text-[#374151]">
             <li className="flex items-center gap-2.5">
@@ -184,7 +168,7 @@ export function FooterInfo() {
         </div>
       </div>
 
-      <div className="hidden gap-10 py-10 sm:grid sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1.2fr] lg:gap-12">
+      <div className="hidden gap-10 py-10 sm:grid sm:grid-cols-2 lg:grid-cols-[1.4fr_1.2fr] lg:gap-12">
         {/* Address */}
         <div>
           <Heading>Address</Heading>
@@ -199,23 +183,6 @@ export function FooterInfo() {
               View on Map
             </a>
           </AddressBlock>
-        </div>
-
-        {/* Quick Links */}
-        <div>
-          <Heading>Quick Links</Heading>
-          <ul className="mt-4 space-y-2">
-            {FOOTER_QUICK_LINKS.map((link) => (
-              <li key={link.label}>
-                <Link
-                  to={link.href}
-                  className="text-[13px] leading-[1.4] text-[#374151] transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
         </div>
 
         {/* Talk To Us + socials */}

@@ -9,7 +9,6 @@ import { AdminPlaceholderPage } from '@/pages/admin/AdminPlaceholderPage'
 // Route-level code splitting — reduces initial JS from ~862kB to ~180kB.
 // Each public/admin page is a separate chunk loaded on demand.
 const HomePage = React.lazy(() => import('@/pages/HomePage').then(m => ({ default: m.HomePage })))
-const DestinationsPage = React.lazy(() => import('@/pages/DestinationsPage').then(m => ({ default: m.DestinationsPage })))
 const DestinationPage = React.lazy(() => import('@/pages/DestinationPage').then(m => ({ default: m.DestinationPage })))
 const TripsPage = React.lazy(() => import('@/pages/TripsPage').then(m => ({ default: m.TripsPage })))
 const TripPage = React.lazy(() => import('@/pages/TripPage').then(m => ({ default: m.TripPage })))
@@ -18,11 +17,6 @@ const BookingConfirmationPage = React.lazy(() => import('@/pages/BookingConfirma
 const BlogsPage = React.lazy(() => import('@/pages/BlogsPage').then(m => ({ default: m.BlogsPage })))
 const DestinationBlogsPage = React.lazy(() => import('@/pages/BlogsPage').then(m => ({ default: m.DestinationBlogsPage })))
 const BlogDetailPage = React.lazy(() => import('@/pages/BlogDetailPage').then(m => ({ default: m.BlogDetailPage })))
-const FaqsPage = React.lazy(() => import('@/pages/FaqsPage').then(m => ({ default: m.FaqsPage })))
-const ContactPage = React.lazy(() => import('@/pages/ContactPage').then(m => ({ default: m.ContactPage })))
-const PrivacyPolicyPage = React.lazy(() => import('@/pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })))
-const TermsPage = React.lazy(() => import('@/pages/TermsPage').then(m => ({ default: m.TermsPage })))
-const CancellationPolicyPage = React.lazy(() => import('@/pages/CancellationPolicyPage').then(m => ({ default: m.CancellationPolicyPage })))
 const NotFoundPage = React.lazy(() => import('@/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })))
 const MiddleAgeTripsPage = React.lazy(() => import('@/pages/MiddleAgeTripsPage').then(m => ({ default: m.MiddleAgeTripsPage })))
 const UpcomingTripsPage = React.lazy(() => import('@/pages/UpcomingTripsPage').then(m => ({ default: m.UpcomingTripsPage })))
@@ -130,8 +124,7 @@ export function AppRoutes() {
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
 
-          {/* Destinations */}
-          <Route path="/destinations" element={<DestinationsPage />} />
+          {/* Destinations — detail pages only (listing /destinations removed) */}
           <Route path="/destination/:slug" element={<DestinationPage />} />
 
           {/* Trips */}
@@ -149,14 +142,6 @@ export function AppRoutes() {
           <Route path="/blogs" element={<BlogsPage />} />
           <Route path="/blogs/:destinationSlug" element={<DestinationBlogsPage />} />
           <Route path="/blog/:slug" element={<BlogDetailPage />} />
-          <Route path="/faqs" element={<FaqsPage />} />
-
-          {/* Company */}
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-          <Route path="/terms-and-conditions" element={<TermsPage />} />
-          <Route path="/terms" element={<TermsPage />} />
-          <Route path="/cancellation-policy" element={<CancellationPolicyPage />} />
 
           {/* Marketing / navigation placeholders — keep for backwards compat; nav now points to real routes */}
           <Route path="/group-trips" element={placeholder('Group Trips')} />

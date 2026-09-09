@@ -52,22 +52,16 @@ export const NAV_ITEMS = [
 ]
 
 // Footer link groups. Structured so real content can be added later.
+// Note: public /destinations listing and the Contact/Privacy/Terms/
+// Cancellation pages are removed — no entries here point to them.
 export const FOOTER_NAV = {
   destinations: [
-    { label: 'Popular Destinations', href: '/destinations' },
     { label: 'Group Trips', href: '/trips' },
     { label: 'Upcoming Group Trips', href: '/trips' },
     { label: 'Travel Blogs', href: '/blogs' },
   ],
   support: [
     { label: 'Travel Blogs', href: '/blogs' },
-    { label: 'FAQs', href: '/faqs' },
-    { label: 'Contact Us', href: '/contact' },
-    { label: 'Destinations', href: '/destinations' },
   ],
-  legal: [
-    { label: 'Privacy Policy', href: '/privacy-policy' },
-    { label: 'Terms & Conditions', href: '/terms-and-conditions' },
-    { label: 'Cancellation Policy', href: '/cancellation-policy' },
-  ],
+  legal: [],
 }

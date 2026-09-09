@@ -1,27 +1,16 @@
 import * as React from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { UserCog, CalendarRange, Users, Star, Bell, LogIn, LogOut } from 'lucide-react'
-import { toast } from 'sonner'
+import { Outlet } from 'react-router-dom'
+import { LogIn } from 'lucide-react'
 import { Container } from '@/components/ui/container'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import { useUIStore } from '@/stores/ui'
 import { useSeo } from '@/lib/seo'
-import { cn } from '@/lib/utils'
-
-const NAV = [
-  { to: '/account', label: 'Profile', icon: UserCog, end: true },
-  { to: '/account/bookings', label: 'My Bookings', icon: CalendarRange },
-  { to: '/account/travellers', label: 'Travellers', icon: Users },
-  { to: '/account/reviews', label: 'My Reviews', icon: Star },
-  { to: '/account/notifications', label: 'Notifications', icon: Bell },
-]
 
 // Customer account shell. Private area — noindex (ADR-017).
 export function AccountLayoutPage() {
-  const { isAuthenticated, isLoading: authLoading, logout } = useAuth()
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
   const openAuthModal = useUIStore((s) => s.openAuthModal)
-  const navigate = useNavigate()
 
   useSeo({ title: 'My Account', noindex: true })
 
@@ -55,53 +44,18 @@ export function AccountLayoutPage() {
     )
   }
 
-  async function handleLogout() {
-    await logout()
-    toast.success('Logged out')
-    navigate('/')
-  }
-
   return (
     <Container className="py-8 lg:py-12">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div>
         <div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">My Account</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Profile, bookings and saved travellers — all in one place.
+            
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleLogout}>
-          <LogOut className="h-4 w-4" aria-hidden="true" />
-          Logout
-        </Button>
       </div>
 
-      <div className="mt-6 grid gap-8 lg:grid-cols-[220px_1fr]">
-        {/* Sidebar nav (desktop) / pill tabs (mobile) */}
-        <nav aria-label="Account sections" className="lg:h-fit lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-2 lg:shadow-card">
-          <ul className="-mx-1 flex gap-2 overflow-x-auto overscroll-x-contain px-1 pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:flex-col lg:gap-1 lg:overflow-visible lg:px-0 lg:pb-0">
-            {NAV.map(({ to, label, icon: Icon, end }) => (
-              <li key={to} className="shrink-0 lg:shrink">
-                <NavLink
-                  to={to}
-                  end={end}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-2.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:rounded-lg',
-                      isActive
-                        ? 'bg-primary text-primary-foreground lg:bg-primary/10 lg:text-primary'
-                        : 'border border-input bg-background text-muted-foreground hover:bg-accent hover:text-foreground lg:border-transparent lg:bg-transparent'
-                    )
-                  }
-                >
-                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  {label}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
+      <div className="mt-6">
         <div className="min-w-0">
           <Outlet />
         </div>

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Link } from 'react-router-dom'
-import { User as UserIcon, LogOut, ChevronDown, UserCog, CalendarRange, Users } from 'lucide-react'
+import { User as UserIcon, LogOut, ChevronDown, UserCog, LayoutDashboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import { useUIStore } from '@/stores/ui'
@@ -9,8 +9,6 @@ import { formatPhone } from '@/lib/phone'
 
 const MENU_LINKS = [
   { to: '/account', label: 'My Account', icon: UserCog },
-  { to: '/account/bookings', label: 'My Bookings', icon: CalendarRange },
-  { to: '/account/travellers', label: 'Travellers', icon: Users },
 ]
 
 function AuthenticatedMenu() {
@@ -68,6 +66,16 @@ function AuthenticatedMenu() {
               {label}
             </Link>
           ))}
+          {user?.role === 'admin' && (
+            <Link
+              to="/admin"
+              onClick={() => setOpen(false)}
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+              Admin Panel
+            </Link>
+          )}
           <button
             type="button"
             onClick={async () => {

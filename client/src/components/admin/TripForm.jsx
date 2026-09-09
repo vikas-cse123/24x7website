@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -16,7 +15,6 @@ import { ListItemEditor } from '@/components/trips/ListItemEditor'
 import { FaqListEditor } from '@/components/trips/FaqListEditor'
 import { TripItineraryBuilder } from '@/components/trips/TripItineraryBuilder'
 import { RichTextEditor } from '@/components/ui/rich-text-editor'
-import httpClient from '@/services/http'
 
 function FieldError({ message }) {
   if (!message) return null
@@ -132,45 +130,6 @@ function ThingsToCarryEditor({ items, error, onChange }) {
     </div>
   )
 }
-function TripGalleryManager({ tripId }) {
-  const queryClient = useQueryClient()
-  const [videoUploading, setVideoUploading] = React.useState(false)
-  const [error, setError] = React.useState(null)
-  const videoInputRef = React.useRef(null)
-  const { data, isLoading } = useQuery({ queryKey: ['admin', 'trip-gallery', tripId], queryFn: async () => { const { data } = await httpClient.get('/admin/media', { params: { tripId, limit: 50 } }); return data.data }, enabled: !!tripId })
-  const items = data?.items || []
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin', 'trip-gallery', tripId] })
-  const fail = (e, fallback) => setError(e.response?.data?.message || e.message || fallback)
-  async function createRecord(mediaType, meta) { setError(null); await httpClient.post('/admin/media', { tripId, mediaType, publicId: meta.publicId || '', secureUrl: meta.secureUrl || '', url: meta.url || '', width: meta.width ?? null, height: meta.height ?? null, format: meta.format || '', bytes: meta.bytes ?? null, altText: meta.alt || '', published: true }); invalidate() }
-  async function handlePhotoUploaded(meta) { try { await createRecord('photo', meta) } catch (e) { fail(e, 'Photo upload failed') } }
-  async function handleVideoFile(file) {
-    if (!file) return; setError(null); setVideoUploading(true);
-    try { const form = new FormData(); form.append('video', file); const { data } = await httpClient.post('/admin/upload/video?folder=traveler-media', form, { headers: { 'Content-Type': 'multipart/form-data' } }); await createRecord('video', data.data) } catch (e) { fail(e, 'Video upload failed') } finally { setVideoUploading(false) }
-  }
-  async function togglePublish(item) { try { await httpClient.patch(`/admin/media/${item.id}`, { published: !item.published }); invalidate() } catch (e) { fail(e, 'Update failed') } }
-  async function removeItem(item) { try { await httpClient.delete(`/admin/media/${item.id}`); invalidate() } catch (e) { fail(e, 'Delete failed') } }
-  return (
-    <div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div><Label className="text-xs font-semibold">Upload photos</Label><div className="mt-1"><ImageUploader value={[]} onChange={() => {}} multiple folder="traveler-media" onUploaded={handlePhotoUploaded} /></div></div>
-        <div><Label className="text-xs font-semibold">Upload video</Label><div className="mt-1"><Button type="button" variant="outline" size="sm" disabled={videoUploading} onClick={() => videoInputRef.current?.click()} className="h-8 text-xs">{videoUploading ? 'Uploading video…' : 'Upload video'}</Button><p className="mt-1 text-xs text-slate-500">MP4 or WebM — max 100 MB</p><input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={(e) => { handleVideoFile(e.target.files?.[0]); e.target.value = '' }} /></div></div>
-      </div>
-      {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
-      <div className="mt-4">
-        {isLoading ? (<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{Array.from({ length: 6 }).map((_, i) => (<div key={i} className="h-24 animate-pulse rounded-lg bg-muted" />))}</div>) : items.length === 0 ? (<p className="text-sm text-muted-foreground">No gallery items yet. Upload photos or a video above.</p>) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {items.map((m) => (
-              <div key={m.id} className="overflow-hidden rounded-lg border border-border bg-muted">
-                {m.mediaType === 'video' ? (<div className="flex h-24 items-center justify-center bg-black text-xs font-medium text-white">Video</div>) : (<img src={m.secureUrl || m.url} alt={m.altText || ''} loading="lazy" className="h-24 w-full object-cover" />)}
-                <div className="flex items-center justify-between gap-1 bg-white p-1.5"><span className="text-xs text-muted-foreground">{m.mediaType === 'video' ? 'Video' : 'Photo'} · {m.published ? 'Published' : 'Draft'}</span><span className="flex gap-1"><Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => togglePublish(m)}>{m.published ? 'Unpublish' : 'Publish'}</Button><Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeItem(m)} aria-label="Delete gallery item"><Trash2 className="h-4 w-4" /></Button></span></div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
 export function TripForm({ initialValues, destinations, tripCode, tripId, isSubmitting, submitLabel, onSubmit }) {
   const { register, handleSubmit, control, setValue, watch, reset, formState: { errors, isDirty }, trigger } = useForm({ mode: 'onChange', resolver: zodResolver(tripSchema), defaultValues: initialValues || tripFormDefault })
   const [activeTab, setActiveTab] = React.useState('basic')
@@ -234,7 +193,6 @@ export function TripForm({ initialValues, destinations, tripCode, tripId, isSubm
         {activeTab==='media' && (
           <div className="space-y-0 divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 bg-white">
             <div className="p-4"><RecordSection title="Trip Card Image"><div className="space-y-1"><Label className="text-xs font-semibold">Image shown on trip cards across the website.</Label><div className="mt-1.5"><ImageUploader value={watch('cardImage')} onChange={(v)=> setValue('cardImage', {...(watch('cardImage')||{}), ...v, alt: v.alt || watch('cardImage.alt')}, {shouldValidate:true, shouldDirty:true})} folder="trip-media" /></div><div className="mt-2"><Input placeholder="Alt text" {...register('cardImage.alt')} className="h-8 text-sm" /></div></div></RecordSection></div>
-            <div className="p-4"><RecordSection title="Gallery"><TripGalleryManager tripId={tripId} /></RecordSection></div>
           </div>
         )}
         {activeTab==='pricing' && (

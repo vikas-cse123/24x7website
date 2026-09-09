@@ -46,12 +46,6 @@ export function TrendingDestinations() {
       <Container className="max-w-none mx-0 w-full px-5 sm:px-6 lg:px-[90px]">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Trending Destinations</h2>
-          <Link
-            to="/destinations"
-            className="text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-          >
-            View all destinations
-          </Link>
         </div>
 
         <div className="mt-8">

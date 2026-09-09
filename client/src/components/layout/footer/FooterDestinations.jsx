@@ -2,21 +2,9 @@ import * as React from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { destinationApi } from '@/services/destinations'
-import {
-  DOMESTIC_TRIP_COLUMNS,
-  INTERNATIONAL_TRIP_COLUMNS,
-} from '@/lib/footerData'
-
-// Labels like "Kashmir Tour Packages" → "kashmir" so they can be matched
-// against destination names/slugs coming from the API.
-function normalize(value) {
-  return String(value || '')
-    .toLowerCase()
-    .replace(/tour\s*packages?/g, '')
-    .replace(/[^a-z0-9]/g, '')
-}
 
 const PAGE_SIZE = 50
+const COLUMN_COUNT = 5
 
 async function fetchAllDestinations() {
   const first = await destinationApi.list({ page: 1, limit: PAGE_SIZE })
@@ -33,40 +21,85 @@ async function fetchAllDestinations() {
   return items
 }
 
-function useDestinationSlugMap() {
-  const { data } = useQuery({
-    queryKey: ['footer', 'destination-slugs'],
+function useFooterDestinations() {
+  return useQuery({
+    queryKey: ['footer', 'destinations'],
     queryFn: fetchAllDestinations,
     staleTime: 5 * 60 * 1000,
   })
-  return React.useMemo(() => {
-    const map = new Map()
-    for (const destination of data || []) {
-      if (destination?.slug) {
-        if (destination.name) map.set(normalize(destination.name), destination.slug)
-        map.set(normalize(destination.slug), destination.slug)
-      }
-    }
-    return map
-  }, [data])
 }
 
-function DestinationLink({ label, category, slugMap }) {
-  const slug = slugMap.get(normalize(label))
-  const to = slug ? `/destination/${slug}` : `/trips?category=${category}`
+function hasCategory(destination, key) {
+  const category = destination?.category
+  if (Array.isArray(category)) return category.includes(key)
+  return category === key
+}
+
+function isValidDestination(destination) {
+  if (!destination) return false
+  if (!destination.slug || typeof destination.slug !== 'string') return false
+  if (!destination.slug.trim()) return false
+  if (!destination.name || !String(destination.name).trim()) return false
+  // Public list API already returns published only; keep as a safeguard.
+  if (destination.published === false) return false
+  return true
+}
+
+function chunkIntoColumns(items, columnCount = COLUMN_COUNT) {
+  const columns = Array.from({ length: columnCount }, () => [])
+  if (items.length === 0) return columns
+  const chunkSize = Math.ceil(items.length / columnCount)
+  items.forEach((item, index) => {
+    const columnIndex = Math.min(Math.floor(index / chunkSize), columnCount - 1)
+    columns[columnIndex].push(item)
+  })
+  return columns.filter((column) => column.length > 0)
+}
+
+function getDestinationLabel(destination) {
+  if (destination?.slug === 'almaty') return 'Almaty Tour Packages'
+  return destination?.name
+}
+
+function DestinationLink({ destination }) {
   return (
     <Link
-      to={to}
+      to={`/destination/${destination.slug}`}
       className="text-[13px] leading-[1.4] text-[#374151] transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      {label}
+      {getDestinationLabel(destination)}
     </Link>
   )
 }
 
-function DestinationSection({ title, columns, category, first }) {
-  const slugMap = useDestinationSlugMap()
+function DestinationSectionSkeleton({ title, first }) {
+  return (
+    <section className={`hidden sm:block ${first ? '' : 'mt-8 lg:mt-10'}`} aria-label={`${title} loading`}>
+      <h3 className="text-[15px] font-semibold leading-none tracking-tight text-[#1b4332]">{title}</h3>
+      <div className="mt-3 border-t border-[#1b4332]/15 pt-4">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-7 sm:grid-cols-3 lg:grid-cols-5">
+          {Array.from({ length: COLUMN_COUNT }).map((_, columnIndex) => (
+            <ul key={columnIndex} className="space-y-2" aria-hidden="true">
+              {Array.from({ length: 3 }).map((__, itemIndex) => (
+                <li key={itemIndex}>
+                  <div className="h-4 w-3/4 animate-pulse rounded bg-[#1b4332]/10" />
+                </li>
+              ))}
+            </ul>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function DestinationSection({ title, destinations, first }) {
   const [open, setOpen] = React.useState(false)
+  const columns = React.useMemo(
+    () => chunkIntoColumns(destinations, COLUMN_COUNT),
+    [destinations]
+  )
+  if (destinations.length === 0) return null
   return (
     <>
       {/* Desktop: grid */}
@@ -76,9 +109,9 @@ function DestinationSection({ title, columns, category, first }) {
           <div className="grid grid-cols-2 gap-x-6 gap-y-7 sm:grid-cols-3 lg:grid-cols-5">
             {columns.map((column, index) => (
               <ul key={index} className="space-y-2">
-                {column.map((label) => (
-                  <li key={label}>
-                    <DestinationLink label={label} category={category} slugMap={slugMap} />
+                {column.map((destination) => (
+                  <li key={destination.slug}>
+                    <DestinationLink destination={destination} />
                   </li>
                 ))}
               </ul>
@@ -109,9 +142,9 @@ function DestinationSection({ title, columns, category, first }) {
         {open && (
           <div className="pb-4">
             <div className="grid grid-cols-2 gap-x-6 gap-y-4 pt-2">
-              {columns.flat().map((label) => (
-                <div key={label}>
-                  <DestinationLink label={label} category={category} slugMap={slugMap} />
+              {destinations.map((destination) => (
+                <div key={destination.slug}>
+                  <DestinationLink destination={destination} />
                 </div>
               ))}
             </div>
@@ -123,18 +156,53 @@ function DestinationSection({ title, columns, category, first }) {
 }
 
 export function FooterDestinations() {
+  const { data, isLoading, isError } = useFooterDestinations()
+
+  const destinations = React.useMemo(
+    () => (data || []).filter(isValidDestination),
+    [data]
+  )
+  const domesticDestinations = React.useMemo(
+    () => destinations.filter((d) => hasCategory(d, 'domestic')),
+    [destinations]
+  )
+  const internationalDestinations = React.useMemo(
+    () => destinations.filter((d) => hasCategory(d, 'international')),
+    [destinations]
+  )
+
+  if (isLoading) {
+    return (
+      <div>
+        <DestinationSectionSkeleton title="Domestic Trips" first />
+        <div className="hidden sm:block">
+          <DestinationSectionSkeleton title="International Trips" />
+        </div>
+        {/* Mobile loading keeps the accordion chrome without fake links. */}
+        <section className="sm:hidden" aria-label="Footer destinations loading">
+          <div className="border-t border-[#1b4332]/15 py-4">
+            <div className="h-4 w-32 animate-pulse rounded bg-[#1b4332]/10" />
+          </div>
+          <div className="border-t border-[#1b4332]/15 py-4">
+            <div className="h-4 w-40 animate-pulse rounded bg-[#1b4332]/10" />
+          </div>
+        </section>
+      </div>
+    )
+  }
+
+  if (isError) return null
+
   return (
     <div>
       <DestinationSection
         title="Domestic Trips"
-        columns={DOMESTIC_TRIP_COLUMNS}
-        category="domestic"
+        destinations={domesticDestinations}
         first
       />
       <DestinationSection
         title="International Trips"
-        columns={INTERNATIONAL_TRIP_COLUMNS}
-        category="international"
+        destinations={internationalDestinations}
       />
     </div>
   )

@@ -205,10 +205,9 @@ export function TripsPage() {
     <Container className="py-8 lg:py-12">
       {/* Heading + intro */}
       <div className="max-w-3xl">
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Upcoming Group Trips</h1>
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Upcoming Trips</h1>
         <p className="mt-2 text-muted-foreground">
-          Real departures with live pricing — pick a destination, a budget or a
-          date, and find your next chhutti.
+        
         </p>
       </div>
 

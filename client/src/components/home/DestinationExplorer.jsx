@@ -103,41 +103,6 @@ export function DestinationExplorer() {
   const lockRef = React.useRef(null)
   const [isDragging, setIsDragging] = React.useState(false)
 
-  const onPointerDown = React.useCallback((e) => {
-    if (e.button !== 0) return
-    const el = trackRef.current
-    if (!el) return
-    hasDraggedRef.current = false
-    lockRef.current = null
-    startXRef.current = e.clientX
-    startYRef.current = e.clientY
-    scrollLeftRef.current = el.scrollLeft
-  }, [])
-
-  const onPointerMove = React.useCallback((e) => {
-    const el = trackRef.current
-    if (!el) return
-    const walkX = e.clientX - startXRef.current
-    const walkY = e.clientY - startYRef.current
-    if (!isDraggingRef.current) {
-      if (Math.abs(walkX) < 6 && Math.abs(walkY) < 6) return
-      if (!lockRef.current) lockRef.current = Math.abs(walkX) > Math.abs(walkY) ? 'h' : 'v'
-      if (lockRef.current === 'v') return
-      if (Math.abs(walkX) <= 6) return
-      isDraggingRef.current = true
-      hasDraggedRef.current = true
-      setIsDragging(true)
-      el.style.scrollBehavior = 'auto'
-      el.style.willChange = 'scroll-position'
-      try {
-        el.setPointerCapture(e.pointerId)
-      } catch {}
-    }
-    if (lockRef.current === 'v') return
-    if (e.cancelable) e.preventDefault()
-    el.scrollLeft = scrollLeftRef.current - walkX
-  }, [])
-
   const endDrag = React.useCallback(
     (e) => {
       lockRef.current = null
@@ -157,6 +122,53 @@ export function DestinationExplorer() {
       }
     },
     []
+  )
+
+  const onPointerDown = React.useCallback((e) => {
+    if (e.button !== 0) return
+    const el = trackRef.current
+    if (!el) return
+    hasDraggedRef.current = false
+    lockRef.current = null
+    startXRef.current = e.clientX
+    startYRef.current = e.clientY
+    scrollLeftRef.current = el.scrollLeft
+  }, [])
+
+  const onPointerMove = React.useCallback(
+    (e) => {
+      const el = trackRef.current
+      if (!el) return
+      // Mouse-only guard: a move with no button held is a hover, never a
+      // drag. A gesture whose pointerup was missed (release outside the
+      // window, focus loss, …) leaves stale start/scroll refs behind; without
+      // this check every later hover would scroll the carousel and could arm
+      // click suppression. Touch/pen/wheel paths are intentionally untouched.
+      if (e.pointerType === 'mouse' && e.buttons === 0) {
+        endDrag(e)
+        return
+      }
+      const walkX = e.clientX - startXRef.current
+      const walkY = e.clientY - startYRef.current
+      if (!isDraggingRef.current) {
+        if (Math.abs(walkX) < 6 && Math.abs(walkY) < 6) return
+        if (!lockRef.current) lockRef.current = Math.abs(walkX) > Math.abs(walkY) ? 'h' : 'v'
+        if (lockRef.current === 'v') return
+        if (Math.abs(walkX) <= 6) return
+        isDraggingRef.current = true
+        hasDraggedRef.current = true
+        setIsDragging(true)
+        el.style.scrollBehavior = 'auto'
+        el.style.willChange = 'scroll-position'
+        try {
+          el.setPointerCapture(e.pointerId)
+        } catch {}
+      }
+      if (lockRef.current === 'v') return
+      if (e.cancelable) e.preventDefault()
+      el.scrollLeft = scrollLeftRef.current - walkX
+    },
+    [endDrag]
   )
 
   const onClickCapture = React.useCallback((e) => {

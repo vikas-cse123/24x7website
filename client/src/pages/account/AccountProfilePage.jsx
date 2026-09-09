@@ -102,13 +102,13 @@ export function AccountProfilePage() {
               <Input id="p-phone" value={profile?.mobile || ''} readOnly disabled autoComplete="tel-national" />
             </div>
             <div className="mt-1.5 flex items-center gap-2">
-              <Badge variant="success">
+              {/* <Badge variant="success">
                 {profile?.mobileVerified ? 'Verified' : 'Unverified'}
-              </Badge>
-              <p className="flex items-center gap-1 text-xs text-muted-foreground">
+              </Badge> */}
+              {/* <p className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Smartphone className="h-3 w-3" aria-hidden="true" />
-                Your login number — verified via OTP.
-              </p>
+                number
+              </p> */}
             </div>
           </div>
           <Button type="submit" disabled={mutation.isPending}>

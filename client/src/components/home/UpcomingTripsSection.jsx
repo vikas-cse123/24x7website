@@ -9,6 +9,8 @@ import { tripApi } from '@/services/trips'
 const LIMIT = 30
 
 export function UpcomingTripsSection() {
+  const [activeDestination, setActiveDestination] = React.useState(null)
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ['home', 'trips'],
     queryFn: () => tripApi.list({ limit: LIMIT, includeBatches: true }),
@@ -25,6 +27,11 @@ export function UpcomingTripsSection() {
     })
     return Array.from(seen.entries()).map(([slug, name]) => ({ slug, name }))
   }, [trips])
+
+  const filteredTrips = React.useMemo(() => {
+    if (!activeDestination) return trips
+    return trips.filter((t) => t.destination?.slug === activeDestination)
+  }, [trips, activeDestination])
 
   // Same proven mobile drag as Explore Destinations — smooth, momentum, no snap jump
   const trackRef = React.useRef(null)
@@ -98,25 +105,42 @@ export function UpcomingTripsSection() {
           </Link>
         </div>
 
-        {/* Destination tabs route into the shared discovery system (/trips). */}
+        {/* Destination tabs filter this section locally (no navigation). */}
         <div className="mt-5 -mx-1 flex gap-2 overflow-x-auto overscroll-x-contain px-1 pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <Link
-            to="/trips"
-            aria-label="Browse all upcoming trips"
-            className="shrink-0 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          <button
+            type="button"
+            onClick={() => setActiveDestination(null)}
+            aria-pressed={activeDestination === null}
+            aria-label="Show all upcoming trips"
+            className={cn(
+              'shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              activeDestination === null
+                ? 'bg-primary text-primary-foreground'
+                : 'border border-input bg-background text-muted-foreground hover:bg-accent hover:text-foreground'
+            )}
           >
             All
-          </Link>
-          {destinationTabs.map((t) => (
-            <Link
-              key={t.slug}
-              to={`/trips?destination=${t.slug}`}
-              aria-label={`View ${t.name} trips`}
-              className="shrink-0 rounded-full border border-input bg-background px-4 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {t.name}
-            </Link>
-          ))}
+          </button>
+          {destinationTabs.map((t) => {
+            const isActive = activeDestination === t.slug
+            return (
+              <button
+                key={t.slug}
+                type="button"
+                onClick={() => setActiveDestination(t.slug)}
+                aria-pressed={isActive}
+                aria-label={`Show ${t.name} trips`}
+                className={cn(
+                  'shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  isActive
+                    ? 'bg-primary text-primary-foreground'
+                    : 'border border-input bg-background text-muted-foreground hover:bg-accent hover:text-foreground'
+                )}
+              >
+                {t.name}
+              </button>
+            )
+          })}
         </div>
 
         <div className="mt-6">
@@ -130,7 +154,7 @@ export function UpcomingTripsSection() {
             <p className="rounded-xl border border-destructive/40 p-8 text-center text-sm text-destructive">
               Could not load trips.
             </p>
-          ) : trips.length === 0 ? (
+          ) : filteredTrips.length === 0 ? (
             <p className="rounded-xl border border-dashed border-border bg-background p-10 text-center text-sm text-muted-foreground">
               No trips available yet.
             </p>
@@ -150,7 +174,7 @@ export function UpcomingTripsSection() {
                 isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'
               )}
             >
-              {trips.map((trip) => (
+              {filteredTrips.map((trip) => (
                 <div key={trip.id} className="w-[88vw] max-w-[360px] shrink-0 snap-start sm:w-[380px] lg:w-[340px]">
                   <TripCard trip={trip} />
                 </div>

@@ -112,7 +112,6 @@ export function ContactPage() {
             <p className="mt-1 text-sm text-muted-foreground">Find answers without waiting.</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Link to="/trips"><Button variant="outline" size="sm">Browse trips</Button></Link>
-              <Link to="/destinations"><Button variant="outline" size="sm">Destinations</Button></Link>
               <Link to="/blogs"><Button variant="outline" size="sm">Travel blogs</Button></Link>
             </div>
           </div>

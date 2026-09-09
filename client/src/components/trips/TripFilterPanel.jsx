@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
-import { TRIP_TYPES, TRIP_TYPE_LABELS } from '@/schemas/trip'
+import { TRIP_TYPE_LABELS } from '@/schemas/trip'
 
 // Active filter shape (all optional):
 // { tripType, category, destination, minPrice, maxPrice,
@@ -19,6 +19,24 @@ const BUDGET_PRESETS = [
   { label: '₹25k–50k', min: 25000, max: 50000 },
   { label: '₹50k–75k', min: 50000, max: 75000 },
   { label: '₹75k+', min: 75000, max: null },
+]
+
+// Trip Type options shown on the public Trips page. Deliberately narrower
+// than TRIP_TYPES (which must keep every value for validation, stored trips
+// and the admin form): Customized, Honeymoon, Family, Adventure and Weekend
+// are hidden here, as is the internal match_maker value.
+const VISIBLE_TRIP_TYPES = [
+  'group',
+  'international',
+  'domestic',
+  'bike',
+  'spiritual',
+  'wellness',
+  'trek',
+  'northern_lights_early_bird',
+  'middle_age_trips',
+  'upcoming_group_trips',
+  'corporate',
 ]
 
 function Group({ title, children }) {
@@ -59,19 +77,7 @@ export function TripFilterPanel({
 
       <Group title="Trip Type">
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => set({ tripType: null })}
-            aria-pressed={!filters.tripType}
-            className={`max-w-full break-words rounded-full px-3 py-1.5 text-xs font-medium leading-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-              !filters.tripType
-                ? 'bg-primary text-primary-foreground'
-                : 'border border-input bg-background text-muted-foreground hover:bg-accent hover:text-foreground'
-            }`}
-          >
-            All types
-          </button>
-          {TRIP_TYPES.filter((t) => t !== 'match_maker').map((t) => {
+          {VISIBLE_TRIP_TYPES.map((t) => {
             const active = filters.tripType === t
             return (
               <button

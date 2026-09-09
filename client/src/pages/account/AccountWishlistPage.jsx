@@ -20,7 +20,7 @@ export function AccountWishlistPage(){
     <Card className="p-12 text-center">
       <p className="mt-3 font-medium">Your wishlist is empty</p>
       <p className="text-sm text-muted-foreground">No saved trips or destinations yet.</p>
-      <div className="mt-4 flex justify-center gap-3"><Link to="/trips"><Button>Explore Trips</Button></Link><Link to="/destinations"><Button variant="outline">Destinations</Button></Link></div>
+      <div className="mt-4 flex justify-center gap-3"><Link to="/trips"><Button>Explore Trips</Button></Link></div>
     </Card>
   )
   return (

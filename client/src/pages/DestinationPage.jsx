@@ -265,11 +265,11 @@ export function DestinationPage() {
           This destination may have been unpublished or removed.
         </p>
         <Link
-          to="/destinations"
+          to="/trips"
           className="mt-6 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ArrowLeft className="h-4 w-4" />
-          Browse destinations
+          Browse trips
         </Link>
       </Container>
     )
@@ -483,12 +483,6 @@ function RelatedDestinations({ category, currentSlug }) {
     <div className="mt-12">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Similar destinations</h2>
-        <Link
-          to="/destinations"
-          className="text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-        >
-          View all destinations
-        </Link>
       </div>
       <div className="mt-4 grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
         {related.map((d) => (

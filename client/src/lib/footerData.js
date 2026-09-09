@@ -1,41 +1,9 @@
-// Footer content configuration. Destination labels are grouped column-by-column
-// exactly as they should appear in the footer grid. Each label is resolved to a
-// real destination page (`/destination/<slug>`) when a matching destination
-// exists in the API; otherwise it falls back to the trips listing for its
-// category.
-
-export const DOMESTIC_TRIP_COLUMNS = [
-  ['Meghalaya Tour Packages', 'Kashmir Tour Packages', 'Andaman Tour Packages'],
-  ['Spiti Tour Packages', 'Ladakh Tour Packages'],
-  ['Himachal Tour Packages', 'Rajasthan Tour Packages'],
-  ['Tawang Tour Packages', 'Kedarnath Tour Packages'],
-  ['Uttarakhand Tour Packages', 'Kerala Tour Packages'],
-]
-
-export const INTERNATIONAL_TRIP_COLUMNS = [
-  [
-    'Northern Lights Tour Packages',
-    'Almaty Tour Packages',
-    'Japan Tour Packages',
-    'Mauritius Tour Packages',
-  ],
-  [
-    'Georgia Tour Packages',
-    'Thailand Tour Packages',
-    'Sri Lanka Tour Packages',
-    'Malaysia Tour Packages',
-  ],
-  ['Vietnam Tour Packages', 'Dubai Tour Packages', 'Nepal Tour Packages'],
-  ['Bali Tour Packages', 'Cambodia Tour Packages', 'Maldives Tour Packages'],
-  ['Europe Tour Packages', 'Bhutan Tour Packages', 'Singapore Tour Packages'],
-]
+// Footer content configuration. Destination links are populated dynamically
+// from the published destinations API (see FooterDestinations); no
+// destination names or URLs are hardcoded here.
 
 export const FOOTER_QUICK_LINKS = [
   { label: 'Blogs', href: '/blogs' },
-  { label: 'Contact Us', href: '/contact' },
-  { label: 'Privacy Policy', href: '/privacy-policy' },
-  { label: 'Cancellation Policy', href: '/cancellation-policy' },
-  { label: 'Terms & Conditions', href: '/terms-and-conditions' },
 ]
 
 export const FOOTER_CONTACT = {

@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -265,19 +266,64 @@ export function AdminTripsPage() {
 
 function TripsActionMenu({ trip, onDelete, onPublish, onUnpublish }) {
   const [open, setOpen] = React.useState(false)
+  const [pos, setPos] = React.useState(null)
   const ref = React.useRef(null)
-  React.useEffect(() => {
-    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
-    document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
+  const menuRef = React.useRef(null)
+
+  // Position the menu in viewport coordinates so it escapes the table's
+  // scroll container. Opens downward when space allows, otherwise upward.
+  const updatePosition = React.useCallback(() => {
+    const btn = ref.current
+    if (!btn) return
+    const r = btn.getBoundingClientRect()
+    const menuW = 160 // w-40
+    const menuH = menuRef.current ? menuRef.current.offsetHeight : 180
+    const gap = 4
+    const spaceBelow = window.innerHeight - r.bottom
+    const spaceAbove = r.top
+    const openUp = spaceBelow < menuH + gap + 8 && spaceAbove > menuH + gap + 8
+    const top = openUp ? Math.max(8, r.top - menuH - gap) : r.bottom + gap
+    const left = Math.max(8, Math.min(r.right - menuW, window.innerWidth - menuW - 8))
+    setPos({ top, left })
   }, [])
+
+  // Measure with the real menu height before paint so the first frame is placed correctly.
+  React.useLayoutEffect(() => {
+    if (open) updatePosition()
+  }, [open, updatePosition])
+
+  React.useEffect(() => {
+    if (!open) return undefined
+    const onScrollResize = () => updatePosition()
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    const h = (e) => {
+      if (ref.current && ref.current.contains(e.target)) return
+      if (menuRef.current && menuRef.current.contains(e.target)) return
+      setOpen(false)
+    }
+    window.addEventListener('scroll', onScrollResize, true)
+    window.addEventListener('resize', onScrollResize)
+    document.addEventListener('mousedown', h)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('scroll', onScrollResize, true)
+      window.removeEventListener('resize', onScrollResize)
+      document.removeEventListener('mousedown', h)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open, updatePosition])
   return (
-    <div className="relative" ref={ref}>
-      <button type="button" onClick={() => setOpen((v) => !v)} className="grid h-7 w-7 place-items-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700">
+    <div className="relative inline-block" ref={ref}>
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open} aria-label="Trip actions" className="grid h-7 w-7 place-items-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
       </button>
-      {open && (
-        <div className="absolute right-0 top-8 z-20 w-40 rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+      {open && createPortal(
+        <div
+          ref={menuRef}
+          role="menu"
+          style={{ position: 'fixed', top: pos ? pos.top : -9999, left: pos ? pos.left : -9999, zIndex: 50, visibility: pos ? 'visible' : 'hidden' }}
+          className="w-40 rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+        >
           <Link to={`/admin/trips/${trip.id}/edit`} className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-slate-50" onClick={() => setOpen(false)}>
             <Pencil className="h-3.5 w-3.5" /> Edit
           </Link>
@@ -297,7 +343,8 @@ function TripsActionMenu({ trip, onDelete, onPublish, onUnpublish }) {
           <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50" onClick={() => { onDelete(); setOpen(false)}}>
             <Trash2 className="h-3.5 w-3.5" /> Delete
           </button>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
